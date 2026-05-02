@@ -6,7 +6,7 @@ Credit card recommendation engine. Tells users the single best next card to add 
 
 Next.js 15 (App Router) · TypeScript · Tailwind · Supabase · Vercel.
 
-See `ARCHITECTURE.md` for the full architecture and `DESIGN_BRIEF_FOR_CLAUDE_DESIGNER.md` for the design intent.
+See `docs/ARCHITECTURE.md` for the full architecture and `docs/DESIGN_BRIEF.md` for the design intent.
 
 ## Local development
 

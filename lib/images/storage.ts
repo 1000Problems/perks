@@ -40,9 +40,9 @@ class R2Storage implements ImageStorage {
     if (!this.available()) {
       throw new Error("R2 storage not configured. Set R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET, R2_PUBLIC_BASE.");
     }
-    // Lazy import: @aws-sdk/client-s3 is an optional dep installed only
-    // when R2 is wired (`npm install @aws-sdk/client-s3`). The resolver
-    // and synthetic renderer don't need it.
+    // Dynamic import keeps @aws-sdk/client-s3 out of the user-facing
+    // bundle — only the admin upload route lands on it. The package is
+    // a regular dependency; webpack still resolves it at build time.
     const { S3Client, PutObjectCommand } = await import("@aws-sdk/client-s3");
     const accountId = process.env.R2_ACCOUNT_ID;
     if (!accountId) throw new Error("R2_ACCOUNT_ID not set");

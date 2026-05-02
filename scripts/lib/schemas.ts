@@ -52,11 +52,13 @@ export const CardSchema = z
     network: z.string().optional(),
     card_type: z.enum(["personal", "business", "secured", "student"]),
     category: z.array(z.string()),
-    annual_fee_usd: z.number(),
+    // null for invite-only / unknown-fee cards. Engine treats null as 0.
+    annual_fee_usd: z.number().nullable(),
     annual_fee_first_year_waived: z.boolean().optional(),
     foreign_tx_fee_pct: z.number().nullable().optional(),
     credit_score_required: z.string().optional(),
-    currency_earned: z.string(),
+    // null for no-rewards cards (secured, 0% APR builders, balance-transfer).
+    currency_earned: z.string().nullable(),
     earning: z.array(EarningRule),
     signup_bonus: SignupBonus.optional().nullable(),
     annual_credits: z.array(AnnualCredit).default([]),

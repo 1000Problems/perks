@@ -205,9 +205,11 @@ create table card_signup_bonuses (
   estimated_value_usd numeric(10,2),
   notes text,
   effective_from date,
-  effective_to date,
-  is_current boolean generated always as
-    (effective_to is null or effective_to > current_date) stored
+  effective_to date
+  -- `is_current` was originally a generated stored column using
+  -- current_date, but Postgres requires generated stored expressions to
+  -- be IMMUTABLE and current_date is STABLE. Callers compute the flag
+  -- on read (effective_to is null or effective_to > current_date).
 );
 
 create index card_signup_bonuses_card_idx on card_signup_bonuses(card_id);

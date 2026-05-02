@@ -87,6 +87,10 @@
     "citi_custom_cash",
     "citi_rewards_plus"
   ],
+  "transfer_unlock_card_ids": [
+    "citi_strata_premier",
+    "citi_strata_elite"
+  ],
   "fixed_redemption_cpp": 1.0,
   "portal_redemption_cpp": 1.0,
   "transfer_partners": [

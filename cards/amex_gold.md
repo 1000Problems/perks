@@ -91,6 +91,16 @@
     "amex_blue_business_plus",
     "amex_business_green"
   ],
+  "transfer_unlock_card_ids": [
+    "amex_gold",
+    "amex_platinum",
+    "amex_green",
+    "amex_business_gold",
+    "amex_business_platinum",
+    "amex_blue_business_plus",
+    "amex_platinum_schwab",
+    "amex_platinum_morgan_stanley"
+  ],
   "fixed_redemption_cpp": 0.6,
   "portal_redemption_cpp": 1.0,
   "portal_redemption_cpp_notes": "1cpp on flights via AmexTravel for Platinum/Business Platinum; lower for other cards. Pay With Points highly variable.",

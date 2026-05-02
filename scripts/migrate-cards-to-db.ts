@@ -343,6 +343,7 @@ function synthesizeStubPrograms(seeds: SeedSets, parsed: ParsedFile[]): void {
       issuer: "",
       earning_cards: [],
       transfer_partners: [],
+      transfer_unlock_card_ids: [],
       sweet_spots: [],
       sources: [],
     } as Program);

@@ -95,6 +95,14 @@
     "capital_one_spark_miles",
     "capital_one_spark_miles_select"
   ],
+  "transfer_unlock_card_ids": [
+    "capital_one_venture_x",
+    "capital_one_venture",
+    "capital_one_venture_one",
+    "capital_one_venture_x_business",
+    "capital_one_spark_miles",
+    "capital_one_spark_miles_select"
+  ],
   "fixed_redemption_cpp": 0.5,
   "fixed_redemption_cpp_notes": "0.5cpp via cash/statement credit",
   "portal_redemption_cpp": 1.0,

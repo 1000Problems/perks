@@ -111,6 +111,17 @@ function mergeFile(db: DB, filename: string): void {
     } catch (e) {
       err(`${filename}: programs.json validation: ${(e as Error).message}`);
     }
+    // Derive `kind` if the markdown didn't author it. Transferable and
+    // cobrand programs are loyalty currencies; anything else with no
+    // transfer partners is cash. The runtime classifier in
+    // lib/engine/scoring.ts depends on this field always being set.
+    if (!program.kind) {
+      const isLoyalty =
+        program.type === "transferable" ||
+        program.type.startsWith("cobrand_") ||
+        program.transfer_partners.length > 0;
+      program.kind = isLoyalty ? "loyalty" : "cash";
+    }
     if (!db.programs.has(program.id)) {
       // First card to define this program is the anchor; it owns
       // transfer_partners, sweet_spots, redemption rates.

@@ -76,6 +76,7 @@
   "type": "transferable",
   "issuer": "Bilt",
   "earning_cards": ["bilt_blue", "bilt_obsidian", "bilt_palladium"],
+  "transfer_unlock_card_ids": ["bilt_blue", "bilt_obsidian", "bilt_palladium"],
   "fixed_redemption_cpp": 1.25,
   "fixed_redemption_cpp_notes": "Via Bilt Travel portal; 1.25cpp",
   "portal_redemption_cpp": 1.25,

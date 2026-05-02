@@ -13,9 +13,12 @@ import type { Card, CardDatabase } from "@/lib/data/loader";
 import type { SpendCategoryId } from "@/lib/data/types";
 import type {
   CardScore,
+  EarningMode,
   NewPerkOut,
+  PointsBucket,
   ScoreLineItem,
   ScoringOptions,
+  SubBucket,
   UserProfile,
   WalletCardHeld,
 } from "./types";
@@ -69,44 +72,89 @@ interface NormalizedRule {
   cap_usd_per_year: number | null;
 }
 
-// Effective cents-per-point for a card's earned currency. Conservative:
-// uses portal_redemption_cpp when present (Chase Travel 1.25, US Bank
-// FlexPoints 1.5 etc.), otherwise fixed_redemption_cpp, otherwise 1.
-// We deliberately do NOT model peak transfer-partner sweet spots here
-// (Hyatt at 2¢, ANA biz at 4¢). Those are the why-sentence story; the
-// rec score stays conservative so the headline number is defensible.
-//
-// Cards without a currency_earned (no-rewards builder/secured cards)
-// get 1¢/pt because their rate_pts_per_dollar is already a percent
-// (or is null and falls through to 0).
-function cppForCurrency(currencyId: string | null | undefined, db: CardDatabase): number {
-  if (!currencyId) return 1;
-  const prog = db.programById.get(currencyId);
-  if (!prog) return 1;
-  const portal = prog.portal_redemption_cpp ?? 0;
-  const fixed = prog.fixed_redemption_cpp ?? 0;
-  return Math.max(portal, fixed) || 1;
+interface NormalizedEarning {
+  byCat: Map<SpendCategoryId, NormalizedRule>;
+  base: number;
+  mode: EarningMode;
 }
 
-// Per-process memoization of normalizeEarning. Keyed by card.id since
-// the card database is loaded once and immutable. The map is reset at
-// process boundaries (serverless cold start), which is fine.
-const normalizeCache = new Map<
-  string,
-  { byCat: Map<SpendCategoryId, NormalizedRule>; base: number }
->();
+// Classify a card's earned currency in the context of a wallet. Cash
+// programs always return cash mode at 1cpp. Loyalty programs return
+// loyalty mode at the program's portal cpp ONLY when the wallet
+// contains an unlock card — Sapphire/Ink Preferred for chase_ur,
+// Strata Premier/Elite for citi_thankyou. Cobrand programs (United,
+// Hilton, etc.) and fully-open transferable programs (Capital One,
+// Bilt) have empty unlock lists and always classify as loyalty.
+//
+// This is the gate that makes Chase Freedom Unlimited / Citi Double
+// Cash earn cash on their own and points when paired — the engine
+// can't know the user holds a Sapphire from the candidate alone.
+//
+// `contextCards` should include the candidate when scoring it (adding
+// CSP unlocks UR for itself).
+export function classifyEarning(
+  card: Card,
+  contextCards: Card[],
+  db: CardDatabase,
+): EarningMode {
+  if (!card.currency_earned) {
+    return { mode: "cash", cpp: 1, programId: null, programName: null };
+  }
+  const program = db.programById.get(card.currency_earned);
+  if (!program) {
+    return { mode: "cash", cpp: 1, programId: null, programName: null };
+  }
+  const programId = program.id;
+  const programName = program.name;
+  if (program.kind === "cash") {
+    return { mode: "cash", cpp: 1, programId, programName };
+  }
+  // Loyalty branch. Conservative cpp: max(portal, fixed) || 1.
+  const portal = program.portal_redemption_cpp ?? 0;
+  const fixed = program.fixed_redemption_cpp ?? 0;
+  const cpp = Math.max(portal, fixed) || 1;
+  // Empty unlock list = always loyalty mode (cobrand currencies and
+  // fully-open transferables like Capital One Miles, Bilt Rewards).
+  if (program.transfer_unlock_card_ids.length === 0) {
+    return { mode: "loyalty", cpp, programId, programName };
+  }
+  // Gated transferable. Loyalty if any context card unlocks; otherwise
+  // the points sit at fixed cash redemption value, which the engine
+  // models as plain cash mode at 1cpp (CFU/CDC default behavior).
+  const unlocks = contextCards.some((c) =>
+    program.transfer_unlock_card_ids.includes(c.id),
+  );
+  if (unlocks) {
+    return { mode: "loyalty", cpp, programId, programName };
+  }
+  return { mode: "cash", cpp: 1, programId, programName };
+}
+
+// Per-process memoization of normalizeEarning. Keyed by card.id PLUS
+// the resolved earning mode, because the same card normalizes
+// differently depending on whether the wallet unlocks transfers
+// (CFU = 1.5% cash alone, 1.875¢ UR with Sapphire). The map is reset
+// at process boundaries (serverless cold start), which is fine.
+const normalizeCache = new Map<string, NormalizedEarning>();
+
+function normKey(cardId: string, mode: EarningMode): string {
+  return `${cardId}::${mode.mode}:${mode.cpp}`;
+}
 
 // Convert a card's earning rules into a normalized shape keyed by
 // SpendCategoryId. Rates are dollar value per dollar spent: a 4× MR
 // rule with MR at 1.25¢/pt becomes rate = 0.05.
 function normalizeEarning(
   card: Card,
+  contextCards: Card[],
   db: CardDatabase,
-): { byCat: Map<SpendCategoryId, NormalizedRule>; base: number } {
-  const cached = normalizeCache.get(card.id);
+): NormalizedEarning {
+  const mode = classifyEarning(card, contextCards, db);
+  const key = normKey(card.id, mode);
+  const cached = normalizeCache.get(key);
   if (cached) return cached;
 
-  const cpp = cppForCurrency(card.currency_earned, db);
+  const cpp = mode.cpp;
   const byCat = new Map<SpendCategoryId, NormalizedRule>();
   let base = 0.01; // default 1% baseline if not specified
 
@@ -129,24 +177,31 @@ function normalizeEarning(
     }
   }
 
-  const result = { byCat, base };
-  normalizeCache.set(card.id, result);
+  const result: NormalizedEarning = { byCat, base, mode };
+  normalizeCache.set(key, result);
   return result;
 }
 
 // Best earning rate the user gets in a category given a list of cards.
-// Returns the rate and the source card name (for "from" labels).
+// Returns the rate, source card name, and the currency mode of that
+// winning rate. The classifier walks the same `cards` list so that
+// paired-mode resolution applies — when the wallet holds CSP, CFU's
+// chase_ur earnings are evaluated at portal cpp, not at 1cpp.
 function bestRateForCategory(
   category: SpendCategoryId,
   cards: Card[],
   db: CardDatabase,
-): { rate: number; from: string } {
-  let best = { rate: 0, from: "—" };
+): { rate: number; from: string; mode: "cash" | "loyalty" | null } {
+  let best: { rate: number; from: string; mode: "cash" | "loyalty" | null } = {
+    rate: 0,
+    from: "—",
+    mode: null,
+  };
   for (const c of cards) {
-    const norm = normalizeEarning(c, db);
+    const norm = normalizeEarning(c, cards, db);
     const r = norm.byCat.get(category)?.rate ?? norm.base;
     if (r > best.rate) {
-      best = { rate: r, from: c.name };
+      best = { rate: r, from: c.name, mode: norm.mode.mode };
     }
   }
   return best;
@@ -209,7 +264,10 @@ export function scoreCard(
 
   // Spend impact — best rate per category, before vs after, with
   // source-card attribution and cap info for the drill-in's per-row math.
-  const cardNorm = normalizeEarning(card, db);
+  // The candidate's normalized earning resolves against `walletPlus` so
+  // the candidate counts toward unlocking transfers for its own program
+  // (e.g. scoring CSP unlocks UR for itself).
+  const cardNorm = normalizeEarning(card, walletPlus, db);
   const spendImpact = {} as CardScore["spendImpact"];
   for (const cat of ALL_CATS) {
     const curBest = bestRateForCategory(cat, walletCards, db);
@@ -226,10 +284,13 @@ export function scoreCard(
       delta: 0, // populated below
       newCap: candidateRule?.cap_usd_per_year ?? null,
       newBase: candidateWins ? cardNorm.base : null,
+      newMode: newBest.mode,
     };
   }
 
   // Earnings delta — only the marginal portion this card contributes.
+  // All marginal earnings for this candidate land in one bucket
+  // (cardNorm.mode.mode), since a card earns into exactly one program.
   let earningsDelta = 0;
   for (const cat of ALL_CATS) {
     const impact = spendImpact[cat];
@@ -312,20 +373,57 @@ export function scoreCard(
     });
   }
 
-  // Two-pillar split. Spend = earnings delta + brand-fit cobrand bonus
-  // (both spend-conditional). Perks = annual credits + ongoing perks
-  // (both claim-conditional). Fee is its own component, signed negative.
-  // Each component is rounded independently so deltaOngoing equals the
-  // sum of the rendered pillars exactly — no off-by-one between the
-  // hero and the breakdown view.
-  const spendOngoing = Math.round(earningsDelta + brandFitValue);
+  // Cash vs points split. Earnings deltas land in either cashOngoing or
+  // pointsOngoing based on the candidate's resolved mode (a card earns
+  // into exactly one program). Brand-fit always counts as cash —
+  // cobrand bonuses are dollar-back rebates regardless of currency.
+  // Perks and fee unchanged. Each component is rounded so the back-
+  // compat `spendOngoing` reconciles exactly to `cashOngoing + points$`.
+  const earningsDeltaRounded = Math.round(earningsDelta);
+  const brandFitRounded = Math.round(brandFitValue);
+  const mode = cardNorm.mode;
+  const isLoyalty = mode.mode === "loyalty";
+  const cashOngoing =
+    (isLoyalty ? 0 : earningsDeltaRounded) + brandFitRounded;
+  const pointsValueUsd = isLoyalty ? earningsDeltaRounded : 0;
+  const pointsRaw =
+    isLoyalty && mode.cpp > 0
+      ? Math.round((earningsDelta * 100) / mode.cpp)
+      : 0;
+  const pointsOngoing: PointsBucket | null =
+    isLoyalty && pointsRaw > 0 && mode.programId && mode.programName
+      ? {
+          pts: pointsRaw,
+          valueUsd: pointsValueUsd,
+          programId: mode.programId,
+          programName: mode.programName,
+          cpp: mode.cpp,
+        }
+      : null;
+  const spendOngoing = cashOngoing + pointsValueUsd;
   const perksOngoing = Math.round(creditsValue + perksValue);
   const feeOngoing = fee > 0 ? -fee : 0;
   const deltaOngoing = spendOngoing + perksOngoing + feeOngoing;
 
-  // Year-1 SUB amortized.
-  const sub = card.signup_bonus?.estimated_value_usd ?? 0;
-  const subYear1 = sub > 0 ? Math.round((sub * 12) / options.subAmortizeMonths) : 0;
+  // Year-1 SUB amortized. Cash-mode cards record the dollar value with
+  // pts: 0; loyalty-mode cards split out the amortized point count too
+  // so the UI can show "+15,000 UR pts y1" in addition to the dollar.
+  const subDollar = card.signup_bonus?.estimated_value_usd ?? 0;
+  const subPtsRaw = card.signup_bonus?.amount_pts ?? 0;
+  const subYear1 =
+    subDollar > 0 ? Math.round((subDollar * 12) / options.subAmortizeMonths) : 0;
+  const subPtsAmortized =
+    subPtsRaw > 0 ? Math.round((subPtsRaw * 12) / options.subAmortizeMonths) : 0;
+  const subYear1Detail: SubBucket | null =
+    subYear1 > 0
+      ? {
+          mode: mode.mode,
+          pts: isLoyalty ? subPtsAmortized : 0,
+          valueUsd: subYear1,
+          programId: mode.programId,
+          programName: mode.programName,
+        }
+      : null;
   const deltaYear1 = deltaOngoing + subYear1;
 
   if (subYear1 > 0) {
@@ -345,10 +443,13 @@ export function scoreCard(
     deltaOngoing,
     deltaYear1,
     components: {
+      cashOngoing,
+      pointsOngoing,
       spendOngoing,
       perksOngoing,
       feeOngoing,
       subYear1,
+      subYear1Detail,
     },
     breakdown,
     spendImpact,

@@ -105,10 +105,23 @@ export const ProgramSchema = z
     type: z.string(), // commonly transferable | fixed_value | cobrand_airline | cobrand_hotel — kept open for variants
     issuer: z.string(),
     earning_cards: z.array(z.string()).default([]),
+    // Cash vs loyalty currency. When omitted in markdown the build script
+    // derives it from `type` and `transfer_partners` — see
+    // scripts/build-card-db.ts. Loader sees a populated value every time.
+    kind: z.enum(["cash", "loyalty"]).optional(),
     fixed_redemption_cpp: z.number().nullable().optional(),
     portal_redemption_cpp: z.number().nullable().optional(),
     portal_redemption_cpp_notes: z.string().nullable().optional(),
     transfer_partners: z.array(TransferPartner).default([]),
+    // Card IDs that, when present in the wallet, unlock loyalty-mode
+    // earning for every card in this program. Empty list means "every
+    // earning card unlocks transfers" (cobrand currencies, plus fully
+    // open transferable currencies like Capital One Miles and Bilt). For
+    // gated currencies (chase_ur, amex_mr, citi_thankyou) this is the
+    // strict subset of cards that grant transfer access — e.g. CSP/CSR/IBP
+    // for chase_ur. CFU/CFF/CFR earn UR but do not appear in this list,
+    // so they earn cash unless the wallet contains a Sapphire/Ink Preferred.
+    transfer_unlock_card_ids: z.array(z.string()).default([]),
     sweet_spots: z.array(SweetSpot).default([]),
     sources: z.array(Url).default([]),
   });

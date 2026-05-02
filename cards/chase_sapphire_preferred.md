@@ -95,6 +95,11 @@
     "chase_ink_business_unlimited",
     "chase_ink_business_premier"
   ],
+  "transfer_unlock_card_ids": [
+    "chase_sapphire_preferred",
+    "chase_sapphire_reserve",
+    "chase_ink_business_preferred"
+  ],
   "fixed_redemption_cpp": 1.0,
   "portal_redemption_cpp": 1.25,
   "portal_redemption_cpp_notes": "1.25cpp on Sapphire Preferred / Ink Business Preferred via Chase Travel; Sapphire Reserve has shifted to a different points-and-cash redemption model post-2025 refresh",

@@ -216,12 +216,20 @@ export function generateWhy(ctx: WhyContext): string {
     }
   }
 
-  // 3. Big category jump (≥ 2 percentage points).
+  // 3. Big category jump (≥ 2 percentage points). Tag the currency
+  // type so a "3% on dining" line doesn't conflate cashback and points.
   const cat = findBiggestCategoryGain(score);
   if (cat && cat.jump >= 0.02) {
     const pct = Math.round(cat.jump * 100);
+    const mode = score.spendImpact[cat.cat]?.newMode;
+    const tag =
+      mode === "loyalty"
+        ? ` (${score.components.pointsOngoing?.programName ?? "points"})`
+        : mode === "cash"
+        ? " (cash back)"
+        : "";
     return clip(
-      `Adds ${pct}% on ${CAT_DISPLAY[cat.cat]}, your biggest gap.`,
+      `Adds ${pct}% on ${CAT_DISPLAY[cat.cat]}${tag}, your biggest gap.`,
     );
   }
 

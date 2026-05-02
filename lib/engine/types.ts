@@ -57,15 +57,59 @@ export interface ScoreLineItem {
   note?: string;
 }
 
-// The hero number split. The recommendation UI surfaces these as two
-// pillars instead of one combined +$X so users can tell what's earned
-// from spending (high confidence — happens automatically) from what's
-// upside if they actually claim a perk or credit.
+// Result of classifying a card's earned currency in the context of a
+// wallet. Cards in `cash` mode contribute to `cashOngoing`; cards in
+// `loyalty` mode contribute to `pointsOngoing`. The mode is per-wallet:
+// CFU classifies as cash on its own, loyalty when paired with a Sapphire
+// or Ink Preferred (any card in the program's transfer_unlock_card_ids).
+// See lib/engine/scoring.ts → classifyEarning.
+export interface EarningMode {
+  mode: "cash" | "loyalty";
+  cpp: number; // dollar value per point. 1.0 in cash mode.
+  programId: string | null;
+  programName: string | null;
+}
+
+// Loyalty-currency earnings split out of the cash bucket. `pts` is raw
+// points/yr; `valueUsd` is `pts × cpp / 100` rounded. The UI renders
+// `pts` as the headline number with `valueUsd` as the caption.
+export interface PointsBucket {
+  pts: number;
+  valueUsd: number;
+  programId: string;
+  programName: string;
+  cpp: number;
+}
+
+// Year-1 sign-up bonus, broken out by currency type. Cash-mode SUBs put
+// the dollar value in `valueUsd` and `pts: 0`. Loyalty-mode SUBs report
+// both the points awarded (amortized) and their dollar equivalent.
+export interface SubBucket {
+  mode: "cash" | "loyalty";
+  pts: number;
+  valueUsd: number;
+  programId: string | null;
+  programName: string | null;
+}
+
+// The hero number split. The recommendation UI surfaces these as
+// pillars so users can tell what's earned automatically from what's
+// upside they only realise if they claim it. Cash and points were
+// previously lumped into one `spendOngoing` number; they're split now
+// because a 6% cashback card and a 3x points card are not the same.
 export interface CardScoreComponents {
-  // Spend "floor": value the user earns by spending normally with this
-  // card in their wallet. Sums earning-rule deltas across spend
-  // categories plus brand-fit cobrand bonuses (Costco, Amazon, etc.).
-  // Always >= 0.
+  // Statement-credit dollars/yr the user earns from spending. Sums
+  // cashback earning-rule deltas across spend categories plus brand-fit
+  // cobrand bonuses (which always count as cash). Always >= 0.
+  cashOngoing: number;
+  // Loyalty-currency earnings/yr from spend, valued at the program's
+  // portal cpp. Null when the card earns no points (cash-mode programs,
+  // or transferable programs whose wallet doesn't unlock transfers).
+  // The bucket is per-program; a card earns into exactly one program.
+  pointsOngoing: PointsBucket | null;
+  // Back-compat shim — equals `cashOngoing + (pointsOngoing?.valueUsd ?? 0)`.
+  // Existing UI components read this; will be removed when the
+  // three-pillar UI follow-up lands. Always reconciles exactly.
   spendOngoing: number;
   // Perk "upside": value the user only realises if they claim it.
   // Sums annual credits (haircut by ease in realistic mode) and
@@ -74,10 +118,11 @@ export interface CardScoreComponents {
   perksOngoing: number;
   // Annual fee, signed negative when present, 0 otherwise.
   feeOngoing: number;
-  // Year-1 sign-up bonus, amortized per options.subAmortizeMonths.
-  // Surfaced separately so the year-1 view can render it as its own
-  // small pill rather than mixed into spend or perks.
+  // Year-1 sign-up bonus value, amortized per options.subAmortizeMonths.
+  // Same back-compat shim philosophy: dollar-amortized for existing UI,
+  // detail breakdown in subYear1Detail for the new UI.
   subYear1: number;
+  subYear1Detail: SubBucket | null;
 }
 
 export interface NewPerkOut {
@@ -116,6 +161,10 @@ export interface CardScore {
       // the candidate isn't the winner.
       newCap: number | null;
       newBase: number | null;
+      // Currency type of the new best earner. "cash" when the winning
+      // card lands in `cashOngoing`, "loyalty" when it lands in
+      // `pointsOngoing`. Null only when no card contributes (newFrom: "—").
+      newMode: "cash" | "loyalty" | null;
     }
   >;
   newPerks: NewPerkOut[];

@@ -51,6 +51,12 @@ export function RecPanelMobile({
   const [view, setView] = useState<ViewMode>("ongoing");
   const [credits, setCredits] = useState<CreditsMode>("realistic");
   const [filter, setFilter] = useState<RankFilter>("total");
+  // Category sort — session-only. "overall" → engine default; otherwise
+  // pass a category sort and swap the per-row headline number for that
+  // category's marginal delta.
+  const [sortCategory, setSortCategory] = useState<SpendCategoryId | "overall">(
+    "overall",
+  );
   const [tab, setTab] = useState<Tab>("top");
 
   const {
@@ -86,6 +92,10 @@ export function RecPanelMobile({
         consideringIds.length === 0 && profile.cards_held === serverProfile.cards_held
           ? eligibilityOverrides ?? undefined
           : undefined,
+      sortBy:
+        sortCategory === "overall"
+          ? { kind: "total" }
+          : { kind: "category", category: sortCategory },
     }),
     [
       filter,
@@ -94,8 +104,22 @@ export function RecPanelMobile({
       consideringIds.length,
       profile.cards_held,
       serverProfile.cards_held,
+      sortCategory,
     ],
   );
+
+  // Sort categories by descending user spend so the dropdown leads
+  // with what the user actually buys. Zero-spend categories preserve
+  // their default order at the tail.
+  const categoryOptions = useMemo(() => {
+    const spend = profile.spend_profile ?? {};
+    return [...SPEND_CATEGORIES].sort((a, b) => {
+      const sa = spend[a.id] ?? 0;
+      const sb = spend[b.id] ?? 0;
+      if (sa === 0 && sb === 0) return 0;
+      return sb - sa;
+    });
+  }, [profile.spend_profile]);
 
   const ranked = useMemo(
     () => rankCards(profile, effectiveWallet, db, rankOptions),
@@ -426,11 +450,56 @@ export function RecPanelMobile({
 
         {tab === "top" && (
           <div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14, alignItems: "center" }}>
               <Segmented value={filter} onChange={setFilter} options={FILTER_OPTIONS} />
+              <label
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 12,
+                  color: "var(--ink-3)",
+                }}
+              >
+                <span>Sort by</span>
+                <select
+                  value={sortCategory}
+                  onChange={(e) => setSortCategory(e.target.value as SpendCategoryId | "overall")}
+                  style={{
+                    fontSize: 12,
+                    padding: "6px 8px",
+                    borderRadius: 8,
+                    border: "1px solid var(--rule)",
+                    background: "white",
+                    color: "var(--ink)",
+                    fontFamily: "inherit",
+                    cursor: "pointer",
+                  }}
+                >
+                  <option value="overall">Overall</option>
+                  {categoryOptions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
             {ranked.visible.length === 0 ? (
-              <p style={{ fontSize: 14, color: "var(--ink-2)" }}>No cards match this filter.</p>
+              <p style={{ fontSize: 14, color: "var(--ink-2)" }}>
+                {sortCategory === "overall"
+                  ? "No cards match this filter."
+                  : (() => {
+                      const cat = SPEND_CATEGORIES.find((c) => c.id === sortCategory);
+                      const label = cat?.label.toLowerCase() ?? sortCategory;
+                      const baseline = bestRateForCategory(sortCategory, walletCards, db);
+                      if (baseline.rate > 0 && baseline.from !== "—") {
+                        const pct = (baseline.rate * 100).toFixed(1).replace(/\.0$/, "");
+                        return `No card in this view beats your ${baseline.from} for ${label} at ${pct}%.`;
+                      }
+                      return `No card in this view adds value for ${label}.`;
+                    })()}
+              </p>
             ) : (
               <ol style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
                 {ranked.visible.map((r) => {
@@ -482,11 +551,40 @@ export function RecPanelMobile({
                               <EligibilityChip status={r.eligibility.status} label={r.eligibility.note} />
                             </div>
                           </div>
-                          <ValuePillars
-                            components={r.score.components}
-                            view={view}
-                            variant="list-stacked"
-                          />
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "flex-end",
+                              gap: 4,
+                            }}
+                          >
+                            {sortCategory !== "overall" && (() => {
+                              const impact = r.score.spendImpact[sortCategory];
+                              const delta = Math.round(impact?.delta ?? 0);
+                              const cat = SPEND_CATEGORIES.find((c) => c.id === sortCategory);
+                              const label = cat?.label.toLowerCase() ?? sortCategory;
+                              return (
+                                <div
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    color: delta > 0 ? "var(--ink)" : "var(--ink-3)",
+                                    letterSpacing: "-0.01em",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  {delta > 0 ? "+" : ""}
+                                  ${delta}/yr on {label}
+                                </div>
+                              );
+                            })()}
+                            <ValuePillars
+                              components={r.score.components}
+                              view={view}
+                              variant="list-stacked"
+                            />
+                          </div>
                         </div>
                         <div style={{ fontSize: 12, color: "var(--ink-2)", lineHeight: 1.4 }}>
                           {r.why}

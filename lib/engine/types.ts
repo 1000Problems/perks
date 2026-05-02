@@ -131,6 +131,15 @@ export interface EligibilityResult {
 
 export type RankFilter = "total" | "nofee" | "premium";
 
+// Sort axis for the rec panel. `total` (default) ranks by overall
+// deltaOngoing — the existing behavior. `category` ranks by the
+// candidate's marginal value in a single spend category, sourced from
+// the precomputed `spendImpact[category].delta`. Used by the rec panel
+// when the user picks a category from the Sort-by listbox.
+export type RankSortBy =
+  | { kind: "total" }
+  | { kind: "category"; category: SpendCategoryId };
+
 export interface RankOptions {
   filter: RankFilter;
   scoring: ScoringOptions;
@@ -141,6 +150,12 @@ export interface RankOptions {
   // the catalog-driven rules evaluator when RULES_ENGINE=server. Keys
   // are card IDs; missing keys fall back to the in-engine path.
   eligibilityOverrides?: Record<string, EligibilityResult>;
+  // Sort axis. Defaults to `{ kind: "total" }` when omitted, matching
+  // legacy behavior. When `kind: "category"`, the comparator uses
+  // `score.spendImpact[category].delta` and the brand-pin pass is
+  // skipped — the user's category choice is a stronger signal than
+  // their cobrand affinity.
+  sortBy?: RankSortBy;
 }
 
 export interface RankedRecommendation {

@@ -283,13 +283,23 @@ export function rankCards(
       break;
   }
 
+  // Sort axis. `total` ranks by overall deltaOngoing (legacy default).
+  // `category` ranks by the candidate's marginal delta in a single
+  // spend category. The credit-band haircut applies the same way in
+  // either mode.
+  const sortBy = options.sortBy ?? { kind: "total" };
+  const valueOf = (r: Row): number =>
+    sortBy.kind === "category"
+      ? r.score.spendImpact[sortBy.category]?.delta ?? 0
+      : r.score.deltaOngoing;
+
   // Sort by a credit-band-adjusted delta — a 670 user gets a Sapphire
   // Reserve down-ranked, but it's still visible. The displayed
   // score.deltaOngoing is unchanged. Tiebreak on card.id so equal-scoring
   // cards don't reshuffle between renders.
   filtered.sort((a, b) => {
-    const da = rankAdjustedDelta(b.card, b.score.deltaOngoing, userBand) -
-      rankAdjustedDelta(a.card, a.score.deltaOngoing, userBand);
+    const da = rankAdjustedDelta(b.card, valueOf(b), userBand) -
+      rankAdjustedDelta(a.card, valueOf(a), userBand);
     if (da !== 0) return da;
     return a.card.id < b.card.id ? -1 : a.card.id > b.card.id ? 1 : 0;
   });
@@ -300,13 +310,22 @@ export function rankCards(
   // brand-fit dollar value is already baked into deltaOngoing; this
   // affects sort order only. Within each group cards stay sorted by
   // band-adjusted delta.
-  const pinned: Row[] = [];
-  const rest: Row[] = [];
-  for (const r of filtered) {
-    if (getBrandFit(r.card, userProfile.brands_used)) pinned.push(r);
-    else rest.push(r);
+  //
+  // Skipped under category sort — the user has explicitly chosen a
+  // single category as their ranking axis, which is a stronger signal
+  // than their cobrand affinity.
+  let combined: Row[];
+  if (sortBy.kind === "category") {
+    combined = filtered;
+  } else {
+    const pinned: Row[] = [];
+    const rest: Row[] = [];
+    for (const r of filtered) {
+      if (getBrandFit(r.card, userProfile.brands_used)) pinned.push(r);
+      else rest.push(r);
+    }
+    combined = [...pinned, ...rest];
   }
-  const combined = [...pinned, ...rest];
   const visible = combined.slice(0, limit).map((r, i) => ({ ...r, rank: i + 1 }));
 
   // Rank denied as well — useful when surfacing them.

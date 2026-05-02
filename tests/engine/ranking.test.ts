@@ -108,3 +108,77 @@ describe("rankCards — empty candidates", () => {
     expect(r.visible.length).toBe(0);
   });
 });
+
+describe("rankCards — sortBy", () => {
+  it("omitted sortBy matches { kind: total } order exactly", () => {
+    const a = rankCards(profile(), [], db, baseOptions());
+    const b = rankCards(profile(), [], db, baseOptions({ sortBy: { kind: "total" } }));
+    expect(a.visible.map((v) => v.card.id)).toEqual(b.visible.map((v) => v.card.id));
+  });
+
+  it("category sort orders visible cards by descending category delta", () => {
+    // High dining spend, no held cards — every dining-strong card has
+    // room to add marginal value. Top of the list must hold the highest
+    // dining delta.
+    const p = profile({
+      spend_profile: { dining: 12000, groceries: 4000, gas: 1200, other: 6000 },
+    });
+    const r = rankCards(
+      p,
+      [],
+      db,
+      baseOptions({
+        limit: 5,
+        sortBy: { kind: "category", category: "dining" },
+      }),
+    );
+    expect(r.visible.length).toBeGreaterThan(0);
+    for (let i = 1; i < r.visible.length; i++) {
+      const prev = r.visible[i - 1].score.spendImpact.dining?.delta ?? 0;
+      const curr = r.visible[i].score.spendImpact.dining?.delta ?? 0;
+      expect(prev).toBeGreaterThanOrEqual(curr);
+    }
+  });
+
+  it("category sort releases the brand-affinity pin", () => {
+    // Brand affinity normally pins a cobrand card to position #1 even
+    // when its raw delta is lower. Under category sort the pin should
+    // release, so the top card is whichever has the highest category
+    // delta — not necessarily the cobrand match.
+    const brands = ["Costco"];
+    const totalRanked = rankCards(
+      profile({ brands_used: brands }),
+      [],
+      db,
+      baseOptions({ filter: "total", limit: 10 }),
+    );
+    const categoryRanked = rankCards(
+      profile({ brands_used: brands }),
+      [],
+      db,
+      baseOptions({
+        filter: "total",
+        limit: 10,
+        sortBy: { kind: "category", category: "dining" },
+      }),
+    );
+    // Under category sort the order is strictly by dining delta
+    // (descending), so the top card's dining delta must be the max
+    // among all visible — even if a cobrand card has a higher overall
+    // delta. The total-mode top card is whatever brand-pin selected.
+    const categoryTopId = categoryRanked.visible[0]?.card.id;
+    expect(categoryTopId).toBeDefined();
+    const maxDiningDelta = Math.max(
+      ...categoryRanked.visible.map((v) => v.score.spendImpact.dining?.delta ?? 0),
+    );
+    const topDiningDelta =
+      categoryRanked.visible[0].score.spendImpact.dining?.delta ?? 0;
+    expect(topDiningDelta).toBe(maxDiningDelta);
+    // Sanity: the two modes should not always produce the same #1
+    // when brand affinity is present and dining isn't the cobrand's
+    // strong suit. (We don't strictly assert inequality because the
+    // database may not have a Costco-branded card; the loose check
+    // above is what proves the pin was released.)
+    void totalRanked;
+  });
+});

@@ -24,6 +24,9 @@
 # claude
 /.claude/
 
+# generated card database (compiled from cards/*.md by scripts/build-card-db.ts)
+/data/
+
 # misc
 .DS_Store
 *.pem

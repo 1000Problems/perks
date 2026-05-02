@@ -1,0 +1,282 @@
+// Card database compiler.
+//
+// Reads cards/*.md (one per card), pulls the JSON fenced blocks out of
+// each section, validates against Zod schemas, merges using anchor-card
+// semantics, and writes the result to data/*.json.
+//
+// Also rewrites the "## Completed" section of cards/AllCards.md so the
+// human-facing index stays in sync with disk state.
+//
+// Run via: npm run cards:build (also auto-runs as part of build/dev).
+
+import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { join } from "node:path";
+import {
+  CardSchema,
+  ProgramSchema,
+  IssuerRulesSchema,
+  PerksDedupEntrySchema,
+  DestinationPerkSchema,
+  type Card,
+  type Program,
+  type IssuerRules,
+  type PerksDedupEntry,
+  type DestinationPerk,
+} from "./lib/schemas";
+import { parseCardMarkdown } from "./lib/parse";
+
+const ROOT = process.cwd();
+const CARDS_DIR = join(ROOT, "cards");
+const DATA_DIR = join(ROOT, "data");
+const ALL_CARDS = join(CARDS_DIR, "AllCards.md");
+
+function log(...args: unknown[]) {
+  console.log("[cards]", ...args);
+}
+
+function err(msg: string): never {
+  console.error("[cards] FAIL:", msg);
+  process.exit(1);
+}
+
+// ── load ───────────────────────────────────────────────────────────────
+
+function listCardFiles(): string[] {
+  if (!existsSync(CARDS_DIR)) err(`cards directory not found: ${CARDS_DIR}`);
+  return readdirSync(CARDS_DIR)
+    .filter((f) => f.endsWith(".md") && f !== "AllCards.md")
+    .sort();
+}
+
+// ── merge ──────────────────────────────────────────────────────────────
+
+interface DB {
+  cards: Card[];
+  programs: Map<string, Program>;
+  programAnchors: Map<string, string>;
+  issuerRules: Map<string, IssuerRules>;
+  perksDedup: Map<string, PerksDedupEntry>;
+  destinationPerks: Map<string, DestinationPerk>;
+  notes: string[];
+}
+
+function emptyDB(): DB {
+  return {
+    cards: [],
+    programs: new Map(),
+    programAnchors: new Map(),
+    issuerRules: new Map(),
+    perksDedup: new Map(),
+    destinationPerks: new Map(),
+    notes: [],
+  };
+}
+
+function mergeFile(db: DB, filename: string): void {
+  const md = readFileSync(join(CARDS_DIR, filename), "utf8");
+  const parsed = parseCardMarkdown(filename, md);
+
+  if (!parsed.card) {
+    err(`${filename}: missing required ## cards.json entry`);
+  }
+
+  let card: Card;
+  try {
+    card = CardSchema.parse(parsed.card);
+  } catch (e) {
+    err(`${filename}: cards.json validation: ${(e as Error).message}`);
+  }
+  if (db.cards.some((c) => c.id === card.id)) {
+    err(`${filename}: duplicate card id "${card.id}" already provided by another file`);
+  }
+  db.cards.push(card);
+
+  if (parsed.program) {
+    let program: Program;
+    try {
+      program = ProgramSchema.parse(parsed.program);
+    } catch (e) {
+      err(`${filename}: programs.json validation: ${(e as Error).message}`);
+    }
+    if (!db.programs.has(program.id)) {
+      // First card to define this program is the anchor; it owns
+      // transfer_partners, sweet_spots, redemption rates.
+      db.programs.set(program.id, program);
+      db.programAnchors.set(program.id, filename);
+    } else {
+      log(
+        `note: ${filename} re-defines program "${program.id}" (anchor is ${db.programAnchors.get(
+          program.id,
+        )}). Ignoring this definition; only its earning_cards membership matters.`,
+      );
+    }
+  }
+
+  if (parsed.issuerRules) {
+    let rules: IssuerRules;
+    try {
+      rules = IssuerRulesSchema.parse(parsed.issuerRules);
+    } catch (e) {
+      err(`${filename}: issuer_rules.json validation: ${(e as Error).message}`);
+    }
+    const existing = db.issuerRules.get(rules.issuer);
+    if (!existing) {
+      db.issuerRules.set(rules.issuer, rules);
+    } else {
+      // Merge rule lists by rule id, preserving first definition.
+      const seen = new Set(existing.rules.map((r) => r.id));
+      for (const r of rules.rules) {
+        if (!seen.has(r.id)) {
+          existing.rules.push(r);
+          seen.add(r.id);
+        }
+      }
+    }
+  }
+
+  if (parsed.perksDedup) {
+    for (const raw of parsed.perksDedup) {
+      let entry: PerksDedupEntry;
+      try {
+        entry = PerksDedupEntrySchema.parse(raw);
+      } catch (e) {
+        err(`${filename}: perks_dedup.json validation: ${(e as Error).message}`);
+      }
+      const existing = db.perksDedup.get(entry.perk);
+      if (!existing) {
+        db.perksDedup.set(entry.perk, { ...entry, card_ids: [...entry.card_ids] });
+      } else {
+        for (const id of entry.card_ids) {
+          if (!existing.card_ids.includes(id)) existing.card_ids.push(id);
+        }
+      }
+    }
+  }
+
+  if (parsed.destinationPerks) {
+    for (const [key, raw] of Object.entries(parsed.destinationPerks)) {
+      let dp: DestinationPerk;
+      try {
+        dp = DestinationPerkSchema.parse(raw);
+      } catch (e) {
+        err(`${filename}: destination_perks.json[${key}] validation: ${(e as Error).message}`);
+      }
+      const existing = db.destinationPerks.get(key);
+      if (!existing) {
+        db.destinationPerks.set(key, dp);
+      } else {
+        // Union relevant_cards; first-write wins for prose fields.
+        const seen = new Set(existing.relevant_cards);
+        for (const c of dp.relevant_cards) if (!seen.has(c)) existing.relevant_cards.push(c);
+      }
+    }
+  }
+
+  if (parsed.notes) {
+    db.notes.push(`### ${card.id} (${card.name})\n\n${parsed.notes}`);
+  }
+}
+
+// Derive the authoritative `earning_cards` for each program from the
+// cards' `currency_earned` field. This is more robust than trusting the
+// anchor's hand-written list.
+function deriveEarningCards(db: DB): void {
+  for (const program of db.programs.values()) {
+    const earning = db.cards
+      .filter((c) => c.currency_earned === program.id)
+      .map((c) => c.id)
+      .sort();
+    program.earning_cards = earning;
+  }
+}
+
+// ── write ──────────────────────────────────────────────────────────────
+
+function writeJSON(filename: string, value: unknown): void {
+  const path = join(DATA_DIR, filename);
+  writeFileSync(path, JSON.stringify(value, null, 2) + "\n", "utf8");
+}
+
+function writeOutputs(db: DB): void {
+  if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
+
+  writeJSON("cards.json", db.cards);
+  writeJSON("programs.json", [...db.programs.values()]);
+  writeJSON("issuer_rules.json", [...db.issuerRules.values()]);
+  writeJSON("perks_dedup.json", [...db.perksDedup.values()]);
+
+  // destination_perks is keyed by destination, kept as object for fast lookup.
+  const destObj: Record<string, DestinationPerk> = {};
+  for (const [k, v] of db.destinationPerks.entries()) destObj[k] = v;
+  writeJSON("destination_perks.json", destObj);
+
+  // Compiled at: stamp + counts so the loader can surface freshness.
+  writeJSON("manifest.json", {
+    compiled_at: new Date().toISOString(),
+    counts: {
+      cards: db.cards.length,
+      programs: db.programs.size,
+      issuers: db.issuerRules.size,
+      perks_dedup: db.perksDedup.size,
+      destinations: db.destinationPerks.size,
+    },
+  });
+
+  // Concatenated research notes.
+  const notesPath = join(DATA_DIR, "RESEARCH_NOTES.md");
+  const header = `# Research notes\n\nAuto-compiled from cards/*.md research-notes sections. Generated ${new Date().toISOString()}. Do not edit by hand.\n\n`;
+  writeFileSync(notesPath, header + db.notes.join("\n\n---\n\n") + "\n", "utf8");
+}
+
+// ── AllCards.md regen ──────────────────────────────────────────────────
+
+function regenAllCards(db: DB): void {
+  const lines: string[] = [];
+  lines.push("# All Cards Researched");
+  lines.push("");
+  lines.push(
+    "This file tracks every card that has been fully researched and written to a card file in this directory. Before researching a new card, check this list to avoid duplication.",
+  );
+  lines.push("");
+  lines.push("Format: `card_id` — `Card Name` (Issuer)");
+  lines.push("");
+  lines.push("Target: 80 cards.");
+  lines.push("");
+  lines.push("---");
+  lines.push("");
+  lines.push("## Completed");
+  lines.push("");
+  lines.push(`_Auto-generated. ${db.cards.length} cards. Re-run \`npm run cards:build\` to refresh._`);
+  lines.push("");
+
+  const sorted = [...db.cards].sort((a, b) => a.id.localeCompare(b.id));
+  sorted.forEach((c, i) => {
+    lines.push(`${i + 1}. \`${c.id}\` — ${c.name} (${c.issuer})`);
+  });
+  lines.push("");
+
+  writeFileSync(ALL_CARDS, lines.join("\n"), "utf8");
+}
+
+// ── main ───────────────────────────────────────────────────────────────
+
+function main(): void {
+  const files = listCardFiles();
+  log(`reading ${files.length} card files from cards/`);
+
+  const db = emptyDB();
+  for (const f of files) {
+    mergeFile(db, f);
+  }
+
+  deriveEarningCards(db);
+  writeOutputs(db);
+  regenAllCards(db);
+
+  log(
+    `wrote ${db.cards.length} cards, ${db.programs.size} programs, ${db.issuerRules.size} issuers, ` +
+      `${db.perksDedup.size} dedup perks, ${db.destinationPerks.size} destinations to data/`,
+  );
+}
+
+main();

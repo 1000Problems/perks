@@ -627,25 +627,18 @@ export function RecPanelDesktop({
                       overflow: "hidden",
                     }}
                   >
-                    {/* Identity row — title finally has the full width. */}
+                    {/* Identity row — title finally has the full width.
+                        Art is top-aligned with the title (not vertically
+                        centered) so the row stays short. */}
                     <div
                       style={{
                         display: "grid",
-                        gridTemplateColumns: "24px 88px 1fr auto",
+                        gridTemplateColumns: "88px 1fr",
                         gap: 18,
-                        alignItems: "center",
-                        padding: "16px 18px",
+                        alignItems: "flex-start",
+                        padding: "14px 18px 12px",
                       }}
                     >
-                      <div
-                        style={{
-                          fontFamily: "var(--font-mono), ui-monospace, monospace",
-                          fontSize: 12,
-                          color: "var(--ink-3)",
-                        }}
-                      >
-                        {String(r.rank).padStart(2, "0")}
-                      </div>
                       <CardArt variant={variantForCard(r.card)} issuer={r.card.issuer} network={r.card.network} size="md" />
                       <div style={{ minWidth: 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
@@ -699,10 +692,31 @@ export function RecPanelDesktop({
                           {subVal > 0 && <span>SUB ≈ ${Math.round(subVal)}</span>}
                         </div>
                       </div>
+                    </div>
+                    {/* Value band — full-width pillars + Try button.
+                        Try lives here (not in the identity row) so each
+                        row is shorter and more cards fit per screen. */}
+                    <div
+                      style={{
+                        borderTop: "1px solid var(--rule)",
+                        background: isSel ? "var(--paper-2)" : "transparent",
+                        padding: "12px 18px",
+                        display: "flex",
+                        gap: 14,
+                        alignItems: "flex-end",
+                      }}
+                    >
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <ValuePillars
+                          components={r.score.components}
+                          view={view}
+                          variant="band"
+                        />
+                      </div>
                       <button
                         type="button"
                         className="btn"
-                        style={{ fontSize: 11.5, padding: "4px 12px", alignSelf: "flex-start" }}
+                        style={{ fontSize: 11.5, padding: "4px 14px", flexShrink: 0 }}
                         onClick={(e) => {
                           e.stopPropagation();
                           tryCard(r.card.id);
@@ -710,20 +724,6 @@ export function RecPanelDesktop({
                       >
                         Try
                       </button>
-                    </div>
-                    {/* Value band — full-width, equal thirds. */}
-                    <div
-                      style={{
-                        borderTop: "1px solid var(--rule)",
-                        background: isSel ? "var(--paper-2)" : "transparent",
-                        padding: "14px 18px",
-                      }}
-                    >
-                      <ValuePillars
-                        components={r.score.components}
-                        view={view}
-                        variant="band"
-                      />
                     </div>
                   </li>
                 );

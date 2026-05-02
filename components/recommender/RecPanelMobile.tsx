@@ -520,10 +520,10 @@ export function RecPanelMobile({
                       <div
                         style={{
                           display: "grid",
-                          gridTemplateColumns: "64px 1fr auto",
+                          gridTemplateColumns: "64px 1fr",
                           gap: 12,
                           alignItems: "start",
-                          padding: "14px",
+                          padding: "14px 14px 10px",
                         }}
                       >
                         <CardArt variant={variantForCard(r.card)} size="sm" issuer={r.card.issuer} network={r.card.network} />
@@ -582,10 +582,30 @@ export function RecPanelMobile({
                             {subVal > 0 && <span>SUB ≈ ${Math.round(subVal)}</span>}
                           </div>
                         </div>
+                      </div>
+                      {/* Value band — pillars + Try, all in the band so
+                          the identity row stays compact. */}
+                      <div
+                        style={{
+                          borderTop: "1px solid var(--rule)",
+                          padding: "10px 14px",
+                          background: "var(--paper-2)",
+                          display: "flex",
+                          gap: 10,
+                          alignItems: "flex-end",
+                        }}
+                      >
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <ValuePillars
+                            components={r.score.components}
+                            view={view}
+                            variant="band"
+                          />
+                        </div>
                         <button
                           type="button"
                           className="btn"
-                          style={{ fontSize: 11, padding: "3px 10px" }}
+                          style={{ fontSize: 11, padding: "3px 10px", flexShrink: 0 }}
                           onClick={(e) => {
                             e.stopPropagation();
                             tryCard(r.card.id);
@@ -593,20 +613,6 @@ export function RecPanelMobile({
                         >
                           Try
                         </button>
-                      </div>
-                      {/* Value band — full-width, equal thirds. */}
-                      <div
-                        style={{
-                          borderTop: "1px solid var(--rule)",
-                          padding: "12px 14px",
-                          background: "var(--paper-2)",
-                        }}
-                      >
-                        <ValuePillars
-                          components={r.score.components}
-                          view={view}
-                          variant="band"
-                        />
                       </div>
                     </li>
                   );

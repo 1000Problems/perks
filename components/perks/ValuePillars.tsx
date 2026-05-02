@@ -7,9 +7,11 @@
 // 6% cashback card — they earn very different things per dollar spent.
 //
 // Variants:
-//   - "list"          compact, side-by-side, used in the ranked card list
-//   - "list-stacked"  vertical, used on mobile where horizontal width is tight
+//   - "list"          compact, side-by-side, used in legacy ranked card list
+//   - "list-stacked"  vertical, used where horizontal width is tight
 //   - "hero"          larger, used in the drill-in detail panel
+//   - "band"          full-width 3-column grid, sits beneath the card
+//                     identity row in the new two-row recommendation card
 //
 // Fee renders as a small negative subtotal beneath. Year-1 SUB (when
 // view === "year1") renders as a small +$/+pts badge so the year-1
@@ -18,7 +20,7 @@
 import type { CardScoreComponents, PointsBucket } from "@/lib/engine/types";
 import { fmt } from "@/lib/utils/format";
 
-type Variant = "list" | "list-stacked" | "hero";
+type Variant = "list" | "list-stacked" | "hero" | "band";
 type View = "ongoing" | "year1";
 
 interface Props {
@@ -28,14 +30,17 @@ interface Props {
 }
 
 const SIZES: Record<Variant, { num: number; ptsNum: number; label: number; sub: number; gap: number }> = {
-  // Side-by-side, full row right rail (desktop list). Pts headline uses
-  // a slightly smaller number than $ headlines so a five-digit pts
+  // Side-by-side, full row right rail (legacy desktop list). Pts headline
+  // uses a slightly smaller number than $ headlines so a five-digit pts
   // count doesn't blow the row.
   list: { num: 22, ptsNum: 18, label: 9.5, sub: 10, gap: 12 },
   // Vertically stacked, label inline with the number — used on mobile.
   "list-stacked": { num: 18, ptsNum: 16, label: 9.5, sub: 9.5, gap: 4 },
   // Big hero version for the detail panel.
   hero: { num: 36, ptsNum: 30, label: 10.5, sub: 11, gap: 22 },
+  // Full-width band beneath the identity row. Numbers sit between list
+  // and hero in size — generous because the band finally has the room.
+  band: { num: 24, ptsNum: 20, label: 10, sub: 10.5, gap: 16 },
 };
 
 function fmtPts(n: number): string {
@@ -53,6 +58,73 @@ export function ValuePillars({ components, view, variant }: Props) {
   const showFee = feeOngoing < 0;
   const isList = variant === "list" || variant === "list-stacked";
   const align = isList ? "flex-end" : "flex-start";
+
+  // Band variant: full-width 3-column grid. Each cell is a left-aligned
+  // pillar (label, big number, caption). Fee/SUB caption hangs in a thin
+  // strip below the band, right-aligned so it tucks under PERKS.
+  if (variant === "band") {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr",
+            gap: sz.gap,
+            alignItems: "flex-start",
+          }}
+        >
+          <CashPillar
+            label="CASH"
+            value={cashOngoing}
+            captionTop="from spending"
+            numSize={sz.num}
+            labelSize={sz.label}
+            subSize={sz.sub}
+            tone="confident"
+          />
+          <PointsPillar
+            label="POINTS"
+            points={pointsOngoing}
+            numSize={sz.ptsNum}
+            labelSize={sz.label}
+            subSize={sz.sub}
+          />
+          <CashPillar
+            label="PERKS"
+            value={perksOngoing}
+            captionTop="if claimed"
+            numSize={sz.num}
+            labelSize={sz.label}
+            subSize={sz.sub}
+            tone="conditional"
+          />
+        </div>
+        {(showFee || showSub) && (
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              fontSize: sz.sub,
+              color: "var(--ink-3)",
+              fontFamily: "var(--font-mono), ui-monospace, monospace",
+              justifyContent: "flex-end",
+            }}
+          >
+            {showSub && (
+              <span style={{ color: "var(--ink-2)" }}>
+                {subYear1Caption(subYear1, subYear1Detail)}
+              </span>
+            )}
+            {showFee && (
+              <span style={{ color: "var(--neg)" }}>
+                −{fmt.usd(Math.abs(feeOngoing))} fee
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   // Stacked variant: each pillar is one row, label inline with number.
   if (variant === "list-stacked") {

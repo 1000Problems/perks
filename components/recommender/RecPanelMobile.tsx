@@ -500,96 +500,92 @@ export function RecPanelMobile({
             ) : (
               <ol style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
                 {ranked.visible.map((r) => {
+                  const fee = r.card.annual_fee_usd ?? 0;
+                  const subVal = r.card.signup_bonus?.estimated_value_usd ?? 0;
                   return (
                     <li
                       key={r.card.id}
                       onClick={() => pickCard(r.card.id)}
                       style={{
-                        display: "grid",
-                        // Drop the why-sentence into its own row beneath
-                        // the card head — gives ValuePillars enough room
-                        // on narrow screens.
-                        gridTemplateColumns: "64px 1fr",
-                        gap: 12,
-                        alignItems: "start",
-                        padding: "14px",
+                        display: "flex",
+                        flexDirection: "column",
                         borderRadius: 12,
                         border: "1px solid var(--rule)",
                         background: "white",
                         cursor: "pointer",
+                        overflow: "hidden",
                       }}
                     >
-                      <CardArt variant={variantForCard(r.card)} size="sm" issuer={r.card.issuer} network={r.card.network} />
-                      <div style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 8 }}>
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "flex-start",
-                            gap: 10,
-                          }}
-                        >
-                          <div style={{ minWidth: 0, flex: 1 }}>
-                            <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: "-0.01em" }}>
-                              {r.card.name}
-                            </div>
-                            <div
-                              style={{
-                                fontSize: 12,
-                                color: "var(--ink-3)",
-                                marginTop: 2,
-                                display: "flex",
-                                gap: 8,
-                                alignItems: "center",
-                                flexWrap: "wrap",
-                              }}
-                            >
-                              {r.card.issuer}
-                              <EligibilityChip status={r.eligibility.status} label={r.eligibility.note} />
-                            </div>
+                      {/* Identity row — title gets the full width. */}
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "64px 1fr auto",
+                          gap: 12,
+                          alignItems: "start",
+                          padding: "14px",
+                        }}
+                      >
+                        <CardArt variant={variantForCard(r.card)} size="sm" issuer={r.card.issuer} network={r.card.network} />
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: "-0.01em" }}>
+                            {r.card.name}
                           </div>
                           <div
                             style={{
+                              fontSize: 12,
+                              color: "var(--ink-3)",
+                              marginTop: 2,
                               display: "flex",
-                              flexDirection: "column",
-                              alignItems: "flex-end",
-                              gap: 4,
+                              gap: 8,
+                              alignItems: "center",
+                              flexWrap: "wrap",
                             }}
                           >
-                            {sortCategory !== "overall" && (() => {
-                              const impact = r.score.spendImpact[sortCategory];
-                              const delta = Math.round(impact?.delta ?? 0);
-                              const cat = SPEND_CATEGORIES.find((c) => c.id === sortCategory);
-                              const label = cat?.label.toLowerCase() ?? sortCategory;
-                              return (
-                                <div
-                                  style={{
-                                    fontSize: 12,
-                                    fontWeight: 600,
-                                    color: delta > 0 ? "var(--ink)" : "var(--ink-3)",
-                                    letterSpacing: "-0.01em",
-                                    whiteSpace: "nowrap",
-                                  }}
-                                >
-                                  {delta > 0 ? "+" : ""}
-                                  ${delta}/yr on {label}
-                                </div>
-                              );
-                            })()}
-                            <ValuePillars
-                              components={r.score.components}
-                              view={view}
-                              variant="list-stacked"
-                            />
+                            {r.card.issuer}
+                            <EligibilityChip status={r.eligibility.status} label={r.eligibility.note} />
                           </div>
-                        </div>
-                        <div style={{ fontSize: 12, color: "var(--ink-2)", lineHeight: 1.4 }}>
-                          {r.why}
+                          <div style={{ marginTop: 6, fontSize: 12, color: "var(--ink-2)", lineHeight: 1.4 }}>
+                            {r.why}
+                          </div>
+                          {sortCategory !== "overall" && (() => {
+                            const impact = r.score.spendImpact[sortCategory];
+                            const delta = Math.round(impact?.delta ?? 0);
+                            const cat = SPEND_CATEGORIES.find((c) => c.id === sortCategory);
+                            const label = cat?.label.toLowerCase() ?? sortCategory;
+                            return (
+                              <div
+                                style={{
+                                  marginTop: 6,
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  color: delta > 0 ? "var(--ink)" : "var(--ink-3)",
+                                  letterSpacing: "-0.01em",
+                                }}
+                              >
+                                {delta > 0 ? "+" : ""}
+                                ${delta}/yr on {label}
+                              </div>
+                            );
+                          })()}
+                          <div
+                            style={{
+                              marginTop: 6,
+                              fontSize: 10.5,
+                              color: "var(--ink-3)",
+                              display: "flex",
+                              gap: 12,
+                              fontFamily: "var(--font-mono), ui-monospace, monospace",
+                            }}
+                          >
+                            <span>{fee === 0 ? "NO ANNUAL FEE" : "$" + fee + " FEE"}</span>
+                            {subVal > 0 && <span>SUB ≈ ${Math.round(subVal)}</span>}
+                          </div>
                         </div>
                         <button
                           type="button"
                           className="btn"
-                          style={{ fontSize: 11, padding: "3px 10px", alignSelf: "flex-end" }}
+                          style={{ fontSize: 11, padding: "3px 10px" }}
                           onClick={(e) => {
                             e.stopPropagation();
                             tryCard(r.card.id);
@@ -597,6 +593,20 @@ export function RecPanelMobile({
                         >
                           Try
                         </button>
+                      </div>
+                      {/* Value band — full-width, equal thirds. */}
+                      <div
+                        style={{
+                          borderTop: "1px solid var(--rule)",
+                          padding: "12px 14px",
+                          background: "var(--paper-2)",
+                        }}
+                      >
+                        <ValuePillars
+                          components={r.score.components}
+                          view={view}
+                          variant="band"
+                        />
                       </div>
                     </li>
                   );

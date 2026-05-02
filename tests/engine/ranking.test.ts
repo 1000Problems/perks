@@ -300,7 +300,65 @@ describe("rankCards — specialization lenses", () => {
     expect(ids).toContain("capital_one_venture_x");
   });
 
-  it("perks lens sorts by net perks (perksOngoing + feeOngoing)", () => {
+  it("cash lens sorts by gross cashOngoing, not deltaOngoing", () => {
+    const r = rankCards(
+      richProfile,
+      [],
+      db,
+      baseOptions({
+        limit: 50,
+        sortBy: { kind: "specialization", lens: "cash" },
+      }),
+    );
+    expect(r.visible.length).toBeGreaterThan(0);
+    for (let i = 1; i < r.visible.length; i++) {
+      const prev = r.visible[i - 1].score.components.cashOngoing;
+      const curr = r.visible[i].score.components.cashOngoing;
+      expect(prev + 1e-6).toBeGreaterThanOrEqual(curr);
+    }
+  });
+
+  it("points lens sorts by points value, not deltaOngoing", () => {
+    const r = rankCards(
+      richProfile,
+      [],
+      db,
+      baseOptions({
+        limit: 50,
+        sortBy: { kind: "specialization", lens: "points" },
+      }),
+    );
+    expect(r.visible.length).toBeGreaterThan(0);
+    for (let i = 1; i < r.visible.length; i++) {
+      const prev = r.visible[i - 1].score.components.pointsOngoing?.valueUsd ?? 0;
+      const curr = r.visible[i].score.components.pointsOngoing?.valueUsd ?? 0;
+      expect(prev + 1e-6).toBeGreaterThanOrEqual(curr);
+    }
+  });
+
+  it("points lens does NOT put perks-heavy zero-points cards at the top", () => {
+    // Repro of the user-reported bug: under deltaOngoing sort, Amex
+    // Platinum (large perks + SUB, but pointsOngoing = 0 when MR
+    // doesn't unlock for an empty wallet) sat at #1 above Sapphire
+    // Reserve (which actually earns points on this profile). With the
+    // pointsOngoing.valueUsd sort, the top card must have a non-zero
+    // points value — otherwise it doesn't belong in Points.
+    const r = rankCards(
+      richProfile,
+      [],
+      db,
+      baseOptions({
+        limit: 5,
+        sortBy: { kind: "specialization", lens: "points" },
+      }),
+    );
+    expect(r.visible.length).toBeGreaterThan(0);
+    const top = r.visible[0];
+    const topPointsValue = top.score.components.pointsOngoing?.valueUsd ?? 0;
+    expect(topPointsValue).toBeGreaterThan(0);
+  });
+
+  it("perks lens sorts by gross perksOngoing", () => {
     const r = rankCards(
       richProfile,
       [],
@@ -311,15 +369,9 @@ describe("rankCards — specialization lenses", () => {
       }),
     );
     expect(r.visible.length).toBeGreaterThan(0);
-    // Order is strictly by net-perks descending. Compute the same
-    // projection and verify monotonic ordering.
     for (let i = 1; i < r.visible.length; i++) {
-      const prev =
-        r.visible[i - 1].score.components.perksOngoing +
-        r.visible[i - 1].score.components.feeOngoing;
-      const curr =
-        r.visible[i].score.components.perksOngoing +
-        r.visible[i].score.components.feeOngoing;
+      const prev = r.visible[i - 1].score.components.perksOngoing;
+      const curr = r.visible[i].score.components.perksOngoing;
       // Account for the credit-band haircut, which is a no-op when
       // userBand is undefined (default profile). Use a tolerant
       // comparison to absorb floating-point drift.
@@ -361,15 +413,11 @@ describe("rankCards — specialization lenses", () => {
         sortBy: { kind: "specialization", lens: "perks" },
       }),
     );
-    const topNetPerks =
-      perksR.visible[0].score.components.perksOngoing +
-      perksR.visible[0].score.components.feeOngoing;
-    const maxNetPerks = Math.max(
-      ...perksR.visible.map(
-        (v) => v.score.components.perksOngoing + v.score.components.feeOngoing,
-      ),
+    const topPerks = perksR.visible[0].score.components.perksOngoing;
+    const maxPerks = Math.max(
+      ...perksR.visible.map((v) => v.score.components.perksOngoing),
     );
-    expect(topNetPerks).toBeCloseTo(maxNetPerks, 6);
+    expect(topPerks).toBeCloseTo(maxPerks, 6);
   });
 });
 

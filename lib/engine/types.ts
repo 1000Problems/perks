@@ -215,7 +215,8 @@ export type RankFilter = "total" | "nofee" | "premium";
 //
 // `specialization` is a discovery lens layered on top of the engine —
 // not a new scoring algorithm. The lens both filters the candidate set
-// and projects the score onto a different summary number:
+// and projects the score onto the lens-specific headline number that
+// the user reads on the matching pillar of the card row:
 //   - cash:   filter to programs where kind === "cash" OR cards whose
 //             category array includes a structural cashback tag —
 //             flat_rate_cashback, tiered_cashback, rotating_5_cashback
@@ -224,15 +225,18 @@ export type RankFilter = "total" | "nofee" | "premium";
 //             as cashback). The marketing tag `no_af_cashback` is
 //             explicitly NOT used as a signal because it's applied to
 //             many cobrand cards too;
-//             sort by deltaOngoing.
+//             sort by components.cashOngoing.
 //   - points: filter to programs where kind === "loyalty" &&
 //             type === "transferable" AND the card is not cashback-
 //             tagged (cobrand airline/hotel cards excluded by design —
 //             they have their own categories);
-//             sort by deltaOngoing.
-//   - perks:  no program filter; sort by perksOngoing + feeOngoing
-//             (gross perks minus annual fee — feeOngoing is signed
-//             negative, so this is net perks).
+//             sort by components.pointsOngoing?.valueUsd ?? 0.
+//   - perks:  no program filter;
+//             sort by components.perksOngoing (gross claimable perks).
+// The sort axes are gross headline numbers — sorting by deltaOngoing
+// would let perks-heavy cards win the Points lens and SUB-heavy cards
+// win the Cash lens, contradicting the user's mental model of each
+// lens.
 // The brand-pin pass in rankCards is skipped under specialization for
 // the same reason as category sort: an explicit lens choice is a
 // stronger signal than cobrand affinity.

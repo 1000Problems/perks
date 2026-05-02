@@ -374,14 +374,23 @@ export function rankCards(
     if (sortBy.kind === "category") {
       return r.score.spendImpact[sortBy.category]?.delta ?? 0;
     }
-    if (sortBy.kind === "specialization" && sortBy.lens === "perks") {
-      // Net perks: gross perks-and-credits value minus annual fee.
-      // feeOngoing is signed negative, so this is addition. Cards
-      // where the fee exceeds capturable perks rank below no-fee
-      // perk-light cards, which is what we want — Reserve/Platinum
-      // only deserve the top under this lens when their perks justify
-      // the fee for this user's claim profile.
-      return r.score.components.perksOngoing + r.score.components.feeOngoing;
+    if (sortBy.kind === "specialization") {
+      // Sort each lens by its own headline number — the same value the
+      // user reads on the matching pillar of the card row. Sorting by
+      // overall deltaOngoing would let perks-heavy cards win the
+      // Points lens when they earn no points on the user's spend
+      // (e.g. Amex Platinum with $2,839 perks but pointsOngoing 0
+      // when MR doesn't unlock for the wallet — that surfaces a card
+      // the user wouldn't expect under "Points").
+      const c = r.score.components;
+      switch (sortBy.lens) {
+        case "cash":
+          return c.cashOngoing;
+        case "points":
+          return c.pointsOngoing?.valueUsd ?? 0;
+        case "perks":
+          return c.perksOngoing;
+      }
     }
     return r.score.deltaOngoing;
   };

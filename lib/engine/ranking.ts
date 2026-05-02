@@ -65,6 +65,31 @@ function matchDestinationKey(dest: string, db: CardDatabase): string | null {
   return null;
 }
 
+// Family-specific opener for the brand-fit why-line. Retail families fall
+// through to the default "You shop at {brand}" — that reads naturally for
+// Costco, Amazon, Target, etc. Airline and hotel families get verb-
+// matched openers so "You shop at United" / "You shop at Hilton" don't
+// surface in the UI.
+const FAMILY_OPENER: Record<string, string> = {
+  // Hotels
+  hilton: "You stay at",
+  marriott: "You stay at",
+  hyatt: "You stay at",
+  ihg: "You stay at",
+  wyndham: "You stay at",
+  // Airlines (no preposition reads more natural — "You fly United")
+  united: "You fly",
+  delta: "You fly",
+  american: "You fly",
+  southwest: "You fly",
+  alaska: "You fly",
+  jetblue: "You fly",
+};
+
+function brandFitOpener(family: string): string {
+  return FAMILY_OPENER[family] ?? "You shop at";
+}
+
 const CAT_DISPLAY: Record<SpendCategoryId, string> = {
   groceries: "groceries",
   dining: "dining",
@@ -154,10 +179,12 @@ export function generateWhy(ctx: WhyContext): string {
   const { card, score, userProfile, db } = ctx;
 
   // 0. Cobrand match — strongest signal we have. The user told us they
-  // shop here; the card is built around that brand. Lead with it.
+  // shop / fly / stay here; the card is built around that brand. Lead
+  // with it. Opener is family-specific so the verb fits the brand
+  // (retail "shop at", hotels "stay at", airlines "fly").
   const fit = getBrandFit(card, userProfile.brands_used);
   if (fit) {
-    return clip(`You shop at ${fit.brand} — ${fit.whyPhrase}.`);
+    return clip(`${brandFitOpener(fit.family)} ${fit.brand} — ${fit.whyPhrase}.`);
   }
 
   // 1. Trip + sweet-spot match.
@@ -304,12 +331,19 @@ export function rankCards(
     return a.card.id < b.card.id ? -1 : a.card.id > b.card.id ? 1 : 0;
   });
 
-  // Pin brand-matched cobrand cards to the top. When the user said they
-  // shop at Costco, the Costco card surfaces first even if a $550-AF
-  // premium card scores higher on raw credits-and-perks math. The
-  // brand-fit dollar value is already baked into deltaOngoing; this
-  // affects sort order only. Within each group cards stay sorted by
-  // band-adjusted delta.
+  // Pin brand-matched cobrand cards to the top, family-best style. When
+  // the user said they shop at Costco, the Costco card surfaces first
+  // even if a $550-AF premium card scores higher on raw earnings-and-
+  // perks math. The brand-fit dollar bonus is already baked into
+  // deltaOngoing; this affects sort order only.
+  //
+  // Family-best rule: when multiple cards in the same family match
+  // (e.g. picking "Hilton" matches all four Hilton cards in the
+  // catalog), only the highest-scoring family member is pinned. The
+  // other siblings fall through to the regular sorted list at their
+  // normal rank — they remain visible, just not pinned. Retail families
+  // contain a single card each, so this preserves today's retail
+  // behavior exactly.
   //
   // Skipped under category sort — the user has explicitly chosen a
   // single category as their ranking axis, which is a stronger signal
@@ -318,12 +352,31 @@ export function rankCards(
   if (sortBy.kind === "category") {
     combined = filtered;
   } else {
-    const pinned: Row[] = [];
+    const familyBest = new Map<string, Row>();
     const rest: Row[] = [];
     for (const r of filtered) {
-      if (getBrandFit(r.card, userProfile.brands_used)) pinned.push(r);
-      else rest.push(r);
+      const fit = getBrandFit(r.card, userProfile.brands_used);
+      if (!fit) {
+        rest.push(r);
+        continue;
+      }
+      const current = familyBest.get(fit.family);
+      if (!current) {
+        familyBest.set(fit.family, r);
+      } else if (r.score.deltaOngoing > current.score.deltaOngoing) {
+        // New best for this family — old best demoted to rest, where it
+        // re-enters at its natural rank position.
+        rest.push(current);
+        familyBest.set(fit.family, r);
+      } else {
+        rest.push(r);
+      }
     }
+    // Sort pinned cards among themselves by deltaOngoing desc so multi-
+    // family pin order is deterministic (highest-value pin first).
+    const pinned = Array.from(familyBest.values()).sort(
+      (a, b) => b.score.deltaOngoing - a.score.deltaOngoing,
+    );
     combined = [...pinned, ...rest];
   }
   const visible = combined.slice(0, limit).map((r, i) => ({ ...r, rank: i + 1 }));

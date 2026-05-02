@@ -85,7 +85,7 @@ function cppForCurrency(currencyId: string | null | undefined, db: CardDatabase)
   if (!prog) return 1;
   const portal = prog.portal_redemption_cpp ?? 0;
   const fixed = prog.fixed_redemption_cpp ?? 0;
-  return Math.max(portal, fixed, 1);
+  return Math.max(portal, fixed) || 1;
 }
 
 // Per-process memoization of normalizeEarning. Keyed by card.id since

@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { describe, it, expect } from "vitest";
 import { rankCards } from "@/lib/engine/ranking";
 import { loadCardDatabase } from "@/lib/data/loader";
+import { getBrandFit } from "@/lib/engine/brandAffinity";
 import type { RankOptions, UserProfile } from "@/lib/engine/types";
 
 const FIXTURE_PATH = join(__dirname, "..", "fixtures", "profile.json");
@@ -39,38 +40,31 @@ describe("integration — full engine against real card database", () => {
       // bucket below pinned cobrand cards), deltaOngoing is monotonically
       // non-increasing. Brand-matched cards are pinned to the top
       // regardless of delta.
+      // Mirror the real pin rule from ranking.ts via getBrandFit, so
+      // this test stays correct as new cobrand entries land in
+      // CARD_BRAND_FIT (no need to keep a duplicate map in sync).
       const fit = (id: string) => {
         const card = db.cardById.get(id);
         if (!card) return false;
-        return Boolean(
-          // mirror the pin rule from ranking.ts
-          fixture.brands_used.length > 0 && card.id in costcoLikePins(),
-        );
+        return getBrandFit(card, fixture.brands_used) != null;
       };
-      // Skip first-pinned and assert order on the unpinned tail.
-      const firstUnpinned = r.visible.findIndex((v) => !fit(v.card.id));
-      for (let i = Math.max(firstUnpinned + 1, 1); i < r.visible.length; i++) {
+      // Find the first card after the contiguous leading run of pinned
+      // brand-matched cards, then assert deltaOngoing is monotonically
+      // non-increasing across the unpinned tail.
+      let firstUnpinned = 0;
+      while (
+        firstUnpinned < r.visible.length &&
+        fit(r.visible[firstUnpinned].card.id)
+      ) {
+        firstUnpinned++;
+      }
+      for (let i = firstUnpinned + 1; i < r.visible.length; i++) {
         expect(r.visible[i - 1].score.deltaOngoing).toBeGreaterThanOrEqual(
           r.visible[i].score.deltaOngoing,
         );
       }
     }
   });
-
-  // Mirrors CARD_BRAND_FIT keys in lib/engine/brandAffinity.ts. Kept
-  // local so the test is self-contained — if a new cobrand fit lands,
-  // add the card_id here too.
-  function costcoLikePins(): Record<string, true> {
-    return {
-      costco_anywhere_visa: true,
-      amazon_prime_visa: true,
-      target_redcard: true,
-      sams_club_mastercard: true,
-      capital_one_walmart: true,
-      apple_card: true,
-      rei_co_op_mastercard: true,
-    };
-  }
 
   it("doubling dining lifts the top dining-heavy card's delta", () => {
     const baseline = rankCards(fixture, fixture.cards_held, db, opts());

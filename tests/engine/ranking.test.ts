@@ -109,6 +109,93 @@ describe("rankCards — empty candidates", () => {
   });
 });
 
+describe("rankCards — family-best pin", () => {
+  // Hilton family per CARD_BRAND_FIT in lib/engine/brandAffinity.ts
+  const HILTON_IDS = [
+    "hilton_honors",
+    "hilton_honors_surpass",
+    "hilton_honors_aspire",
+    "hilton_honors_business",
+  ];
+  const UNITED_IDS = [
+    "united_gateway",
+    "united_explorer",
+    "united_quest",
+    "united_club_infinite",
+  ];
+
+  it("picks Hilton: pins exactly one Hilton card at the top of visible", () => {
+    const p = profile({
+      brands_used: ["Hilton"],
+      spend_profile: { hotels: 4000, dining: 3000, other: 30000 },
+    });
+    const r = rankCards(p, [], db, baseOptions({ limit: 50 }));
+    expect(HILTON_IDS).toContain(r.visible[0].card.id);
+    // The pinned card has the max deltaOngoing among Hilton siblings
+    // present in the catalog.
+    const hiltonRows = r.visible.filter((v) => HILTON_IDS.includes(v.card.id));
+    const max = Math.max(...hiltonRows.map((v) => v.score.deltaOngoing));
+    expect(r.visible[0].score.deltaOngoing).toBe(max);
+  });
+
+  it("non-best Hilton siblings still appear in visible", () => {
+    const p = profile({
+      brands_used: ["Hilton"],
+      spend_profile: { hotels: 4000, other: 30000 },
+    });
+    const r = rankCards(p, [], db, baseOptions({ limit: 50 }));
+    const visibleHilton = r.visible.filter((v) =>
+      HILTON_IDS.includes(v.card.id),
+    );
+    // Pinned + at least one sibling visible somewhere in the list.
+    expect(visibleHilton.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("retail behavior unchanged: Costco pick pins costco_anywhere_visa", () => {
+    const r = rankCards(
+      profile({ brands_used: ["Costco"] }),
+      [],
+      db,
+      baseOptions(),
+    );
+    expect(r.visible[0].card.id).toBe("costco_anywhere_visa");
+  });
+
+  it("multi-brand: Hilton + United pin one card per family in top 2", () => {
+    const p = profile({
+      brands_used: ["Hilton", "United"],
+      spend_profile: { hotels: 3000, airfare: 3000, other: 30000 },
+    });
+    const r = rankCards(p, [], db, baseOptions({ limit: 5 }));
+    const top2 = [r.visible[0].card.id, r.visible[1].card.id];
+    expect(top2.some((id) => HILTON_IDS.includes(id))).toBe(true);
+    expect(top2.some((id) => UNITED_IDS.includes(id))).toBe(true);
+  });
+
+  it("under category sort: family-best pin does not fire", () => {
+    const p = profile({
+      brands_used: ["Hilton"],
+      spend_profile: { dining: 6000, hotels: 4000, other: 30000 },
+    });
+    const r = rankCards(
+      p,
+      [],
+      db,
+      baseOptions({
+        limit: 10,
+        sortBy: { kind: "category", category: "dining" },
+      }),
+    );
+    // Order is strictly by dining delta desc, regardless of brand
+    // affinity. The pin cannot insert a card out of dining-delta order.
+    for (let i = 1; i < r.visible.length; i++) {
+      const prev = r.visible[i - 1].score.spendImpact.dining?.delta ?? 0;
+      const curr = r.visible[i].score.spendImpact.dining?.delta ?? 0;
+      expect(prev).toBeGreaterThanOrEqual(curr);
+    }
+  });
+});
+
 describe("rankCards — sortBy", () => {
   it("omitted sortBy matches { kind: total } order exactly", () => {
     const a = rankCards(profile(), [], db, baseOptions());

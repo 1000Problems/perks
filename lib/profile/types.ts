@@ -2,7 +2,11 @@
 // the same shape — we re-export from lib/engine/types for convenience.
 
 import type { SpendCategoryId } from "@/lib/data/types";
-import type { UserProfile, WalletCardHeld } from "@/lib/engine/types";
+import type {
+  CreditScoreBand,
+  UserProfile,
+  WalletCardHeld,
+} from "@/lib/engine/types";
 
-export type { UserProfile, WalletCardHeld };
+export type { UserProfile, WalletCardHeld, CreditScoreBand };
 export type { SpendCategoryId };

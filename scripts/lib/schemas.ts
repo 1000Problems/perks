@@ -59,6 +59,11 @@ export const CardSchema = z
     credit_score_required: z.string().optional(),
     // null for no-rewards cards (secured, 0% APR builders, balance-transfer).
     currency_earned: z.string().nullable(),
+    // Free-text gate that has to be satisfied before applying — Costco /
+    // Amazon Prime / Sam's Club / NFCU / USAA / etc. The eligibility
+    // engine cross-references this against the user's brands_used list to
+    // decide whether to surface a yellow membership flag.
+    membership_required: z.string().nullable().optional(),
     earning: z.array(EarningRule),
     signup_bonus: SignupBonus.optional().nullable(),
     annual_credits: z.array(AnnualCredit).default([]),

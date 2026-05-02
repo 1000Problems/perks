@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 
 interface Props {
-  step: 1 | 2 | 3;
+  step: 1 | 2 | 3 | 4;
   title: string;
   next?: Route;
   children: React.ReactNode;
@@ -10,6 +10,8 @@ interface Props {
   // the navigation itself (for forms that need to persist before moving on).
   hideContinue?: boolean;
 }
+
+const TOTAL_STEPS = 4;
 
 export function OnboardingShell({
   step,
@@ -28,12 +30,12 @@ export function OnboardingShell({
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 32 }}>
-        <div className="eyebrow">Step {step} of 3</div>
+        <div className="eyebrow">Step {step} of {TOTAL_STEPS}</div>
         <div style={{ height: 2, flex: 1, background: "var(--rule)", borderRadius: 1 }}>
           <div
             style={{
               height: 2,
-              width: `${(step / 3) * 100}%`,
+              width: `${(step / TOTAL_STEPS) * 100}%`,
               background: "var(--ink)",
               borderRadius: 1,
             }}

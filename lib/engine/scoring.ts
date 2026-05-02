@@ -19,6 +19,7 @@ import type {
   UserProfile,
   WalletCardHeld,
 } from "./types";
+import { getBrandFit } from "./brandAffinity";
 
 const ALL_CATS: SpendCategoryId[] = [
   "groceries",
@@ -272,6 +273,17 @@ export function scoreCard(
     }
   }
 
+  // Brand fit — captured cobrand value (Costco voucher, Target POS
+  // discount, Amazon-Prime 5%) the spend taxonomy underestimates. Fires
+  // only when the user picked the matching brand on /onboarding/brands,
+  // so it's a self-reported signal, not a guess.
+  const brandFit = getBrandFit(card, userProfile.brands_used);
+  let brandFitValue = 0;
+  if (brandFit) {
+    brandFitValue = brandFit.bonus;
+    breakdown.push(brandFit.lineItem);
+  }
+
   // Annual fee.
   const fee = card.annual_fee_usd ?? 0;
   if (fee > 0) {
@@ -282,7 +294,9 @@ export function scoreCard(
     });
   }
 
-  const deltaOngoing = Math.round(earningsDelta + creditsValue + perksValue - fee);
+  const deltaOngoing = Math.round(
+    earningsDelta + creditsValue + perksValue + brandFitValue - fee,
+  );
 
   // Year-1 SUB amortized.
   const sub = card.signup_bonus?.estimated_value_usd ?? 0;

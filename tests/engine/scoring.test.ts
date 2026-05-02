@@ -105,6 +105,57 @@ describe("scoreCard — perk dedup", () => {
   });
 });
 
+describe("scoreCard — brand-fit bonus", () => {
+  it("Costco brand selection adds a brand-fit line item to costco_anywhere_visa", () => {
+    const profile: UserProfile = {
+      ...minimalProfile,
+      brands_used: ["Costco"],
+    };
+    const result = scoreCard(
+      card("costco_anywhere_visa"),
+      profile,
+      [],
+      db,
+      opts(),
+    );
+    const fitLine = result.breakdown.find((b) =>
+      /Brand fit:.*Costco/i.test(b.label),
+    );
+    expect(fitLine).toBeDefined();
+    expect(fitLine?.value).toBeGreaterThan(0);
+  });
+
+  it("no Costco brand selection → no brand-fit line item", () => {
+    const result = scoreCard(
+      card("costco_anywhere_visa"),
+      minimalProfile,
+      [],
+      db,
+      opts(),
+    );
+    const fitLine = result.breakdown.find((b) => /Brand fit/i.test(b.label));
+    expect(fitLine).toBeUndefined();
+  });
+
+  it("brand fit lifts deltaOngoing for the matching cobrand card", () => {
+    const without = scoreCard(
+      card("costco_anywhere_visa"),
+      minimalProfile,
+      [],
+      db,
+      opts(),
+    );
+    const withBrand = scoreCard(
+      card("costco_anywhere_visa"),
+      { ...minimalProfile, brands_used: ["Costco"] },
+      [],
+      db,
+      opts(),
+    );
+    expect(withBrand.deltaOngoing).toBeGreaterThan(without.deltaOngoing);
+  });
+});
+
 describe("scoreCard — spend caps", () => {
   it("respects cap_usd_per_year on category rules", () => {
     // Amex Gold: 4x on us_supermarkets capped at $25,000/yr

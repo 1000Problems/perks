@@ -9,11 +9,36 @@ export interface WalletCardHeld {
   bonus_received: boolean;
 }
 
+// Self-reported credit band. Matches the Postgres credit_score_band enum
+// in 0001_init_catalog.sql. `null` = user hasn't answered yet (treated
+// the same as "unknown" for engine purposes; "unknown" is what the user
+// picked when they explicitly chose "I'm not sure").
+export type CreditScoreBand =
+  | "building"
+  | "fair"
+  | "good"
+  | "very_good"
+  | "excellent"
+  | "unknown";
+
+export const CREDIT_BAND_RANK: Record<CreditScoreBand, number> = {
+  building: 0,
+  fair: 1,
+  good: 2,
+  very_good: 3,
+  excellent: 4,
+  unknown: -1,
+};
+
 export interface UserProfile {
   spend_profile: Partial<Record<SpendCategoryId, number>>;
   brands_used: string[];
   cards_held: WalletCardHeld[];
   trips_planned: { destination: string; month?: string }[];
+  // null/undefined = the credit-onboarding step hasn't run yet for this
+  // user. The engine treats both the same as "no signal" — `unknown` is
+  // a separate state the user explicitly opts into via the radio.
+  credit_score_band?: CreditScoreBand | null;
   preferences: {
     creditsMode?: "realistic" | "face";
     viewMode?: "ongoing" | "year1";

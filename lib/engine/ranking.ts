@@ -14,8 +14,27 @@ import type {
   UserProfile,
   WalletCardHeld,
 } from "./types";
-import { evaluateEligibility } from "./eligibility";
+import { CREDIT_BAND_RANK } from "./types";
+import { creditBandFloorForCard, evaluateEligibility } from "./eligibility";
 import { scoreCard } from "./scoring";
+import { getBrandFit } from "./brandAffinity";
+
+// When the user's reported credit band is below a card's typical-approval
+// floor, we don't hide the card — we keep it visible — but we down-rank
+// it so a 670 user doesn't see Sapphire Reserve at #1. Used at sort time
+// only; the score on the recommendation panel is unchanged.
+const BELOW_FLOOR_RANK_MULT = 0.6;
+
+function rankAdjustedDelta(
+  card: Card,
+  delta: number,
+  userBand: UserProfile["credit_score_band"],
+): number {
+  if (!userBand || userBand === "unknown") return delta;
+  const floor = creditBandFloorForCard(card);
+  if (CREDIT_BAND_RANK[userBand] >= CREDIT_BAND_RANK[floor]) return delta;
+  return delta * BELOW_FLOOR_RANK_MULT;
+}
 
 // ── why generator ──────────────────────────────────────────────────────
 
@@ -134,6 +153,13 @@ function transferPartnersForCard(card: Card, db: CardDatabase): string[] {
 export function generateWhy(ctx: WhyContext): string {
   const { card, score, userProfile, db } = ctx;
 
+  // 0. Cobrand match — strongest signal we have. The user told us they
+  // shop here; the card is built around that brand. Lead with it.
+  const fit = getBrandFit(card, userProfile.brands_used);
+  if (fit) {
+    return clip(`You shop at ${fit.brand} — ${fit.whyPhrase}.`);
+  }
+
   // 1. Trip + sweet-spot match.
   for (const trip of userProfile.trips_planned) {
     const key = matchDestinationKey(trip.destination, db);
@@ -212,12 +238,20 @@ export function rankCards(
   const visibleRaw: Row[] = [];
   const denied: Row[] = [];
 
+  const userBand = userProfile.credit_score_band;
   for (const card of db.cards) {
     if (heldIds.has(card.id)) continue;
     if (card.closed_to_new_apps) continue;
 
     const score = scoreCard(card, userProfile, wallet, db, options.scoring);
-    const eligibility = evaluateEligibility(card, wallet, db, today);
+    const eligibility = evaluateEligibility(
+      card,
+      wallet,
+      db,
+      today,
+      userBand,
+      userProfile.brands_used,
+    );
     const why = generateWhy({ card, score, eligibility, userProfile, db });
 
     const row: Row = { card, score, eligibility, why, rank: 0 };
@@ -246,11 +280,36 @@ export function rankCards(
       break;
   }
 
-  filtered.sort((a, b) => b.score.deltaOngoing - a.score.deltaOngoing);
-  const visible = filtered.slice(0, limit).map((r, i) => ({ ...r, rank: i + 1 }));
+  // Sort by a credit-band-adjusted delta — a 670 user gets a Sapphire
+  // Reserve down-ranked, but it's still visible. The displayed
+  // score.deltaOngoing is unchanged.
+  filtered.sort(
+    (a, b) =>
+      rankAdjustedDelta(b.card, b.score.deltaOngoing, userBand) -
+      rankAdjustedDelta(a.card, a.score.deltaOngoing, userBand),
+  );
+
+  // Pin brand-matched cobrand cards to the top. When the user said they
+  // shop at Costco, the Costco card surfaces first even if a $550-AF
+  // premium card scores higher on raw credits-and-perks math. The
+  // brand-fit dollar value is already baked into deltaOngoing; this
+  // affects sort order only. Within each group cards stay sorted by
+  // band-adjusted delta.
+  const pinned: Row[] = [];
+  const rest: Row[] = [];
+  for (const r of filtered) {
+    if (getBrandFit(r.card, userProfile.brands_used)) pinned.push(r);
+    else rest.push(r);
+  }
+  const combined = [...pinned, ...rest];
+  const visible = combined.slice(0, limit).map((r, i) => ({ ...r, rank: i + 1 }));
 
   // Rank denied as well — useful when surfacing them.
-  denied.sort((a, b) => b.score.deltaOngoing - a.score.deltaOngoing);
+  denied.sort(
+    (a, b) =>
+      rankAdjustedDelta(b.card, b.score.deltaOngoing, userBand) -
+      rankAdjustedDelta(a.card, a.score.deltaOngoing, userBand),
+  );
   denied.forEach((d, i) => (d.rank = i + 1));
 
   return { visible, denied };

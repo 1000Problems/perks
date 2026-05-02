@@ -12,6 +12,10 @@ export default async function RecommendationsPage() {
   } catch {
     redirect("/login");
   }
+  // Onboarding gate — credit band first, then spend.
+  if (profile.credit_score_band == null) {
+    redirect("/onboarding/credit");
+  }
   const hasSpend =
     Object.values(profile.spend_profile ?? {}).some((v) => (v ?? 0) > 0);
   if (!hasSpend && (profile.cards_held?.length ?? 0) === 0) {

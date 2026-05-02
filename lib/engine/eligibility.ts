@@ -16,7 +16,12 @@
 // Deliberately conservative — we surface risk, we don't gatekeep.
 
 import type { Card, CardDatabase } from "@/lib/data/loader";
-import type { EligibilityResult, WalletCardHeld } from "./types";
+import type { CreditScoreBand, EligibilityResult, WalletCardHeld } from "./types";
+import { CREDIT_BAND_RANK } from "./types";
+import {
+  getMembershipStatus,
+  membershipRequired,
+} from "./brandAffinity";
 
 const MONTH_MS = 30 * 24 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -216,6 +221,25 @@ function boaEligibility(
   return { status: "green", note: "Eligible" };
 }
 
+// Yellow-flag cards that require a club / co-op / credit-union
+// membership the user hasn't signaled. Costco, Sam's Club, REI, Amazon
+// Prime, USAA, NFCU, PenFed, AAA — all fall through here. When the
+// user's brand picks satisfy the requirement we suppress the flag
+// entirely; otherwise we render the requirement string verbatim so the
+// user sees what they'd need to qualify.
+function membershipFlag(
+  card: Card,
+  brandsUsed: string[],
+): EligibilityResult | null {
+  const status = getMembershipStatus(card, brandsUsed);
+  if (status !== "missing") return null;
+  const req = membershipRequired(card);
+  return {
+    status: "yellow",
+    note: req ? `Requires ${req}` : "Requires a separate membership",
+  };
+}
+
 function businessFlag(card: Card): EligibilityResult | null {
   if (card.card_type === "business") {
     return {
@@ -224,6 +248,43 @@ function businessFlag(card: Card): EligibilityResult | null {
     };
   }
   return null;
+}
+
+// Heuristic credit-band floor by card. We don't have a per-card column
+// populated yet — derive it from card_type and annual fee, which are
+// already in the schema. Premium cards typically need very_good (740+),
+// mid-tier need good (670+), entry-level need fair (580+), and the
+// secured/student tiers accept anyone building credit. Conservative —
+// matches public approval-data ranges and intentionally undershoots
+// rather than promising approval the user might not get.
+export function creditBandFloorForCard(card: Card): CreditScoreBand {
+  if (card.card_type === "secured" || card.card_type === "student") return "building";
+  const fee = card.annual_fee_usd ?? 0;
+  if (fee >= 550) return "very_good";
+  if (fee >= 95) return "good";
+  return "fair";
+}
+
+const BAND_LABEL: Record<CreditScoreBand, string> = {
+  building: "building credit",
+  fair: "fair (580–669)",
+  good: "good (670–739)",
+  very_good: "very good (740–799)",
+  excellent: "excellent (800+)",
+  unknown: "unknown",
+};
+
+function creditBandFlag(
+  card: Card,
+  userBand: CreditScoreBand | null | undefined,
+): EligibilityResult | null {
+  if (!userBand || userBand === "unknown") return null;
+  const floor = creditBandFloorForCard(card);
+  if (CREDIT_BAND_RANK[userBand] >= CREDIT_BAND_RANK[floor]) return null;
+  return {
+    status: "yellow",
+    note: `Approvals typically at ${BAND_LABEL[floor]}; you reported ${BAND_LABEL[userBand]}`,
+  };
 }
 
 function pickStricter(...results: EligibilityResult[]): EligibilityResult {
@@ -239,6 +300,8 @@ export function evaluateEligibility(
   wallet: WalletCardHeld[],
   db: CardDatabase,
   today: Date,
+  userBand?: CreditScoreBand | null,
+  brandsUsed: string[] = [],
 ): EligibilityResult {
   const expanded = expand(wallet, db);
 
@@ -266,7 +329,10 @@ export function evaluateEligibility(
   }
 
   const biz = businessFlag(card);
-  if (biz) return pickStricter(issuerResult, biz);
-
-  return issuerResult;
+  const credit = creditBandFlag(card, userBand);
+  const membership = membershipFlag(card, brandsUsed);
+  const flags = [issuerResult, biz, credit, membership].filter(
+    (r): r is EligibilityResult => r != null,
+  );
+  return pickStricter(...flags);
 }

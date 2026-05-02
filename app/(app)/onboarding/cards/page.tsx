@@ -14,7 +14,7 @@ export default async function OnboardingCardsPage() {
   }
   const db = loadCardDatabase();
   return (
-    <OnboardingShell step={3} title="Cards you already have" hideContinue>
+    <OnboardingShell step={4} title="Cards you already have" hideContinue>
       <CardsForm initialProfile={profile} serializedDb={toSerialized(db)} />
     </OnboardingShell>
   );

@@ -11,7 +11,7 @@ export default async function OnboardingBrandsPage() {
     redirect("/login");
   }
   return (
-    <OnboardingShell step={2} title="What do you actually use?" hideContinue>
+    <OnboardingShell step={3} title="What do you actually use?" hideContinue>
       <BrandsForm initialProfile={profile} />
     </OnboardingShell>
   );

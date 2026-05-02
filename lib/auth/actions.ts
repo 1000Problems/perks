@@ -83,7 +83,7 @@ export async function signupAction(
   `;
 
   await createSession(userId);
-  redirect("/onboarding/spend");
+  redirect("/onboarding/credit");
 }
 
 export async function loginAction(
@@ -115,15 +115,28 @@ export async function loginAction(
 
   await createSession(user.id);
 
-  // If they have an existing profile with any data, send straight to the
-  // recommendations. Otherwise drop them into onboarding.
-  const profile = await sql<{ has_data: boolean }[]>`
-    select (
-      jsonb_typeof(spend_profile) = 'object' and spend_profile <> '{}'::jsonb
-    ) as has_data
-    from perks_profiles where user_id = ${user.id} limit 1
-  `;
+  // Routing rules:
+  //   - No credit band on file → /onboarding/credit (gates the whole app
+  //     so existing accounts also get prompted once after the rollout).
+  //   - Has credit band but no spend_profile → /onboarding/spend.
+  //   - Otherwise → /recommendations.
+  const [profile, self] = await Promise.all([
+    sql<{ has_data: boolean }[]>`
+      select (
+        jsonb_typeof(spend_profile) = 'object' and spend_profile <> '{}'::jsonb
+      ) as has_data
+      from perks_profiles where user_id = ${user.id} limit 1
+    `,
+    sql<{ credit_score_band: string | null }[]>`
+      select credit_score_band from user_self_reported where user_id = ${user.id} limit 1
+    `,
+  ]);
   const hasData = profile[0]?.has_data === true;
+  const hasCreditBand = (self[0]?.credit_score_band ?? null) !== null;
+
+  if (!hasCreditBand) {
+    redirect("/onboarding/credit");
+  }
   redirect(hasData ? "/recommendations" : "/onboarding/spend");
 }
 

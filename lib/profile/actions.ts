@@ -16,7 +16,16 @@
 import { sql } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getCurrentProfile } from "./server";
-import type { UserProfile, WalletCardHeld } from "./types";
+import type { CreditScoreBand, UserProfile, WalletCardHeld } from "./types";
+
+const VALID_CREDIT_BANDS: ReadonlyArray<CreditScoreBand> = [
+  "building",
+  "fair",
+  "good",
+  "very_good",
+  "excellent",
+  "unknown",
+];
 
 export interface UpdateResult {
   ok: boolean;
@@ -139,4 +148,30 @@ export async function updateUserCard(input: UpdateUserCardInput): Promise<Update
   }
 }
 
-export type { WalletCardHeld };
+// Persist the user's self-reported credit band. UPSERTs into
+// user_self_reported. The recommendations engine reads this through
+// getCurrentProfile() — it changes which cards we surface as risky vs.
+// approvable, but never red-blocks (a self-reported number is too soft).
+export async function updateCreditBand(band: CreditScoreBand): Promise<UpdateResult> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "not_authenticated" };
+  if (!VALID_CREDIT_BANDS.includes(band)) {
+    return { ok: false, error: "invalid_band" };
+  }
+  try {
+    await sql`
+      insert into user_self_reported (user_id, credit_score_band)
+      values (${user.id}, ${band}::credit_score_band)
+      on conflict (user_id) do update set
+        credit_score_band = excluded.credit_score_band,
+        updated_at = now()
+    `;
+    return { ok: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[profile:update_credit_band] failed:", msg);
+    return { ok: false, error: "update_failed" };
+  }
+}
+
+export type { WalletCardHeld, CreditScoreBand };

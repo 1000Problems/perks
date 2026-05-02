@@ -10,7 +10,7 @@
 import "server-only";
 import { sql } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
-import type { UserProfile, WalletCardHeld } from "./types";
+import type { CreditScoreBand, UserProfile, WalletCardHeld } from "./types";
 
 interface ProfileRow {
   spend_profile: UserProfile["spend_profile"];
@@ -18,6 +18,10 @@ interface ProfileRow {
   cards_held: UserProfile["cards_held"];
   trips_planned: UserProfile["trips_planned"];
   preferences: UserProfile["preferences"];
+}
+
+interface SelfReportedRow {
+  credit_score_band: CreditScoreBand;
 }
 
 interface UserCardReadRow {
@@ -33,6 +37,7 @@ const EMPTY: UserProfile = {
   brands_used: [],
   cards_held: [],
   trips_planned: [],
+  credit_score_band: null,
   preferences: {},
 };
 
@@ -49,22 +54,34 @@ export async function getCurrentProfile(): Promise<UserProfile> {
   if (!user) {
     throw new Error("not_authenticated");
   }
-  const rows = await sql<ProfileRow[]>`
-    select spend_profile, brands_used, cards_held, trips_planned, preferences
-    from perks_profiles
-    where user_id = ${user.id}
-    limit 1
-  `;
+  const [rows, selfRows] = await Promise.all([
+    sql<ProfileRow[]>`
+      select spend_profile, brands_used, cards_held, trips_planned, preferences
+      from perks_profiles
+      where user_id = ${user.id}
+      limit 1
+    `,
+    sql<SelfReportedRow[]>`
+      select credit_score_band
+      from user_self_reported
+      where user_id = ${user.id}
+      limit 1
+    `,
+  ]);
   const row = rows[0];
+  // No row yet means the user hasn't answered the credit question. We
+  // distinguish that from "unknown" (the explicit opt-out radio).
+  const creditBand: CreditScoreBand | null = selfRows[0]?.credit_score_band ?? null;
   const base: UserProfile = row
     ? {
         spend_profile: row.spend_profile ?? {},
         brands_used: Array.isArray(row.brands_used) ? row.brands_used : [],
         cards_held: Array.isArray(row.cards_held) ? row.cards_held : [],
         trips_planned: Array.isArray(row.trips_planned) ? row.trips_planned : [],
+        credit_score_band: creditBand,
         preferences: row.preferences ?? {},
       }
-    : { ...EMPTY };
+    : { ...EMPTY, credit_score_band: creditBand };
 
   if (readSource() === "relational") {
     const heldRows = await sql<UserCardReadRow[]>`

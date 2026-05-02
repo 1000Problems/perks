@@ -31,7 +31,12 @@ function getDb(): Sql {
   return client;
 }
 
-export const sql = new Proxy({} as Sql, {
+// Proxy target must be callable so the `apply` trap fires when `sql` is used
+// as a tagged template (sql`select ...`). A plain `{}` target makes the
+// Proxy non-callable and the engine throws before reaching `apply`.
+const sqlTarget = (() => {}) as unknown as Sql;
+
+export const sql = new Proxy(sqlTarget, {
   get(_t, key) {
     const inst = getDb() as unknown as Record<string | symbol, unknown>;
     const v = inst[key];

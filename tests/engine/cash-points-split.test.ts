@@ -128,7 +128,7 @@ describe("scoreCard split — cash vs points buckets", () => {
     expect(paired.components.spendOngoing).not.toBe(alone.components.spendOngoing);
   });
 
-  it("back-compat: spendOngoing == cashOngoing + (pointsOngoing?.valueUsd ?? 0) across many cards", () => {
+  it("invariant: spendOngoing == cashOngoing + points$ + brandFit$ across many cards", () => {
     const p = profile({
       groceries: 6000,
       dining: 4000,
@@ -154,12 +154,53 @@ describe("scoreCard split — cash vs points buckets", () => {
       const score = scoreCard(get(id), p, [], db, SCORING);
       const c = score.components;
       const ptsValue = c.pointsOngoing?.valueUsd ?? 0;
-      expect(c.spendOngoing).toBe(c.cashOngoing + ptsValue);
+      const brandFitValue = c.brandFitOngoing?.valueUsd ?? 0;
+      expect(c.spendOngoing).toBe(c.cashOngoing + ptsValue + brandFitValue);
       expect(score.deltaOngoing).toBe(
         c.spendOngoing + c.perksOngoing + c.feeOngoing,
       );
       expect(score.deltaYear1).toBe(score.deltaOngoing + c.subYear1);
     }
+  });
+
+  it("brand-fit splits out of cashOngoing into brandFitOngoing", () => {
+    // Costco card with the Costco brand chip picked. The earnings math
+    // (groceries spend × 2%, etc.) lands in cashOngoing; the $80 brand-
+    // fit bonus is its own bucket, not folded into cash.
+    const p: UserProfile = {
+      spend_profile: { groceries: 5000, gas: 3000 },
+      brands_used: ["Costco"],
+      cards_held: [],
+      trips_planned: [],
+      credit_score_band: "very_good",
+      preferences: {},
+    };
+    const score = scoreCard(get("costco_anywhere_visa"), p, [], db, SCORING);
+    const c = score.components;
+
+    // Brand-fit bucket is populated with the right brand + value.
+    expect(c.brandFitOngoing).not.toBeNull();
+    expect(c.brandFitOngoing!.brand).toBe("Costco");
+    expect(c.brandFitOngoing!.valueUsd).toBe(80);
+    expect(c.brandFitOngoing!.whyPhrase).toMatch(/Costco/);
+
+    // Cash pillar shows ONLY the calculated earnings — no $80 fudge.
+    // The breakdown's earning lines should sum to cashOngoing exactly.
+    const earningsTotal = score.breakdown
+      .filter((l) => l.kind === "earning")
+      .reduce((a, l) => a + l.value, 0);
+    expect(c.cashOngoing).toBe(earningsTotal);
+
+    // Brand-fit still counts toward spend total + delta (preserves
+    // ranking), just split into a separate pillar.
+    expect(c.spendOngoing).toBe(c.cashOngoing + 80);
+    expect(score.deltaOngoing).toBe(c.spendOngoing + c.perksOngoing + c.feeOngoing);
+  });
+
+  it("no brand-fit when the user didn't pick the matching chip", () => {
+    const p = profile({ groceries: 5000 });
+    const score = scoreCard(get("costco_anywhere_visa"), p, [], db, SCORING);
+    expect(score.components.brandFitOngoing).toBeNull();
   });
 
   it("loyalty SUB carries an amortized point count in subYear1Detail", () => {

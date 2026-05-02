@@ -92,6 +92,22 @@ export interface SubBucket {
   programName: string | null;
 }
 
+// Cobrand "soft" value from the brand-affinity layer — a flat bonus the
+// engine adds when the user has signaled they actually shop / fly / stay
+// at the card's brand. Distinct from `cashOngoing` because it's an
+// estimate, not a calculation off reported spend, and the UI should
+// present it differently (muted secondary line, not a green pillar).
+// Counts toward `spendOngoing` and `deltaOngoing` so ranking still
+// reflects the cobrand fit. Null when the card has no brand-fit entry
+// or the user didn't pick the matching brand.
+export interface BrandFitBucket {
+  valueUsd: number;
+  brand: string;
+  // Short tail used in the muted caption — same wording as the why-line
+  // opener but without the "You shop at {brand} —" prefix.
+  whyPhrase: string;
+}
+
 // The hero number split. The recommendation UI surfaces these as
 // pillars so users can tell what's earned automatically from what's
 // upside they only realise if they claim it. Cash and points were
@@ -99,17 +115,28 @@ export interface SubBucket {
 // because a 6% cashback card and a 3x points card are not the same.
 export interface CardScoreComponents {
   // Statement-credit dollars/yr the user earns from spending. Sums
-  // cashback earning-rule deltas across spend categories plus brand-fit
-  // cobrand bonuses (which always count as cash). Always >= 0.
+  // cashback earning-rule deltas across spend categories ONLY — brand-fit
+  // cobrand bonuses are split out into `brandFitOngoing` so the UI can
+  // show the calculated portion separately from the soft estimate.
+  // Always >= 0.
   cashOngoing: number;
   // Loyalty-currency earnings/yr from spend, valued at the program's
   // portal cpp. Null when the card earns no points (cash-mode programs,
   // or transferable programs whose wallet doesn't unlock transfers).
   // The bucket is per-program; a card earns into exactly one program.
   pointsOngoing: PointsBucket | null;
-  // Back-compat shim — equals `cashOngoing + (pointsOngoing?.valueUsd ?? 0)`.
-  // Existing UI components read this; will be removed when the
-  // three-pillar UI follow-up lands. Always reconciles exactly.
+  // Cobrand soft value (Costco voucher, Amazon-Prime 5%, airline status
+  // perks). Always >= 0 dollars when present. Counts toward
+  // `spendOngoing` and `deltaOngoing` (so the ranker pins cobrand cards
+  // for users who shop at the brand), but is rendered as a muted line
+  // beneath the CASH/POINTS/PERKS pillars rather than rolled into the
+  // green CASH pillar — the value is an estimate, not derived from the
+  // user's reported spend. Null when the card has no brand-fit entry or
+  // the user didn't pick the matching brand chip.
+  brandFitOngoing: BrandFitBucket | null;
+  // Sum of the spend-side buckets:
+  //   cashOngoing + (pointsOngoing?.valueUsd ?? 0) + (brandFitOngoing?.valueUsd ?? 0)
+  // Reconciles exactly to `deltaOngoing - perksOngoing - feeOngoing`.
   spendOngoing: number;
   // Perk "upside": value the user only realises if they claim it.
   // Sums annual credits (haircut by ease in realistic mode) and

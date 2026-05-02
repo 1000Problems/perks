@@ -52,16 +52,20 @@ function fmtPts(n: number): string {
 }
 
 export function ValuePillars({ components, view, variant }: Props) {
-  const { cashOngoing, pointsOngoing, perksOngoing, feeOngoing, subYear1, subYear1Detail } = components;
+  const { cashOngoing, pointsOngoing, brandFitOngoing, perksOngoing, feeOngoing, subYear1, subYear1Detail } = components;
   const sz = SIZES[variant];
   const showSub = view === "year1" && subYear1 > 0;
   const showFee = feeOngoing < 0;
+  const showBrandFit = brandFitOngoing != null && brandFitOngoing.valueUsd > 0;
   const isList = variant === "list" || variant === "list-stacked";
   const align = isList ? "flex-end" : "flex-start";
 
   // Band variant: full-width 3-column grid. Each cell is a left-aligned
-  // pillar (label, big number, caption). Fee/SUB caption hangs in a thin
-  // strip below the band, right-aligned so it tucks under PERKS.
+  // pillar (label, big number, caption). Brand-fit (cobrand soft value)
+  // hangs as a muted line beneath the pillars, left-aligned so it
+  // anchors visually under CASH — that's the bucket users would
+  // otherwise expect it in. Fee/SUB caption strip is right-aligned and
+  // sits on the same row so it tucks under PERKS.
   if (variant === "band") {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
@@ -99,7 +103,7 @@ export function ValuePillars({ components, view, variant }: Props) {
             tone="conditional"
           />
         </div>
-        {(showFee || showSub) && (
+        {(showFee || showSub || showBrandFit) && (
           <div
             style={{
               display: "flex",
@@ -107,9 +111,13 @@ export function ValuePillars({ components, view, variant }: Props) {
               fontSize: sz.sub,
               color: "var(--ink-3)",
               fontFamily: "var(--font-mono), ui-monospace, monospace",
-              justifyContent: "flex-end",
+              alignItems: "baseline",
             }}
           >
+            {showBrandFit && (
+              <BrandFitCaption bucket={brandFitOngoing!} />
+            )}
+            <div style={{ flex: 1 }} />
             {showSub && (
               <span style={{ color: "var(--ink-2)" }}>
                 {subYear1Caption(subYear1, subYear1Detail)}
@@ -160,26 +168,34 @@ export function ValuePillars({ components, view, variant }: Props) {
           captionRight={perksOngoing > 0 ? "if claimed" : undefined}
           captionSize={sz.sub}
         />
-        {(showFee || showSub) && (
+        {(showFee || showSub || showBrandFit) && (
           <div
             style={{
               display: "flex",
-              gap: 8,
+              flexDirection: "column",
+              alignItems: "flex-end",
+              gap: 2,
               fontSize: sz.sub,
               color: "var(--ink-3)",
               marginTop: 2,
+              fontFamily: "var(--font-mono), ui-monospace, monospace",
             }}
           >
-            {showSub && (
-              <span style={{ color: "var(--ink-2)" }}>
-                {subYear1Caption(subYear1, subYear1Detail)}
-              </span>
+            {showBrandFit && (
+              <BrandFitCaption bucket={brandFitOngoing!} />
             )}
-            {showFee && (
-              <span style={{ color: "var(--neg)" }}>
-                −{fmt.usd(Math.abs(feeOngoing))} fee
-              </span>
-            )}
+            <div style={{ display: "flex", gap: 8 }}>
+              {showSub && (
+                <span style={{ color: "var(--ink-2)" }}>
+                  {subYear1Caption(subYear1, subYear1Detail)}
+                </span>
+              )}
+              {showFee && (
+                <span style={{ color: "var(--neg)" }}>
+                  −{fmt.usd(Math.abs(feeOngoing))} fee
+                </span>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -232,33 +248,53 @@ export function ValuePillars({ components, view, variant }: Props) {
         />
       </div>
 
-      {(showFee || showSub) && (
+      {(showFee || showSub || showBrandFit) && (
         <div
           style={{
             display: "flex",
-            gap: 10,
+            flexDirection: "column",
+            gap: 2,
             fontSize: sz.sub,
             color: "var(--ink-3)",
             fontFamily: "var(--font-mono), ui-monospace, monospace",
             // Match the row of pillars above so the captions don't
             // drift left or right of them.
-            justifyContent: isList ? "flex-end" : "flex-start",
+            alignItems: isList ? "flex-end" : "flex-start",
             width: isList ? "100%" : undefined,
           }}
         >
-          {showSub && (
-            <span style={{ color: "var(--ink-2)" }}>
-              {subYear1Caption(subYear1, subYear1Detail)}
-            </span>
+          {showBrandFit && (
+            <BrandFitCaption bucket={brandFitOngoing!} />
           )}
-          {showFee && (
-            <span style={{ color: "var(--neg)" }}>
-              −{fmt.usd(Math.abs(feeOngoing))} fee
-            </span>
-          )}
+          <div style={{ display: "flex", gap: 10 }}>
+            {showSub && (
+              <span style={{ color: "var(--ink-2)" }}>
+                {subYear1Caption(subYear1, subYear1Detail)}
+              </span>
+            )}
+            {showFee && (
+              <span style={{ color: "var(--neg)" }}>
+                −{fmt.usd(Math.abs(feeOngoing))} fee
+              </span>
+            )}
+          </div>
         </div>
       )}
     </div>
+  );
+}
+
+// Muted secondary line for cobrand soft value. Sits beneath the pillar
+// row, left-aligned (band) or right-aligned (list-stacked). Format:
+//   "+$80 cobrand fit · the only Visa Costco accepts, 2% on warehouse runs"
+// Lighter than the green CASH pillar — same gray as fee/SUB captions —
+// so the user reads it as an estimate, not a calculated dollar value.
+function BrandFitCaption({ bucket }: { bucket: { valueUsd: number; brand: string; whyPhrase: string } }) {
+  return (
+    <span style={{ color: "var(--ink-3)" }}>
+      ~{fmt.usd(bucket.valueUsd)} {bucket.brand} fit
+      <span style={{ color: "var(--ink-4)" }}> · {bucket.whyPhrase}</span>
+    </span>
   );
 }
 

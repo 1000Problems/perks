@@ -373,12 +373,18 @@ export function scoreCard(
     });
   }
 
-  // Cash vs points split. Earnings deltas land in either cashOngoing or
-  // pointsOngoing based on the candidate's resolved mode (a card earns
-  // into exactly one program). Brand-fit always counts as cash —
-  // cobrand bonuses are dollar-back rebates regardless of currency.
-  // Perks and fee unchanged. Each component is rounded so the back-
-  // compat `spendOngoing` reconciles exactly to `cashOngoing + points$`.
+  // Cash vs points vs brand-fit split. Earnings deltas land in either
+  // cashOngoing or pointsOngoing based on the candidate's resolved mode
+  // (a card earns into exactly one program). Brand-fit gets its own
+  // bucket — it's a soft cobrand estimate, not derived from the user's
+  // reported spend, so the UI presents it as a muted secondary line
+  // rather than rolling it into the green CASH pillar. It still counts
+  // toward `spendOngoing` and `deltaOngoing` so the ranker treats a
+  // Costco-shopper's Costco card the way it should.
+  //
+  // Each component is rounded so the spend-side invariant reconciles:
+  //   spendOngoing == cashOngoing + (pointsOngoing?.valueUsd ?? 0)
+  //                                + (brandFitOngoing?.valueUsd ?? 0)
   //
   // Pts derive from the rounded $ value (not from raw earningsDelta) so
   // the displayed "X pts ≈ $Y" reverse-reconciles cleanly when the user
@@ -387,8 +393,7 @@ export function scoreCard(
   const brandFitRounded = Math.round(brandFitValue);
   const mode = cardNorm.mode;
   const isLoyalty = mode.mode === "loyalty";
-  const cashOngoing =
-    (isLoyalty ? 0 : earningsDeltaRounded) + brandFitRounded;
+  const cashOngoing = isLoyalty ? 0 : earningsDeltaRounded;
   const pointsValueUsd = isLoyalty ? earningsDeltaRounded : 0;
   const pointsRaw =
     isLoyalty && mode.cpp > 0
@@ -404,7 +409,15 @@ export function scoreCard(
           cpp: mode.cpp,
         }
       : null;
-  const spendOngoing = cashOngoing + pointsValueUsd;
+  const brandFitOngoing =
+    brandFit && brandFitRounded > 0
+      ? {
+          valueUsd: brandFitRounded,
+          brand: brandFit.brand,
+          whyPhrase: brandFit.whyPhrase,
+        }
+      : null;
+  const spendOngoing = cashOngoing + pointsValueUsd + brandFitRounded;
   const perksOngoing = Math.round(creditsValue + perksValue);
   const feeOngoing = fee > 0 ? -fee : 0;
   const deltaOngoing = spendOngoing + perksOngoing + feeOngoing;
@@ -449,6 +462,7 @@ export function scoreCard(
     components: {
       cashOngoing,
       pointsOngoing,
+      brandFitOngoing,
       spendOngoing,
       perksOngoing,
       feeOngoing,

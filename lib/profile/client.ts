@@ -16,6 +16,10 @@ type Updater = Partial<UserProfile> | ((prev: UserProfile) => Partial<UserProfil
 export interface UseProfileApi {
   profile: UserProfile;
   update: (updater: Updater) => void;
+  // Force any pending debounced write to flush immediately. Returns
+  // when the write completes — call before navigating away from the
+  // form so the next page reads the freshest profile.
+  flushNow: () => Promise<void>;
   saving: boolean;
   error: string | null;
 }
@@ -71,6 +75,14 @@ export function useProfile(initial: UserProfile): UseProfileApi {
     [flush],
   );
 
+  const flushNow = useCallback(async () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    await flush();
+  }, [flush]);
+
   // Flush on unmount so navigating away doesn't drop a pending write.
   useEffect(() => {
     return () => {
@@ -81,5 +93,5 @@ export function useProfile(initial: UserProfile): UseProfileApi {
     };
   }, [flush]);
 
-  return { profile, update, saving, error };
+  return { profile, update, flushNow, saving, error };
 }

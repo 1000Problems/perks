@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
 import { SPEND_CATEGORIES } from "@/lib/categories";
@@ -16,9 +16,30 @@ const MAX_PER_CAT: Partial<Record<SpendCategoryId, number>> = {
   other: 50000,
 };
 
+function buildDefaults(): Partial<Record<SpendCategoryId, number>> {
+  const out: Partial<Record<SpendCategoryId, number>> = {};
+  for (const c of SPEND_CATEGORIES) out[c.id] = c.default;
+  return out;
+}
+
 export function SpendForm({ initialProfile }: Props) {
   const router = useRouter();
-  const { profile, update, saving } = useProfile(initialProfile);
+  const { profile, update, flushNow, saving } = useProfile(initialProfile);
+
+  // If the user lands here with an empty spend_profile, capture the
+  // defaults immediately. Otherwise clicking Continue without touching
+  // a slider leaves spend_profile = {} and the cold-start guard on
+  // /recommendations bounces them back here.
+  const seededRef = useRef(false);
+  useEffect(() => {
+    if (seededRef.current) return;
+    if (Object.keys(initialProfile.spend_profile ?? {}).length > 0) {
+      seededRef.current = true;
+      return;
+    }
+    seededRef.current = true;
+    update({ spend_profile: buildDefaults() });
+  }, [initialProfile.spend_profile, update]);
 
   const total = useMemo(() => {
     return SPEND_CATEGORIES.reduce(
@@ -33,7 +54,8 @@ export function SpendForm({ initialProfile }: Props) {
     }));
   }
 
-  function continueNext() {
+  async function continueNext() {
+    await flushNow();
     router.push("/onboarding/brands" as Route);
   }
 

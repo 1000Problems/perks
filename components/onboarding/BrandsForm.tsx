@@ -48,7 +48,12 @@ const SERVICES = [
 
 export function BrandsForm({ initialProfile }: Props) {
   const router = useRouter();
-  const { profile, update } = useProfile(initialProfile);
+  const { profile, update, flushNow } = useProfile(initialProfile);
+
+  async function go(target: "/onboarding/cards") {
+    await flushNow();
+    router.push(target as Route);
+  }
   const [tripDraft, setTripDraft] = useState("");
 
   const selected = new Set(profile.brands_used);
@@ -179,14 +184,14 @@ export function BrandsForm({ initialProfile }: Props) {
         <button
           type="button"
           className="btn"
-          onClick={() => router.push("/onboarding/cards" as Route)}
+          onClick={() => go("/onboarding/cards")}
         >
           Skip
         </button>
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => router.push("/onboarding/cards" as Route)}
+          onClick={() => go("/onboarding/cards")}
         >
           Continue →
         </button>

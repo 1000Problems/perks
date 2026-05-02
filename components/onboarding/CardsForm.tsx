@@ -37,7 +37,12 @@ const TODAY = new Date();
 
 export function CardsForm({ initialProfile, cards, serializedDb }: Props) {
   const router = useRouter();
-  const { profile, update } = useProfile(initialProfile);
+  const { profile, update, flushNow } = useProfile(initialProfile);
+
+  async function go(target: "/recommendations") {
+    await flushNow();
+    router.push(target as Route);
+  }
   const [query, setQuery] = useState("");
   const [openCardId, setOpenCardId] = useState<string | null>(null);
   const [openMonth, setOpenMonth] = useState<number>(TODAY.getMonth() + 1);
@@ -339,14 +344,14 @@ export function CardsForm({ initialProfile, cards, serializedDb }: Props) {
         <button
           type="button"
           className="btn"
-          onClick={() => router.push("/recommendations" as Route)}
+          onClick={() => go("/recommendations")}
         >
           Skip
         </button>
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => router.push("/recommendations" as Route)}
+          onClick={() => go("/recommendations")}
         >
           Continue →
         </button>

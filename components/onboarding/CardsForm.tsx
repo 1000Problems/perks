@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import type { Route } from "next";
 import { CardArt } from "@/components/perks/CardArt";
 import { useProfile } from "@/lib/profile/client";
 import { evaluateEligibility } from "@/lib/engine/eligibility";
@@ -13,6 +14,7 @@ import { fromSerialized, type SerializedDb } from "@/lib/data/serialized";
 interface Props {
   initialProfile: UserProfile;
   serializedDb: SerializedDb;
+  editMode?: boolean;
 }
 
 const ANCHOR_CARDS_FOR_PRE_CHECK = [
@@ -22,13 +24,18 @@ const ANCHOR_CARDS_FOR_PRE_CHECK = [
   "capital_one_venture",
 ];
 
-export function CardsForm({ initialProfile, serializedDb }: Props) {
+export function CardsForm({ initialProfile, serializedDb, editMode }: Props) {
   const router = useRouter();
   const { profile, update, flushNow, error } = useProfile(initialProfile);
 
-  async function go(target: "/recommendations" | "/onboarding/brands") {
+  async function go(
+    target:
+      | "/recommendations"
+      | "/onboarding/brands"
+      | "/settings",
+  ) {
     await flushNow();
-    router.push(target);
+    router.push(target as Route);
   }
   // Initialize TODAY inside the component so it doesn't drift if the tab
   // stays open across midnight or month rollovers.
@@ -317,7 +324,7 @@ export function CardsForm({ initialProfile, serializedDb }: Props) {
         <button
           type="button"
           className="btn btn-ghost"
-          onClick={() => go("/onboarding/brands")}
+          onClick={() => go(editMode ? "/settings" : "/onboarding/brands")}
         >
           ← Back
         </button>
@@ -327,19 +334,21 @@ export function CardsForm({ initialProfile, serializedDb }: Props) {
               Couldn’t save — try again
             </span>
           )}
-          <button
-            type="button"
-            className="btn"
-            onClick={() => go("/recommendations")}
-          >
-            Skip
-          </button>
+          {!editMode && (
+            <button
+              type="button"
+              className="btn"
+              onClick={() => go("/recommendations")}
+            >
+              Skip
+            </button>
+          )}
           <button
             type="button"
             className="btn btn-primary"
-            onClick={() => go("/recommendations")}
+            onClick={() => go(editMode ? "/settings" : "/recommendations")}
           >
-            Continue →
+            {editMode ? "Save & close" : "Continue →"}
           </button>
         </div>
       </div>

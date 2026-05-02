@@ -9,6 +9,10 @@ interface Props {
   // If true, the shell skips its own Continue link — the child renders
   // the navigation itself (for forms that need to persist before moving on).
   hideContinue?: boolean;
+  // Edit-mode (entered via /settings). Hides the wizard step indicator
+  // and shows a "back to settings" link instead — the page is no longer
+  // step N of a linear flow, it's a focused edit of one section.
+  editMode?: boolean;
 }
 
 const TOTAL_STEPS = 4;
@@ -19,6 +23,7 @@ export function OnboardingShell({
   next,
   children,
   hideContinue,
+  editMode,
 }: Props) {
   return (
     <main
@@ -29,19 +34,34 @@ export function OnboardingShell({
         margin: "0 auto",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 32 }}>
-        <div className="eyebrow">Step {step} of {TOTAL_STEPS}</div>
-        <div style={{ height: 2, flex: 1, background: "var(--rule)", borderRadius: 1 }}>
-          <div
+      {editMode ? (
+        <div style={{ marginBottom: 24 }}>
+          <Link
+            href={"/settings" as Route}
             style={{
-              height: 2,
-              width: `${(step / TOTAL_STEPS) * 100}%`,
-              background: "var(--ink)",
-              borderRadius: 1,
+              fontSize: 13,
+              color: "var(--ink-3)",
+              textDecoration: "none",
             }}
-          />
+          >
+            ← Settings
+          </Link>
         </div>
-      </div>
+      ) : (
+        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 32 }}>
+          <div className="eyebrow">Step {step} of {TOTAL_STEPS}</div>
+          <div style={{ height: 2, flex: 1, background: "var(--rule)", borderRadius: 1 }}>
+            <div
+              style={{
+                height: 2,
+                width: `${(step / TOTAL_STEPS) * 100}%`,
+                background: "var(--ink)",
+                borderRadius: 1,
+              }}
+            />
+          </div>
+        </div>
+      )}
       <h1 style={{ margin: 0, fontSize: 32, letterSpacing: "-0.02em", fontWeight: 600 }}>{title}</h1>
       <div style={{ marginTop: 24 }}>{children}</div>
       {!hideContinue && next && (

@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import type { Route } from "next";
 import { useProfile } from "@/lib/profile/client";
 import type { UserProfile } from "@/lib/profile/types";
 
 interface Props {
   initialProfile: UserProfile;
+  editMode?: boolean;
 }
 
 const STORES = [
@@ -45,13 +47,15 @@ const SERVICES = [
   "Peloton",
 ];
 
-export function BrandsForm({ initialProfile }: Props) {
+export function BrandsForm({ initialProfile, editMode }: Props) {
   const router = useRouter();
   const { profile, update, flushNow, error } = useProfile(initialProfile);
 
-  async function go(target: "/onboarding/cards" | "/onboarding/spend") {
+  async function go(
+    target: "/onboarding/cards" | "/onboarding/spend" | "/settings",
+  ) {
     await flushNow();
-    router.push(target);
+    router.push(target as Route);
   }
   const [tripDraft, setTripDraft] = useState("");
 
@@ -184,7 +188,7 @@ export function BrandsForm({ initialProfile }: Props) {
         <button
           type="button"
           className="btn btn-ghost"
-          onClick={() => go("/onboarding/spend")}
+          onClick={() => go(editMode ? "/settings" : "/onboarding/spend")}
         >
           ← Back
         </button>
@@ -194,19 +198,21 @@ export function BrandsForm({ initialProfile }: Props) {
               Couldn’t save — try again
             </span>
           )}
-          <button
-            type="button"
-            className="btn"
-            onClick={() => go("/onboarding/cards")}
-          >
-            Skip
-          </button>
+          {!editMode && (
+            <button
+              type="button"
+              className="btn"
+              onClick={() => go("/onboarding/cards")}
+            >
+              Skip
+            </button>
+          )}
           <button
             type="button"
             className="btn btn-primary"
-            onClick={() => go("/onboarding/cards")}
+            onClick={() => go(editMode ? "/settings" : "/onboarding/cards")}
           >
-            Continue →
+            {editMode ? "Save & close" : "Continue →"}
           </button>
         </div>
       </div>

@@ -10,6 +10,7 @@ import { fmt } from "@/lib/utils/format";
 
 interface Props {
   initialProfile: UserProfile;
+  editMode?: boolean;
 }
 
 const MAX_PER_CAT: Partial<Record<SpendCategoryId, number>> = {
@@ -22,7 +23,7 @@ function buildDefaults(): Partial<Record<SpendCategoryId, number>> {
   return out;
 }
 
-export function SpendForm({ initialProfile }: Props) {
+export function SpendForm({ initialProfile, editMode }: Props) {
   const router = useRouter();
   const { profile, update, flushNow, saving, error } = useProfile(initialProfile);
 
@@ -56,7 +57,7 @@ export function SpendForm({ initialProfile }: Props) {
 
   async function continueNext() {
     await flushNow();
-    router.push("/onboarding/brands");
+    router.push((editMode ? "/settings" : "/onboarding/brands") as Route);
   }
 
   return (
@@ -182,7 +183,9 @@ export function SpendForm({ initialProfile }: Props) {
           className="btn btn-ghost"
           onClick={async () => {
             await flushNow();
-            router.push("/onboarding/credit" as Route);
+            router.push(
+              (editMode ? "/settings" : "/onboarding/credit") as Route,
+            );
           }}
         >
           ← Back
@@ -193,7 +196,7 @@ export function SpendForm({ initialProfile }: Props) {
           onClick={continueNext}
           disabled={total === 0}
         >
-          Continue →
+          {editMode ? "Save & close" : "Continue →"}
         </button>
       </div>
     </div>

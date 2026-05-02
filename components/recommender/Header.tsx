@@ -85,11 +85,11 @@ export function RecHeader({ view, setView, credits, setCredits }: Props) {
             ]}
           />
           <Link
-            href={"/onboarding/credit" as Route}
+            href={"/settings" as Route}
             className="btn btn-ghost"
             style={{ fontSize: 12, textDecoration: "none" }}
           >
-            Edit profile
+            Settings
           </Link>
         </div>
         {/* Mobile filter trigger — only visible <768px. */}

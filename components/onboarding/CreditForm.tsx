@@ -8,6 +8,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import type { Route } from "next";
 import { updateCreditBand } from "@/lib/profile/actions";
 import type { CreditScoreBand } from "@/lib/profile/types";
 
@@ -28,9 +29,10 @@ const OPTIONS: Option[] = [
 
 interface Props {
   initialBand: CreditScoreBand | null;
+  editMode?: boolean;
 }
 
-export function CreditForm({ initialBand }: Props) {
+export function CreditForm({ initialBand, editMode }: Props) {
   const router = useRouter();
   const [selected, setSelected] = useState<CreditScoreBand | null>(initialBand);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +50,7 @@ export function CreditForm({ initialBand }: Props) {
         setError("Couldn't save — try again.");
         return;
       }
-      router.push("/onboarding/spend");
+      router.push((editMode ? "/settings" : "/onboarding/spend") as Route);
     });
   }
 
@@ -159,7 +161,7 @@ export function CreditForm({ initialBand }: Props) {
           onClick={handleContinue}
           disabled={isPending || !selected}
         >
-          {isPending ? "Saving…" : "Continue →"}
+          {isPending ? "Saving…" : editMode ? "Save & close" : "Continue →"}
         </button>
       </div>
     </div>

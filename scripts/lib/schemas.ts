@@ -13,7 +13,7 @@ const IsoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "expected YYYY-MM-DD");
 
 const EarningRule = z.object({
   category: z.string(),
-  rate_pts_per_dollar: z.number(),
+  rate_pts_per_dollar: z.number().nullable(),
   cap_usd_per_year: z.number().nullable().optional(),
   notes: z.string().nullable().optional(),
 });
@@ -28,10 +28,12 @@ const SignupBonus = z.object({
 
 const AnnualCredit = z.object({
   name: z.string(),
-  value_usd: z.number().nullable(),
+  value_usd: z.number().nullable().optional(),
   type: z.string().nullable().optional(),
   expiration: z.string().nullable().optional(),
-  ease_of_use: z.enum(["easy", "medium", "hard", "coupon_book"]),
+  ease_of_use: z
+    .enum(["easy", "medium", "hard", "coupon_book"])
+    .default("medium"), // missing-grade falls back to a moderate 0.75 multiplier
   notes: z.string().nullable().optional(),
 });
 
@@ -52,7 +54,7 @@ export const CardSchema = z
     category: z.array(z.string()),
     annual_fee_usd: z.number(),
     annual_fee_first_year_waived: z.boolean().optional(),
-    foreign_tx_fee_pct: z.number().optional(),
+    foreign_tx_fee_pct: z.number().nullable().optional(),
     credit_score_required: z.string().optional(),
     currency_earned: z.string(),
     earning: z.array(EarningRule),

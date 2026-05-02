@@ -1,62 +1,38 @@
-# TASK: Card data loader with Zod validation
+# TASK 01: Card data loader — DONE
 
-> Replace the hand-written stub data with a real JSON loader that validates incoming research data against Zod schemas at app startup.
+**Status:** Complete. This file is kept for historical context. No work to do here.
 
-## Context
+## Summary of what's in place
 
-Scaffolding ships with `lib/data/stub.ts` containing 3 wallet cards and 5 recommendation cards as plain TypeScript. The research pass produces real JSON files under `data/`. We want a single loader the rest of the app imports from, with Zod validation that fails loudly if the JSON is malformed. The engine (built in later tasks) consumes a validated `CardDatabase` object; it never touches raw JSON.
+The original plan was for Code to write Zod schemas and a JSON loader. That work was completed before the handoff. Specifically:
 
-## Requirements
+- **Source of truth:** `cards/{card_id}.md` markdown files. Each contains six labeled JSON fenced blocks (`cards.json entry`, `programs.json entry`, `issuer_rules.json entry`, `perks_dedup.json entries`, `destination_perks.json entries`) plus a free-form research notes section.
+- **Compiler:** `scripts/build-card-db.ts` (run via `tsx`). Globs `cards/*.md`, validates each block with Zod, merges with anchor-card semantics, writes `data/*.json` and regenerates the `## Completed` section of `cards/AllCards.md`.
+- **Schemas:** `scripts/lib/schemas.ts`. Imported by both the compiler and the runtime loader. Lenient on `null` for optional fields.
+- **Runtime loader:** `lib/data/loader.ts`. `loadCardDatabase()` reads `data/*.json`, re-validates with Zod, returns a typed `CardDatabase` object with O(1) lookup maps (`cardById`, `programById`, `issuerRulesByIssuer`). Cached in module scope.
+- **Auto-build hooks:** `npm run dev` and `npm run build` invoke `npm run cards:build` first via `predev` and `prebuild`. `data/` is gitignored.
 
-1. Define Zod schemas in `lib/data/schema.ts` for every JSON file produced by `RESEARCH_PROMPT_FOR_CODE.md`: `cards.json`, `programs.json`, `issuer_rules.json`, `perks_dedup.json`, `destination_perks.json`.
-2. Create `lib/data/loader.ts` that reads each file at module load, parses with the schema, and exports a typed `CardDatabase` object combining all five.
-3. Update `lib/data/types.ts` to derive types from the Zod schemas using `z.infer<>` rather than redeclaring them.
-4. Update `lib/data/stub.ts` to re-export from `loader.ts` if the JSON files exist; otherwise keep its current hand-written values as fallback (so the app still runs before the research pass completes).
-5. If validation fails, throw with a clear message naming the file and the path within it that broke.
+## What this means for downstream tasks
 
-## Implementation Notes
+Wherever a later task says "load the card database" or "use cards.json," do this:
 
-- Read the JSON files using `import` statements with the `with { type: "json" }` attribute (Next 15 + TS 5.6 supports this), not `fs.readFile` — the loader runs at module load time, not request time.
-- Schemas should mirror the shape described in `RESEARCH_PROMPT_FOR_CODE.md` exactly. If a field there is `string | null`, the schema is `z.string().nullable()`.
-- For unions like `value: number | "unlocks"` in `NewPerk`, use `z.union([z.number(), z.literal("unlocks")])`.
-- Keep `lib/data/types.ts` as the single source of truth for types. Components import types from there, not from `schema.ts`.
-- The `WALLET_BEST_RATES` derivation currently in `stub.ts` is a per-user computation, not a database property. Move it to `lib/engine/wallet.ts` (a stub file you'll fill in TASK-03). For now the rec page still uses the value from stub, so leave the export accessible.
-- Sample expected schema for cards (illustrative, not complete):
-  ```ts
-  const Card = z.object({
-    id: z.string(),
-    name: z.string(),
-    issuer: z.string(),
-    network: z.string(),
-    card_type: z.enum(["personal", "business"]),
-    annual_fee_usd: z.number(),
-    earning: z.array(EarningRule),
-    signup_bonus: SignupBonus,
-    annual_credits: z.array(AnnualCredit),
-    // ... see RESEARCH_PROMPT_FOR_CODE.md for full shape
-  });
-  ```
+```ts
+import { loadCardDatabase } from "@/lib/data/loader";
+import type { Card, Program } from "@/lib/data/loader";
 
-## Do Not Change
+const db = loadCardDatabase();
+const csp = db.cardById.get("chase_sapphire_preferred");
+```
 
-- `app/**` — no UI changes in this task
-- `components/**` — no component changes
-- `lib/supabase/**`, `lib/auth/**`, `middleware.ts` — auth is settled
-- `lib/engine/**` — engine is built in later tasks
-- `package.json` — no new dependencies; Zod is already installed
+If the engine needs a field that isn't in the schema, follow this order:
+1. Add the field to `scripts/lib/schemas.ts`
+2. Add the field to whichever card markdown files need it
+3. Run `npm run cards:build`
+4. Run `npm run typecheck`
 
-## Acceptance Criteria
+Do not write to `data/*.json` directly — those files are generated.
 
-- [ ] `npm run typecheck` passes with zero errors
-- [ ] `npm run build` passes with zero errors
-- [ ] If `data/cards.json` is missing or malformed, the build fails with a Zod error that names the file and the bad field
-- [ ] If `data/cards.json` is present and valid, `import { CARDS } from "@/lib/data/loader"` returns a typed array
-- [ ] `lib/data/stub.ts` still exports `SPEND_CATEGORIES`, `WALLET_CARDS`, `RECOMMEND_CARDS`, `WALLET_BEST_RATES` so the rec panel keeps working
-- [ ] `git diff` shows changes only in `lib/data/**`
+## What's NOT covered by this task
 
-## Verification
-
-1. `npm run typecheck`
-2. `npm run build`
-3. Visit `/recommendations` in dev — page renders with the same content as before
-4. Temporarily corrupt `data/cards.json` (rename a required field) and confirm the build fails with a useful error
+- Spend categories (`SPEND_CATEGORIES` constant) live in `lib/data/stub.ts` — those are app-domain values, not card-database values, and stay there. TASK-06 may relocate them to `lib/categories.ts` if convenient.
+- The user's wallet (held cards) is a profile concern, not a database concern. Profile data lives in Postgres via `lib/profile/*` (created in TASK-05).

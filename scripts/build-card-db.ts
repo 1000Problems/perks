@@ -43,8 +43,10 @@ function err(msg: string): never {
 
 function listCardFiles(): string[] {
   if (!existsSync(CARDS_DIR)) err(`cards directory not found: ${CARDS_DIR}`);
+  // Skip AllCards.md (auto-generated index) and any file starting with `_`
+  // (meta files like _PROMPT_NEW_CARD.md).
   return readdirSync(CARDS_DIR)
-    .filter((f) => f.endsWith(".md") && f !== "AllCards.md")
+    .filter((f) => f.endsWith(".md") && f !== "AllCards.md" && !f.startsWith("_"))
     .sort();
 }
 

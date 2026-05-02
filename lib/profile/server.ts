@@ -8,7 +8,7 @@
 //     legacy WalletCardHeld shape; the engine sees identical data.
 
 import "server-only";
-import { sql } from "@/lib/db";
+import { sql, isUndefinedTableError } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
 import type { CreditScoreBand, UserProfile, WalletCardHeld } from "./types";
 
@@ -54,6 +54,10 @@ export async function getCurrentProfile(): Promise<UserProfile> {
   if (!user) {
     throw new Error("not_authenticated");
   }
+  // user_self_reported may not exist yet if migration 0003 hasn't been
+  // applied. Soft-fail the credit-band lookup so login + onboarding still
+  // work on a partially-migrated database; callers see band=null and the
+  // engine treats it as "unknown / no signal".
   const [rows, selfRows] = await Promise.all([
     sql<ProfileRow[]>`
       select spend_profile, brands_used, cards_held, trips_planned, preferences
@@ -61,12 +65,19 @@ export async function getCurrentProfile(): Promise<UserProfile> {
       where user_id = ${user.id}
       limit 1
     `,
-    sql<SelfReportedRow[]>`
-      select credit_score_band
-      from user_self_reported
-      where user_id = ${user.id}
-      limit 1
-    `,
+    (async () => {
+      try {
+        return await sql<SelfReportedRow[]>`
+          select credit_score_band
+          from user_self_reported
+          where user_id = ${user.id}
+          limit 1
+        `;
+      } catch (e) {
+        if (isUndefinedTableError(e)) return [];
+        throw e;
+      }
+    })(),
   ]);
   const row = rows[0];
   // No row yet means the user hasn't answered the credit question. We

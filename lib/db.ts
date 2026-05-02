@@ -46,3 +46,16 @@ export const sql = new Proxy(sqlTarget, {
     return (getDb() as unknown as (...a: unknown[]) => unknown)(...args);
   },
 }) as Sql;
+
+// Postgres "undefined_table" error — fired when a query references a
+// table the database doesn't have yet (typically because migrations
+// haven't been run). Used to soft-fail post-cutover queries on tables
+// like user_self_reported so login still works on a partially-migrated
+// database; callers treat the missing data as empty.
+export function isUndefinedTableError(e: unknown): boolean {
+  if (!e || typeof e !== "object") return false;
+  const code = (e as { code?: string }).code;
+  if (code === "42P01") return true;
+  const msg = (e as { message?: string }).message ?? "";
+  return /relation .* does not exist/i.test(msg);
+}

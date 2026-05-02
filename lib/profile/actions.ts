@@ -13,7 +13,7 @@
 //   - updateUserCard() always writes only to user_cards — used by new
 //     UI flows that need closed-card support.
 
-import { sql } from "@/lib/db";
+import { sql, isUndefinedTableError } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getCurrentProfile } from "./server";
 import type { CreditScoreBand, UserProfile, WalletCardHeld } from "./types";
@@ -168,6 +168,15 @@ export async function updateCreditBand(band: CreditScoreBand): Promise<UpdateRes
     `;
     return { ok: true };
   } catch (e) {
+    // Migration 0003 may not have run yet against this database. Treat
+    // the missing table as a soft success so onboarding flows forward;
+    // the band just isn't persisted yet (engine sees "unknown"). The
+    // value will land once migrations are applied.
+    if (isUndefinedTableError(e)) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.warn("[profile:update_credit_band] user_self_reported missing — skipping persist:", msg);
+      return { ok: true };
+    }
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[profile:update_credit_band] failed:", msg);
     return { ok: false, error: "update_failed" };

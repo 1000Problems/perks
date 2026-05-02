@@ -8,7 +8,7 @@
 // constants live in lib/auth/types.ts.
 
 import { redirect } from "next/navigation";
-import { sql } from "@/lib/db";
+import { sql, isUndefinedTableError } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { createSession, destroySession } from "@/lib/auth/session";
 import type { AuthState } from "@/lib/auth/types";
@@ -120,6 +120,9 @@ export async function loginAction(
   //     so existing accounts also get prompted once after the rollout).
   //   - Has credit band but no spend_profile → /onboarding/spend.
   //   - Otherwise → /recommendations.
+  // user_self_reported may not exist yet on a partially-migrated database;
+  // soft-fail so login still completes — the user just lands on
+  // /onboarding/credit, same as a brand-new account.
   const [profile, self] = await Promise.all([
     sql<{ has_data: boolean }[]>`
       select (
@@ -127,9 +130,16 @@ export async function loginAction(
       ) as has_data
       from perks_profiles where user_id = ${user.id} limit 1
     `,
-    sql<{ credit_score_band: string | null }[]>`
-      select credit_score_band from user_self_reported where user_id = ${user.id} limit 1
-    `,
+    (async () => {
+      try {
+        return await sql<{ credit_score_band: string | null }[]>`
+          select credit_score_band from user_self_reported where user_id = ${user.id} limit 1
+        `;
+      } catch (e) {
+        if (isUndefinedTableError(e)) return [];
+        throw e;
+      }
+    })(),
   ]);
   const hasData = profile[0]?.has_data === true;
   const hasCreditBand = (self[0]?.credit_score_band ?? null) !== null;

@@ -1,0 +1,31 @@
+{
+  "spend_profile": {
+    "groceries": 8400,
+    "dining": 4200,
+    "gas": 2400,
+    "airfare": 1800,
+    "hotels": 1500,
+    "streaming": 480,
+    "shopping": 3600,
+    "drugstore": 600,
+    "transit": 1200,
+    "utilities": 2400,
+    "home": 1500,
+    "other": 6000
+  },
+  "brands_used": ["Hyatt", "Costco"],
+  "cards_held": [
+    {
+      "card_id": "wells_fargo_active_cash",
+      "opened_at": "2024-03-15",
+      "bonus_received": true
+    },
+    {
+      "card_id": "amex_blue_cash_preferred",
+      "opened_at": "2023-08-10",
+      "bonus_received": true
+    }
+  ],
+  "trips_planned": [{ "destination": "tokyo" }],
+  "preferences": { "creditsMode": "realistic", "viewMode": "ongoing" }
+}

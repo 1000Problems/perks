@@ -375,16 +375,7 @@ export function RecPanelDesktop({ profile, db }: RecPanelDesktopProps) {
             Ranking is based on your spend profile, your held cards, and issuer rules. We do not take
             affiliate revenue and do not boost cards based on payouts.
           </p>
-          <p
-            style={{
-              marginTop: 6,
-              fontSize: 11,
-              color: "var(--ink-4)",
-              fontFamily: "var(--font-mono), ui-monospace, monospace",
-            }}
-          >
-            Card data verified {db.manifest.compiled_at.slice(0, 10)}
-          </p>
+          <FreshnessStamp compiledAt={db.manifest.compiled_at} />
         </main>
 
         {/* RIGHT — drill-in detail */}
@@ -409,6 +400,27 @@ export function RecPanelDesktop({ profile, db }: RecPanelDesktopProps) {
         </aside>
       </div>
     </div>
+  );
+}
+
+function FreshnessStamp({ compiledAt }: { compiledAt: string }) {
+  const compiled = new Date(compiledAt);
+  const ageDays = (Date.now() - compiled.getTime()) / (24 * 60 * 60 * 1000);
+  const stale = ageDays > 90 || isNaN(ageDays);
+  const color = stale ? "var(--warn-ink)" : "var(--ink-4)";
+  const dateStr = isNaN(compiled.getTime()) ? "unknown" : compiledAt.slice(0, 10);
+  return (
+    <p
+      style={{
+        marginTop: 6,
+        fontSize: 11,
+        color,
+        fontFamily: "var(--font-mono), ui-monospace, monospace",
+      }}
+    >
+      {stale ? "⚠️ Card data may be stale — " : ""}
+      Card data verified {dateStr}
+    </p>
   );
 }
 

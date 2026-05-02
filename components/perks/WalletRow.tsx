@@ -114,11 +114,18 @@ export function WalletRow({
           textAlign: "left",
           display: "grid",
           gridTemplateColumns: "auto 1fr 14px",
-          alignItems: "center",
+          alignItems: "start",
           gap: 12,
         }}
       >
-        <CardSwatch variant={swatchVariant} width={22} />
+        <CardSwatch
+          variant={swatchVariant}
+          width={22}
+          // Nudge down so the swatch's vertical center sits on the card-name
+          // text baseline rather than its top edge — reads as "next to" the
+          // name even though the grid is top-aligned.
+          style={{ marginTop: 2 }}
+        />
         <div style={{ minWidth: 0 }}>
           <div
             style={{

@@ -170,7 +170,7 @@ function ContributorRow({
       style={{
         display: "grid",
         gridTemplateColumns: "auto 1fr auto",
-        alignItems: "center",
+        alignItems: "start",
         gap: 8,
         padding: "5px 8px",
         marginTop: 4,
@@ -179,7 +179,13 @@ function ContributorRow({
         background: isWinner ? "var(--paper-2)" : "transparent",
       }}
     >
-      <CardSwatch variant={variantForCard(card)} width={18} />
+      <CardSwatch
+        variant={variantForCard(card)}
+        width={18}
+        // Match WalletRow: nudge so the swatch's center sits on the card-name
+        // baseline. Keeps it aligned with the name when "← active" wraps.
+        style={{ marginTop: 2 }}
+      />
       <div
         style={{
           minWidth: 0,

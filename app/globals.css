@@ -1,0 +1,302 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* perks — design tokens
+   Calm financial aesthetic: warm-neutral paper, graphite ink, minimal accents.
+   Inspired by Wealthfront / Mercury / Copilot Money.
+*/
+
+:root {
+  /* surfaces */
+  --paper: oklch(0.985 0.004 85);
+  --paper-2: oklch(0.965 0.005 85);
+  --paper-3: oklch(0.945 0.006 85);
+  --rule: oklch(0.90 0.006 85);
+  --rule-2: oklch(0.83 0.008 85);
+
+  /* ink */
+  --ink: oklch(0.20 0.015 250);
+  --ink-2: oklch(0.42 0.013 250);
+  --ink-3: oklch(0.60 0.010 250);
+  --ink-4: oklch(0.74 0.008 250);
+
+  /* semantic — single chroma family */
+  --pos: oklch(0.58 0.13 155);
+  --pos-bg: oklch(0.93 0.06 155);
+  --pos-ink: oklch(0.42 0.10 155);
+
+  --neg: oklch(0.55 0.17 30);
+  --neg-bg: oklch(0.94 0.05 30);
+  --neg-ink: oklch(0.42 0.13 30);
+
+  --warn: oklch(0.72 0.13 75);
+  --warn-bg: oklch(0.95 0.06 75);
+  --warn-ink: oklch(0.50 0.11 75);
+
+  /* heatmap — single hue gradient, low chroma at low values */
+  --hm-0: oklch(0.96 0.01 30);
+  --hm-1: oklch(0.93 0.04 60);
+  --hm-2: oklch(0.92 0.07 100);
+  --hm-3: oklch(0.91 0.10 140);
+  --hm-4: oklch(0.85 0.13 155);
+  --hm-5: oklch(0.72 0.15 155);
+
+  /* radii */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+
+  /* shadows */
+  --shadow-1: 0 1px 0 oklch(0.85 0.006 85), 0 1px 2px oklch(0.85 0.006 85 / 0.4);
+  --shadow-2: 0 1px 0 oklch(0.85 0.006 85), 0 6px 16px -8px oklch(0.20 0.015 250 / 0.18);
+}
+
+/* base */
+html, body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-feature-settings: 'cv11', 'ss01', 'ss02';
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+* { box-sizing: border-box; }
+
+/* numerics — tabular, distinctive */
+.num {
+  font-family: var(--font-display), serif;
+  font-variation-settings: 'opsz' 144, 'SOFT' 0, 'WONK' 0;
+  font-feature-settings: 'tnum', 'lnum', 'ss01';
+  letter-spacing: -0.01em;
+}
+.mono { font-family: var(--font-mono), ui-monospace, monospace; font-feature-settings: 'tnum'; }
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* utility — small caps label */
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+.hr { height: 1px; background: var(--rule); border: 0; margin: 0; }
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* card art — generic placeholders. Real issuer art replaces these later. */
+.card-art {
+  position: relative;
+  aspect-ratio: 1.586 / 1;
+  border-radius: 9px;
+  overflow: hidden;
+  box-shadow: 0 1px 0 oklch(1 0 0 / 0.3) inset, 0 4px 12px -4px oklch(0 0 0 / 0.25);
+  color: white;
+  flex-shrink: 0;
+}
+.card-art .chip {
+  position: absolute;
+  top: 22%;
+  left: 10%;
+  width: 14%;
+  height: 18%;
+  background: linear-gradient(135deg, oklch(0.82 0.04 85), oklch(0.7 0.04 85));
+  border-radius: 3px;
+}
+.card-art .label {
+  position: absolute;
+  bottom: 10%;
+  left: 8%;
+  right: 8%;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 500;
+  opacity: 0.92;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.card-art .label .name { font-weight: 600; letter-spacing: 0; text-transform: none; font-size: 10px; }
+
+.art-navy { background: linear-gradient(135deg, oklch(0.28 0.05 250), oklch(0.18 0.04 260)); }
+.art-navy::before {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 80% 20%, oklch(0.4 0.08 240 / 0.5), transparent 50%),
+    repeating-linear-gradient(115deg, transparent 0 40px, oklch(1 0 0 / 0.04) 40px 41px);
+}
+.art-graphite { background: linear-gradient(160deg, oklch(0.32 0.005 250), oklch(0.18 0.005 250)); }
+.art-graphite::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(160deg, transparent 50%, oklch(1 0 0 / 0.04) 50%);
+}
+.art-platinum {
+  background: linear-gradient(155deg, oklch(0.78 0.005 85), oklch(0.62 0.005 85) 50%, oklch(0.4 0.005 85));
+  color: oklch(0.18 0.005 250);
+}
+.art-platinum::before {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(45deg, transparent 0 2px, oklch(1 0 0 / 0.18) 2px 3px);
+}
+.art-emerald { background: linear-gradient(140deg, oklch(0.42 0.10 165), oklch(0.25 0.07 170)); }
+.art-emerald::before {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 20% 90%, oklch(0.6 0.12 160 / 0.4), transparent 50%);
+}
+.art-rust { background: linear-gradient(140deg, oklch(0.45 0.13 35), oklch(0.30 0.10 30)); }
+.art-rust::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 100% 0%, oklch(0.7 0.15 50 / 0.4), transparent 60%);
+}
+.art-cream {
+  background: linear-gradient(150deg, oklch(0.94 0.02 85), oklch(0.86 0.03 75));
+  color: oklch(0.25 0.04 30);
+}
+.art-cream::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(150deg, transparent 60%, oklch(0.5 0.12 30 / 0.08));
+}
+.art-ink { background: linear-gradient(170deg, oklch(0.18 0.01 260), oklch(0.10 0.01 260)); }
+.art-ink::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(170deg, transparent 70%, oklch(0.5 0.15 240 / 0.15));
+}
+.art-skyblue { background: linear-gradient(140deg, oklch(0.55 0.13 245), oklch(0.40 0.12 250)); }
+.art-skyblue::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle at 90% 100%, oklch(0.75 0.10 230 / 0.4), transparent 60%);
+}
+
+/* button styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--rule-2);
+  background: white;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+.btn:hover { background: var(--paper-3); }
+.btn-primary {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.btn-primary:hover { background: oklch(0.30 0.015 250); }
+.btn-ghost { border-color: transparent; background: transparent; }
+.btn-ghost:hover { background: var(--paper-3); }
+
+/* segmented control */
+.seg {
+  display: inline-flex;
+  background: var(--paper-3);
+  border-radius: var(--r-md);
+  padding: 3px;
+  gap: 2px;
+}
+.seg button {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.seg button[data-active="true"] {
+  background: white;
+  color: var(--ink);
+  box-shadow: var(--shadow-1);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--rule-2);
+  background: white;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+.chip:hover { background: var(--paper-3); }
+.chip[data-active="true"] {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+/* eligibility chip */
+.elig {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.01em;
+}
+.elig-dot { width: 6px; height: 6px; border-radius: 50%; }
+.elig-green { background: var(--pos-bg); color: var(--pos-ink); }
+.elig-green .elig-dot { background: var(--pos); }
+.elig-yellow { background: var(--warn-bg); color: var(--warn-ink); }
+.elig-yellow .elig-dot { background: var(--warn); }
+.elig-red { background: var(--neg-bg); color: var(--neg-ink); }
+.elig-red .elig-dot { background: var(--neg); }
+
+/* heatmap cell */
+.hm-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  font-weight: 500;
+  font-feature-settings: 'tnum';
+  border-radius: 4px;
+  padding: 0 6px;
+  color: oklch(0.30 0.04 155);
+  letter-spacing: -0.02em;
+}
+
+/* skeleton shimmer */
+.skel {
+  background: linear-gradient(90deg,
+    var(--paper-3) 0%,
+    oklch(0.92 0.006 85) 50%,
+    var(--paper-3) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: 4px;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

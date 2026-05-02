@@ -10,7 +10,12 @@ import { SPEND_CATEGORIES } from "@/lib/categories";
 import type { CardDatabase } from "@/lib/data/loader";
 import type { SpendCategory } from "@/lib/data/types";
 import { variantForCard } from "@/lib/cardArt";
-import type { CardScore, RankedRecommendation, UserProfile } from "@/lib/engine/types";
+import type {
+  CardScore,
+  CardScoreComponents,
+  RankedRecommendation,
+  UserProfile,
+} from "@/lib/engine/types";
 import { fmt, heatColor, heatTextColor } from "@/lib/utils/format";
 import type { ViewMode } from "./Header";
 
@@ -56,7 +61,6 @@ export function DrillIn({
 }: Props) {
   const { card, score, eligibility } = r;
   const delta = view === "ongoing" ? score.deltaOngoing : score.deltaYear1;
-  const [mathOpen, setMathOpen] = useState(false);
 
   // Transfer partners for the card's currency_earned program.
   const program = card.currency_earned ? db.programById.get(card.currency_earned) : null;
@@ -80,23 +84,13 @@ export function DrillIn({
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em" }}>{card.name}</div>
           <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>{card.issuer}</div>
-          {/* CASH/POINTS/PERKS pillars are shown in the selected list
-              card — repeating them here was redundant. Keep the NET
-              takeaway as the headline number and bump it up since it's
-              now the only big number in the header. */}
-          <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 4 }}>
-            <span
-              style={{
-                fontSize: 11,
-                color: "var(--ink-3)",
-                fontFamily: "var(--font-mono), ui-monospace, monospace",
-                letterSpacing: "0.06em",
-              }}
-            >
-              {view === "ongoing" ? "NET / YEAR" : "NET, YEAR 1"}
-            </span>
-            <Money value={delta} sign size="md" />
-          </div>
+          {/* The pillars in the selected list card show the spend-side
+              breakdown. The drill-in header now carries the full math
+              walkthrough — components stack into a mini-ledger that
+              terminates in the NET headline. Makes the gap between the
+              CASH pillar (e.g. $106) and the NET (e.g. $186) self-
+              explanatory: the brand-fit row is right there. */}
+          <DrillInLedger score={score} view={view} delta={delta} />
           <div style={{ marginTop: 12 }}>
             <EligibilityChip status={eligibility.status} label={eligibility.note} />
           </div>
@@ -203,80 +197,6 @@ export function DrillIn({
         </Section>
       )}
 
-      <Section num="5" title="Annual breakdown">
-        <button
-          type="button"
-          onClick={() => setMathOpen(!mathOpen)}
-          style={{
-            background: "transparent",
-            border: 0,
-            padding: 0,
-            cursor: "pointer",
-            fontSize: 12,
-            color: "var(--ink-2)",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            fontFamily: "inherit",
-          }}
-        >
-          <span
-            style={{
-              display: "inline-block",
-              transform: mathOpen ? "rotate(90deg)" : "rotate(0)",
-              transition: "transform 120ms",
-            }}
-          >
-            ▸
-          </span>
-          {mathOpen ? "Hide" : "Show"} totals
-        </button>
-        {mathOpen && (
-          <div
-            style={{
-              marginTop: 10,
-              fontFamily: "var(--font-mono), ui-monospace, monospace",
-              fontSize: 11.5,
-              color: "var(--ink-2)",
-              lineHeight: 1.7,
-            }}
-          >
-            {(() => {
-              // Per-category earning lines are shown inline above in
-              // Section 01, so collapse them into a single summary line
-              // here — keeps the totals reconcilable without doubling up.
-              const earnings = score.breakdown.filter((l) => l.kind === "earning");
-              const earningsTotal = earnings.reduce((a, l) => a + l.value, 0);
-              const others = score.breakdown.filter((l) => l.kind !== "earning");
-              return (
-                <>
-                  {earnings.length > 0 && (
-                    <MathRow
-                      label={`Spend earnings (${earnings.length} ${earnings.length === 1 ? "category" : "categories"})`}
-                      v={(earningsTotal >= 0 ? "+$" : "−$") + Math.abs(earningsTotal).toLocaleString()}
-                    />
-                  )}
-                  {others.map((line, i) => (
-                    <MathRow
-                      key={`${line.label}-${i}`}
-                      label={line.label}
-                      v={(line.value >= 0 ? "+$" : "−$") + Math.abs(line.value).toLocaleString()}
-                      neg={line.value < 0}
-                    />
-                  ))}
-                </>
-              );
-            })()}
-            <hr className="hr" style={{ margin: "6px 0" }} />
-            <MathRow
-              label="Net"
-              v={(delta >= 0 ? "+$" : "−$") + Math.abs(delta).toLocaleString()}
-              bold
-            />
-          </div>
-        )}
-      </Section>
-
       <div style={{ marginTop: 22, display: "flex", flexDirection: "column", gap: 6 }}>
         {isConsidering ? (
           <button
@@ -327,20 +247,196 @@ function findPartnerInPhrases(partners: string[], phrases: string[]): string | n
   return null;
 }
 
-function MathRow({ label, v, neg, bold }: { label: string; v: string; neg?: boolean; bold?: boolean }) {
+// Mini ledger that walks through the components contributing to NET.
+// Lives in the drill-in header so the user can tell at a glance why the
+// NET (e.g. $186) doesn't match the CASH pillar from the rec-list card
+// (e.g. $106) — the brand-fit row sits there explicitly. Single-
+// component cards skip the ledger and just show NET.
+//
+// Order: spend-side first (cash, points, brand-fit), then perks, then
+// fee, then SUB (year-1 view only). Brand-fit gets an "(estimated)"
+// flag in its label so the user reads it as a soft adjustment rather
+// than calculated dollars.
+interface LedgerRow {
+  key: string;
+  label: string;
+  value: number;
+  caption?: string;
+  negative?: boolean;
+}
+
+function buildLedgerRows(c: CardScoreComponents, view: ViewMode): LedgerRow[] {
+  const rows: LedgerRow[] = [];
+  if (c.cashOngoing > 0) {
+    rows.push({ key: "cash", label: "from spending", value: c.cashOngoing });
+  }
+  if (c.pointsOngoing) {
+    const pts = c.pointsOngoing;
+    rows.push({
+      key: "points",
+      label: "in points",
+      value: pts.valueUsd,
+      caption: `${fmtPtsShort(pts.pts)} ${shortenProgram(pts.programName)} @ ${fmtCpp(pts.cpp)}`,
+    });
+  }
+  if (c.brandFitOngoing) {
+    rows.push({
+      key: "brandfit",
+      label: `${c.brandFitOngoing.brand} fit (estimated)`,
+      value: c.brandFitOngoing.valueUsd,
+    });
+  }
+  if (c.perksOngoing > 0) {
+    rows.push({
+      key: "perks",
+      label: "perks (if claimed)",
+      value: c.perksOngoing,
+    });
+  }
+  if (c.feeOngoing < 0) {
+    rows.push({
+      key: "fee",
+      label: "annual fee",
+      value: c.feeOngoing,
+      negative: true,
+    });
+  }
+  if (view === "year1" && c.subYear1 > 0) {
+    rows.push({
+      key: "sub",
+      label: "SUB year 1",
+      value: c.subYear1,
+      caption:
+        c.subYear1Detail?.mode === "loyalty" && c.subYear1Detail.pts > 0
+          ? `${fmtPtsShort(c.subYear1Detail.pts)} pts/yr amortized`
+          : "amortized over 24 months",
+    });
+  }
+  return rows;
+}
+
+function DrillInLedger({
+  score,
+  view,
+  delta,
+}: {
+  score: CardScore;
+  view: ViewMode;
+  delta: number;
+}) {
+  const rows = buildLedgerRows(score.components, view);
+  const showLedger = rows.length >= 2;
+
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        fontWeight: bold ? 600 : 400,
-        color: bold ? "var(--ink)" : "inherit",
-      }}
-    >
-      <span style={{ color: bold ? "var(--ink)" : "var(--ink-3)" }}>{label}</span>
-      <span style={{ color: neg ? "var(--neg)" : bold ? "var(--pos)" : "inherit" }}>{v}</span>
+    <div style={{ marginTop: 16 }}>
+      {showLedger && (
+        <div
+          style={{
+            fontFamily: "var(--font-mono), ui-monospace, monospace",
+            fontSize: 11.5,
+            color: "var(--ink-3)",
+            lineHeight: 1.6,
+            marginBottom: 10,
+          }}
+        >
+          {rows.map((row) => (
+            <div
+              key={row.key}
+              style={{ display: "flex", flexDirection: "column", marginBottom: 3 }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "baseline",
+                  gap: 12,
+                }}
+              >
+                <span style={{ color: "var(--ink-3)" }}>{row.label}</span>
+                <span
+                  className="num"
+                  style={{
+                    color: row.negative ? "var(--neg)" : "var(--ink-2)",
+                    fontVariantNumeric: "tabular-nums",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {row.value >= 0 ? "+" : "−"}
+                  {fmt.usd(Math.abs(row.value))}
+                </span>
+              </div>
+              {row.caption && (
+                <span
+                  style={{
+                    fontSize: 10.5,
+                    color: "var(--ink-4)",
+                    marginTop: 1,
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {row.caption}
+                </span>
+              )}
+            </div>
+          ))}
+          <hr
+            style={{
+              border: 0,
+              borderTop: "1px solid var(--rule)",
+              margin: "8px 0 0",
+            }}
+          />
+        </div>
+      )}
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <span
+          style={{
+            fontSize: 11,
+            color: "var(--ink-3)",
+            fontFamily: "var(--font-mono), ui-monospace, monospace",
+            letterSpacing: "0.06em",
+          }}
+        >
+          {view === "ongoing" ? "NET / YEAR" : "NET, YEAR 1"}
+        </span>
+        <Money value={delta} sign size="md" />
+      </div>
     </div>
   );
+}
+
+function fmtPtsShort(n: number): string {
+  if (n >= 10000) {
+    const k = n / 1000;
+    return (k >= 100 ? Math.round(k) : k.toFixed(1).replace(/\.0$/, "")) + "k";
+  }
+  return n.toLocaleString("en-US");
+}
+
+// Trim verbose program names to a short tag. "Chase Ultimate Rewards" →
+// "UR"; "American Express Membership Rewards" → "MR"; "Citi ThankYou
+// Points" → "ThankYou". Falls back to the first capitalized word.
+function shortenProgram(name: string): string {
+  const lower = name.toLowerCase();
+  if (lower.includes("ultimate rewards")) return "UR";
+  if (lower.includes("membership rewards")) return "MR";
+  if (lower.includes("thankyou")) return "TY";
+  if (lower.includes("mileageplus")) return "MileagePlus";
+  if (lower.includes("skymiles")) return "SkyMiles";
+  if (lower.includes("aadvantage")) return "AAdvantage";
+  if (lower.includes("rapid rewards")) return "Rapid Rewards";
+  if (lower.includes("hyatt")) return "Hyatt";
+  if (lower.includes("hilton") || lower.includes("honors")) return "Honors";
+  if (lower.includes("bonvoy")) return "Bonvoy";
+  if (lower.includes("ihg")) return "IHG";
+  // Default: take the first 1-2 words.
+  return name.split(/\s+/).slice(0, 2).join(" ");
+}
+
+function fmtCpp(cpp: number): string {
+  // 1.25 → "1.25¢", 1.0 → "1¢", 1.6 → "1.6¢"
+  const s = cpp.toFixed(2).replace(/\.?0+$/, "");
+  return `${s}¢`;
 }
 
 interface SpendRow {

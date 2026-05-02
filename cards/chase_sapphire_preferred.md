@@ -203,3 +203,238 @@
 - **Hyatt valuation**: Common valuations of UR at 2cpp lean heavily on Hyatt transfers. If user does not stay at Hyatt, realistic UR valuation drops to ~1.25-1.5cpp via portal/airline transfers for economy.
 - **DashPass expiry**: Currently advertised through Dec 31 2027. Chase has extended this multiple times.
 - **Once-per-product clarification**: The "48-month" rule is the eligibility window post-bonus-receipt. User can downgrade CSR → CSP without triggering the rule, but cannot earn a new Sapphire SUB.
+
+## card_soul.credit_score
+
+```json
+{
+  "band": "very_good",
+  "source": "Issuer page application screen — https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred. CSP is the entry-point Sapphire card.",
+  "confidence": "high",
+  "notes": "Chase 5/24 rule applies; CSP is the most 5/24-sensitive Chase product."
+}
+```
+
+## card_soul.annual_credits
+
+```json
+[
+  {
+    "name": "Chase Travel Hotel Credit",
+    "face_value_usd": 50,
+    "period": "anniversary_year",
+    "ease_score": 4,
+    "realistic_redemption_pct": 0.85,
+    "enrollment_required": false,
+    "qualifying_purchases_open_ended": false,
+    "expires_if_unused": true,
+    "stackable_with_other_credits": false,
+    "qualifying_spend": "Hotel booking via Chase Travel",
+    "notes": "Must book through Chase Travel.",
+    "source": "$50 Annual Chase Travel Hotel Credit — issuer page",
+    "confidence": "high"
+  },
+  {
+    "name": "DashPass Membership",
+    "face_value_usd": 120,
+    "period": "calendar_year",
+    "ease_score": 4,
+    "realistic_redemption_pct": 0.85,
+    "enrollment_required": true,
+    "qualifying_purchases_open_ended": false,
+    "expires_if_unused": false,
+    "stackable_with_other_credits": false,
+    "qualifying_spend": "DashPass membership (through 12/31/2027)",
+    "notes": "12-month complimentary DashPass.",
+    "source": "Get a complimentary DashPass membership, a $120 value for 12 months — issuer page",
+    "confidence": "high"
+  },
+  {
+    "name": "DashPass Grocery/Retail Monthly Promo",
+    "face_value_usd": 120,
+    "period": "monthly",
+    "ease_score": 3,
+    "realistic_redemption_pct": 0.65,
+    "enrollment_required": true,
+    "qualifying_purchases_open_ended": false,
+    "expires_if_unused": true,
+    "stackable_with_other_credits": false,
+    "qualifying_spend": "DoorDash groceries, retail orders, etc (through 12/31/2027)",
+    "notes": "$10/month for active DashPass members. NEW finding — not in current markdown.",
+    "source": "Plus, DashPass members get a $10 promo each month ($120 annually) to save on groceries, retail orders, and more through December 31, 2027 — issuer page",
+    "confidence": "high"
+  }
+]
+```
+
+## card_soul.insurance
+
+```json
+{
+  "primary_source_url": "https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred",
+  "gtb_pdf_url": "https://static.chasecdn.com/content/services/structured-document/document.en.pdf/card/benefits-center/product-benefits-guide-pdf/BGC11387_v2.pdf",
+  "auto_rental_cdw": {
+    "available": true,
+    "coverage_type": "primary",
+    "coverage_max_usd": 60000,
+    "domestic": true,
+    "international": true,
+    "liability_included": false,
+    "exclusions": ["exotic_cars", "antiques", "off_road", "motorcycles", "large_passenger_vans"],
+    "source": "Standard CSP Visa Signature Auto Rental CDW per Chase GTB",
+    "confidence": "medium"
+  },
+  "trip_cancellation_interruption": {
+    "available": true,
+    "max_per_traveler_usd": 10000,
+    "max_per_trip_usd": 20000,
+    "source": "Chase GTB inherits same trip cancellation/interruption tier on CSP as CSR ($10K/$20K). Markdown notes the same.",
+    "confidence": "medium"
+  },
+  "trip_delay": {
+    "available": true,
+    "threshold_hours": 12,
+    "max_per_traveler_usd": 500,
+    "trigger_alt": "or requires an overnight stay",
+    "source": "Chase GTB CSP trip delay terms; markdown documents 12hr correctly.",
+    "confidence": "medium"
+  },
+  "baggage_delay": {
+    "available": true,
+    "threshold_hours": 6,
+    "max_per_day_usd": 100,
+    "max_days": 5,
+    "source": "The baggage delay benefit applies if your baggage is delayed or misdirected for more than six hours … with a maximum benefit of $100 per day up to a maximum of five days — WebSearch summary of Chase GTB",
+    "confidence": "medium"
+  },
+  "lost_baggage": {
+    "available": true,
+    "max_per_traveler_usd": 3000,
+    "source": "lost luggage reimbursement providing up to $3,000 per covered traveler — WebSearch summary of Chase GTB",
+    "confidence": "medium"
+  },
+  "cell_phone_protection": {
+    "available": false,
+    "source": "The Chase Sapphire Preferred does not offer cell phone insurance. — https://wallethub.com/answers/cc/chase-sapphire-preferred-cell-phone-protection-1000387-2140694744/. Confirmed by Chase's education page (CSP omitted from cell-phone-protection list).",
+    "confidence": "high",
+    "notes": "Markdown is correct in not listing cell phone protection."
+  },
+  "emergency_evacuation_medical": {
+    "available": false,
+    "source": "Not on CSP per CSP/CSR comparison; Emergency Evac is CSR-tier only.",
+    "confidence": "medium"
+  },
+  "emergency_medical_dental": {
+    "available": false,
+    "source": "CSR-only.",
+    "confidence": "medium"
+  },
+  "travel_accident_insurance": {
+    "available": true,
+    "max_usd": 500000,
+    "trigger": "when you pay for your air, bus, train or cruise transportation with your card",
+    "source": "travel accident insurance with up to $500,000 in accidental death or dismemberment coverage — WebSearch summary of Chase GTB",
+    "confidence": "medium"
+  },
+  "purchase_protection": {
+    "available": true,
+    "window_days": 120,
+    "ny_resident_window_days": 90,
+    "max_per_item_usd": 500,
+    "max_per_year_usd": 50000,
+    "source": "CSP-tier ($500/item caps). Confidence medium pending GTB PDF confirmation.",
+    "confidence": "medium"
+  },
+  "extended_warranty": {
+    "available": true,
+    "extra_year_added": 1,
+    "applies_to_warranties_of_max_years": 3,
+    "source": "Standard CSP Visa Signature Extended Warranty — extends manufacturer warranty by 1 year on warranties of 3 years or less.",
+    "confidence": "medium"
+  },
+  "return_protection": {
+    "available": false,
+    "source": "Not listed for CSP; Return Protection is CSR-tier only.",
+    "confidence": "medium"
+  },
+  "roadside_assistance": {
+    "available": true,
+    "type": "pay-per-use; via Roadside Dispatch (Visa Signature)",
+    "source": "Visa Signature inheritance",
+    "confidence": "medium"
+  }
+}
+```
+
+## card_soul.program_access
+
+```json
+[
+  {"program_id": "points_boost_redemption", "access_kind": "included", "overrides": {"max_multiplier": 2}, "notes": "Up to 2x via Chase Travel Points Boost.", "source": "Up to 2X on Select Flights and Hotels through Chase Travel with Points Boost — issuer page", "confidence": "high"},
+  {"program_id": "visa_signature_lhc", "access_kind": "included", "overrides": {}, "notes": "CSP is Visa Signature.", "source": "derived from network status", "confidence": "high"},
+  {"program_id": "chase_the_edit", "access_kind": "not_available", "overrides": {}, "notes": "The Edit credit is CSR-only; CSP cardholders can BOOK at The Edit but get no $500 credit.", "source": "derived", "confidence": "high"},
+  {"program_id": "visa_infinite_lhc", "access_kind": "not_available", "overrides": {}, "notes": "CSP is Visa Signature, not Visa Infinite.", "source": "derived", "confidence": "high"},
+  {"program_id": "chase_sapphire_lounge_network", "access_kind": "not_available", "overrides": {}, "notes": "CSR-only.", "source": "derived", "confidence": "high"},
+  {"program_id": "priority_pass_select", "access_kind": "not_available", "overrides": {}, "notes": "CSR-only Chase benefit.", "source": "derived", "confidence": "high"},
+  {"program_id": "centurion_lounge_network", "access_kind": "not_available", "overrides": {}, "notes": "Amex-only.", "source": "derived", "confidence": "high"},
+  {"program_id": "capital_one_lounge_network", "access_kind": "not_available", "overrides": {}, "notes": "Capital One-only.", "source": "derived", "confidence": "high"},
+  {"program_id": "delta_skyclub", "access_kind": "not_available", "overrides": {}, "notes": "Amex-Delta only.", "source": "derived", "confidence": "high"},
+  {"program_id": "fhr", "access_kind": "not_available", "overrides": {}, "notes": "Amex-only.", "source": "derived", "confidence": "high"},
+  {"program_id": "amex_hotel_collection", "access_kind": "not_available", "overrides": {}, "notes": "Amex-only.", "source": "derived", "confidence": "high"}
+]
+```
+
+## card_soul.co_brand_perks
+
+```json
+{
+  "hotel_status_grants": [],
+  "rental_status_grants": [],
+  "prepaid_hotel_credit": {
+    "amount_usd_per_period": 50,
+    "period": "anniversary_year",
+    "qualifying_programs": ["chase_travel"],
+    "min_nights": null,
+    "booking_channel": "Chase Travel",
+    "source": "$50 Annual Chase Travel Hotel Credit — issuer page"
+  },
+  "free_night_certificates": [],
+  "complimentary_dashpass": {"available": true, "through": "12/31/2027", "value_usd": 120, "source": "Get a complimentary DashPass membership, a $120 value for 12 months. … when you activate by 12/31/2027 — issuer page"},
+  "dashpass_grocery_retail_promo": {"amount_usd_per_month": 10, "through": "12/31/2027", "source": "DashPass members get a $10 promo each month ($120 annually) to save on groceries, retail orders, and more through December 31, 2027 — issuer page"},
+  "ten_pct_anniversary_bonus": {"available": true, "rate": 0.10, "base": "total purchases made the previous year", "source": "each account anniversary you'll earn bonus points equal to 10% of your total purchases made the previous year — issuer page"},
+  "spend_threshold_lounge_unlock": null,
+  "points_boost_redemption": {"available": true, "max_multiplier": 2, "source": "Up to 2X on Select Flights and Hotels through Chase Travel with Points Boost — issuer page"},
+  "welcome_offer_current_public": {
+    "amount_pts": 75000,
+    "spend_required_usd": 5000,
+    "spend_window_months": 3,
+    "source": "Earn 75,000 bonus points after you spend $5,000 on purchases in the first 3 months from account opening — issuer page",
+    "notes": "Has hit 80K and 100K in past public offers."
+  }
+}
+```
+
+## card_soul.absent_perks
+
+```json
+[
+  {"perk_key": "cell_phone_protection", "reason": "CSP does not include cell phone protection. Chase's education page lists Freedom Flex / Ink Business Preferred / Ink Business Premier; CSP omitted. WalletHub independently confirms.", "workaround": "Pair with Chase Freedom Flex (no AF) or Wells Fargo Autograph Journey.", "confidence": "high"},
+  {"perk_key": "lounge_access_at_all", "reason": "CSP includes no lounge access — no Priority Pass, no Sapphire Lounge.", "workaround": "Upgrade to CSR for Sapphire Lounges + PP; or pair with Amex Plat / Cap One Venture X.", "confidence": "high"},
+  {"perk_key": "emergency_evacuation_medical", "reason": "CSP-tier travel insurance does not include emergency evacuation; CSR has $100K Emergency Evac.", "workaround": "Use CSR; or buy travel insurance for high-risk trips.", "confidence": "medium"},
+  {"perk_key": "return_protection", "reason": "CSR-tier benefit only.", "workaround": "Use CSR or Amex Plat.", "confidence": "medium"},
+  {"perk_key": "hotel_status_grant", "reason": "CSP grants no hotel co-brand status.", "workaround": "Hold a hotel co-brand; or upgrade to CSR for IHG Platinum + Hyatt Explorist (at $75K spend).", "confidence": "high"},
+  {"perk_key": "anniversary_free_night", "reason": "CSP is not a hotel co-brand.", "workaround": "Pair with World of Hyatt, Marriott Brilliant, Hilton Aspire, or IHG Premier.", "confidence": "high"},
+  {"perk_key": "pay_yourself_back", "reason": "Retired/restructured for CSP; no longer surfaced.", "workaround": "Use Points Boost or transfer-partner redemptions.", "confidence": "medium"}
+]
+```
+
+## card_soul.fetch_log
+
+```
+- url: https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred  status: 200  bytes: ~999K
+- url: https://www.chase.com/content/dam/cs-asset/pdf/credit-cards/sapphire-preferred-guide-to-benefits.pdf  status: 404  fallback: WebSearch -> static.chasecdn.com BGC11387_v2.pdf
+- url: https://static.chasecdn.com/content/services/structured-document/document.en.pdf/card/benefits-center/product-benefits-guide-pdf/BGC11387_v2.pdf  status: 200  pdf_extract: failed (binary mangled)
+- url: https://www.chase.com/personal/credit-cards/education/rewards-benefits/how-does-credit-card-cell-phone-protection-work  status: 200  used_for: confirming CSP absent from cell-phone-protection list
+- url: https://wallethub.com/answers/cc/chase-sapphire-preferred-cell-phone-protection-1000387-2140694744/  status: 200  used_for: independent cell-phone-protection absence
+- WebSearch: "Chase Sapphire Preferred Guide to Benefits PDF 2026 trip delay cell phone"
+```

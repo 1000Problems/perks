@@ -17,11 +17,18 @@ import {
   IssuerRulesSchema,
   PerksDedupEntrySchema,
   DestinationPerkSchema,
+  SoulCreditScoreSchema,
+  SoulAnnualCreditSchema,
+  SoulInsuranceSchema,
+  SoulProgramAccessEntrySchema,
+  SoulCoBrandPerksSchema,
+  SoulAbsentPerkSchema,
   type Card,
   type Program,
   type IssuerRules,
   type PerksDedupEntry,
   type DestinationPerk,
+  type Soul,
 } from "./lib/schemas";
 import { parseCardMarkdown } from "./lib/parse";
 
@@ -60,6 +67,9 @@ interface DB {
   perksDedup: Map<string, PerksDedupEntry>;
   destinationPerks: Map<string, DestinationPerk>;
   notes: string[];
+  // soul: keyed by card_id. Optional per card. See
+  // docs/SOUL_SCHEMA_PROPOSAL.md for the shape.
+  souls: Map<string, Soul>;
 }
 
 function emptyDB(): DB {
@@ -71,6 +81,7 @@ function emptyDB(): DB {
     perksDedup: new Map(),
     destinationPerks: new Map(),
     notes: [],
+    souls: new Map(),
   };
 }
 
@@ -181,6 +192,76 @@ function mergeFile(db: DB, filename: string): void {
   if (parsed.notes) {
     db.notes.push(`### ${card.id} (${card.name})\n\n${parsed.notes}`);
   }
+
+  // ── soul (additive; all sub-sections optional) ──────────────────────
+  // Validate each present sub-section. Any failure aborts the build (loud
+  // by design — bad soul data should never reach the runtime).
+  const soul: Soul = {};
+  if (parsed.soul.credit_score) {
+    try {
+      soul.credit_score = SoulCreditScoreSchema.parse(parsed.soul.credit_score);
+    } catch (e) {
+      err(`${filename}: card_soul.credit_score validation: ${(e as Error).message}`);
+    }
+  }
+  if (parsed.soul.annual_credits) {
+    if (!Array.isArray(parsed.soul.annual_credits)) {
+      err(`${filename}: card_soul.annual_credits must be a JSON array`);
+    }
+    try {
+      soul.annual_credits = (parsed.soul.annual_credits as unknown[]).map((c) =>
+        SoulAnnualCreditSchema.parse(c),
+      );
+    } catch (e) {
+      err(`${filename}: card_soul.annual_credits validation: ${(e as Error).message}`);
+    }
+  }
+  if (parsed.soul.insurance) {
+    try {
+      soul.insurance = SoulInsuranceSchema.parse(parsed.soul.insurance);
+    } catch (e) {
+      err(`${filename}: card_soul.insurance validation: ${(e as Error).message}`);
+    }
+  }
+  if (parsed.soul.program_access) {
+    if (!Array.isArray(parsed.soul.program_access)) {
+      err(`${filename}: card_soul.program_access must be a JSON array`);
+    }
+    try {
+      soul.program_access = (parsed.soul.program_access as unknown[]).map((p) =>
+        SoulProgramAccessEntrySchema.parse(p),
+      );
+    } catch (e) {
+      err(`${filename}: card_soul.program_access validation: ${(e as Error).message}`);
+    }
+  }
+  if (parsed.soul.co_brand_perks) {
+    try {
+      soul.co_brand_perks = SoulCoBrandPerksSchema.parse(parsed.soul.co_brand_perks);
+    } catch (e) {
+      err(`${filename}: card_soul.co_brand_perks validation: ${(e as Error).message}`);
+    }
+  }
+  if (parsed.soul.absent_perks) {
+    if (!Array.isArray(parsed.soul.absent_perks)) {
+      err(`${filename}: card_soul.absent_perks must be a JSON array`);
+    }
+    try {
+      soul.absent_perks = (parsed.soul.absent_perks as unknown[]).map((p) =>
+        SoulAbsentPerkSchema.parse(p),
+      );
+    } catch (e) {
+      err(`${filename}: card_soul.absent_perks validation: ${(e as Error).message}`);
+    }
+  }
+  if (parsed.soul.fetch_log) {
+    soul.fetch_log = parsed.soul.fetch_log;
+  }
+  // Only store soul if any sub-section was actually populated. Avoids
+  // emitting empty {} entries for the 79 not-yet-enriched cards.
+  if (Object.keys(soul).length > 0) {
+    db.souls.set(card.id, soul);
+  }
 }
 
 // Derive the authoritative `earning_cards` for each program from the
@@ -216,6 +297,13 @@ function writeOutputs(db: DB): void {
   for (const [k, v] of db.destinationPerks.entries()) destObj[k] = v;
   writeJSON("destination_perks.json", destObj);
 
+  // Soul: keyed by card_id. Only cards with at least one populated
+  // soul sub-section appear in this file. The runtime loader treats
+  // missing entries as "card not yet enriched."
+  const soulObj: Record<string, Soul> = {};
+  for (const [k, v] of db.souls.entries()) soulObj[k] = v;
+  writeJSON("card_soul.json", soulObj);
+
   // Compiled at: stamp + counts so the loader can surface freshness.
   writeJSON("manifest.json", {
     compiled_at: new Date().toISOString(),
@@ -225,6 +313,7 @@ function writeOutputs(db: DB): void {
       issuers: db.issuerRules.size,
       perks_dedup: db.perksDedup.size,
       destinations: db.destinationPerks.size,
+      souls: db.souls.size,
     },
   });
 
@@ -281,7 +370,8 @@ function main(): void {
 
   log(
     `wrote ${db.cards.length} cards, ${db.programs.size} programs, ${db.issuerRules.size} issuers, ` +
-      `${db.perksDedup.size} dedup perks, ${db.destinationPerks.size} destinations to data/`,
+      `${db.perksDedup.size} dedup perks, ${db.destinationPerks.size} destinations, ` +
+      `${db.souls.size} souls to data/`,
   );
 }
 

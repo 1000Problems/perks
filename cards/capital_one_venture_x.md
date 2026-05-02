@@ -214,3 +214,250 @@
 - **Capital One Travel credit ease**: Easy unless user is forced to book through CO Travel only. Booking penetrates Hyatt/Marriott elite stays through partner inventory; engine should weight as easy for non-elite users, medium for elite-status seekers.
 - **Anniversary 10k miles**: Engine valuation: 10k Cap One miles ≈ $200 at 2cpp via best transfer; engine should not double-count the anniversary bonus and the SUB structure.
 - **48-month rule**: Less aggressively enforced than Chase Sapphire rule. Verify on application.
+
+## card_soul.credit_score
+
+```json
+{
+  "band": "excellent",
+  "source": "Issuer page application funnel — https://www.capitalone.com/credit-cards/venture-x/",
+  "confidence": "high"
+}
+```
+
+## card_soul.annual_credits
+
+```json
+[
+  {
+    "name": "Capital One Travel Credit",
+    "face_value_usd": 300,
+    "period": "anniversary_year",
+    "ease_score": 5,
+    "realistic_redemption_pct": 0.95,
+    "enrollment_required": false,
+    "qualifying_purchases_open_ended": true,
+    "expires_if_unused": true,
+    "stackable_with_other_credits": false,
+    "qualifying_spend": "Any Capital One Travel booking",
+    "notes": "Easiest premium-card travel credit on the market.",
+    "source": "Receive a $300 annual Capital One Travel credit — issuer page",
+    "confidence": "high"
+  },
+  {
+    "name": "Anniversary Bonus Miles",
+    "face_value_usd": 200,
+    "period": "anniversary_year",
+    "ease_score": 5,
+    "realistic_redemption_pct": 1.00,
+    "enrollment_required": false,
+    "qualifying_purchases_open_ended": false,
+    "expires_if_unused": false,
+    "stackable_with_other_credits": false,
+    "qualifying_spend": null,
+    "notes": "10,000 miles auto-credited; valued at ~2cpp via partner transfers ($200), $100 via portal.",
+    "source": "10,000 miles anniversary bonus … starting on your first anniversary — issuer page",
+    "confidence": "high"
+  },
+  {
+    "name": "Global Entry / TSA PreCheck",
+    "face_value_usd": 120,
+    "period": "every_4_years",
+    "ease_score": 5,
+    "realistic_redemption_pct": 0.95,
+    "enrollment_required": false,
+    "qualifying_purchases_open_ended": false,
+    "expires_if_unused": false,
+    "stackable_with_other_credits": false,
+    "qualifying_spend": "GE or TSA PreCheck application",
+    "notes": "Once per 4-year cycle.",
+    "source": "Global Entry or TSA PreCheck application fee credit — issuer page",
+    "confidence": "high"
+  }
+]
+```
+
+## card_soul.insurance
+
+```json
+{
+  "primary_source_url": "https://www.capitalone.com/credit-cards/venture-x/",
+  "gtb_pdf_url": null,
+  "auto_rental_cdw": {
+    "available": true,
+    "coverage_type": "primary",
+    "coverage_max_usd": 75000,
+    "domestic": true,
+    "international": true,
+    "liability_included": false,
+    "exclusions": ["exotic_cars", "antiques", "off_road", "motorcycles", "large_passenger_vans"],
+    "source": "Auto rental collision coverage. Get reimbursed for damage or theft when you pay for a rental car with the Venture X card — issuer page Visa Infinite block",
+    "confidence": "medium"
+  },
+  "trip_cancellation_interruption": {
+    "available": true,
+    "max_per_trip_usd": 5000,
+    "source": "Visa Infinite-tier; issuer page lists Trip Cancellation/Interruption — cap inherited from Visa Infinite GTB.",
+    "confidence": "medium"
+  },
+  "trip_delay": {
+    "available": true,
+    "threshold_hours": 6,
+    "max_per_ticket_usd": 500,
+    "source": "Visa Infinite GTB inheritance; issuer page surfaces Trip Delay benefit name.",
+    "confidence": "medium"
+  },
+  "baggage_delay": {
+    "available": true,
+    "threshold_hours": 6,
+    "max_per_day_usd": 100,
+    "max_days": 5,
+    "source": "Visa Infinite GTB inheritance.",
+    "confidence": "medium"
+  },
+  "lost_baggage": {
+    "available": true,
+    "max_per_trip_usd": 3000,
+    "source": "Visa Infinite Lost Luggage benefit, inherited.",
+    "confidence": "medium"
+  },
+  "cell_phone_protection": {
+    "available": true,
+    "coverage_max_per_claim_usd": 800,
+    "deductible_usd": 50,
+    "max_claims_per_12mo": 2,
+    "requires_phone_bill_paid_with_card": true,
+    "source": "Cell Phone Protection. Protect your cell phone every time you pay your bill with your Venture X card — issuer page",
+    "confidence": "medium"
+  },
+  "emergency_evacuation_medical": {
+    "available": true,
+    "max_usd": 1000000,
+    "source": "Visa Infinite GTB inheritance.",
+    "confidence": "medium"
+  },
+  "travel_accident_insurance": {
+    "available": true,
+    "max_usd": 1000000,
+    "source": "Visa Infinite-tier inherited.",
+    "confidence": "medium"
+  },
+  "purchase_protection": {
+    "available": false,
+    "source": "Not listed on issuer page benefit grid; Capital One has historically NOT included Purchase Protection on Venture X.",
+    "confidence": "high"
+  },
+  "extended_warranty": {
+    "available": true,
+    "extra_year_added": 1,
+    "source": "Visa Infinite Extended Warranty Protection inheritance.",
+    "confidence": "medium"
+  },
+  "return_protection": {
+    "available": false,
+    "source": "Not listed on issuer page; Visa Infinite does not standardly include Return Protection.",
+    "confidence": "medium"
+  },
+  "roadside_assistance": {
+    "available": true,
+    "type": "Visa Infinite Roadside Dispatch — pay-per-event",
+    "source": "Visa Infinite inheritance.",
+    "confidence": "medium"
+  }
+}
+```
+
+## card_soul.program_access
+
+```json
+[
+  {"program_id": "capital_one_lounge_network", "access_kind": "included", "overrides": {"primary_only_post_2026_02_01": true}, "notes": "Cap One Lounges + Landings.", "source": "Capital One Lounges Venture X primary cardholders can enjoy access to Capital One Lounge and Landing locations — issuer page", "confidence": "high"},
+  {"program_id": "priority_pass_select", "access_kind": "included", "overrides": {"primary_only_post_2026_02_01": true, "lounges": "1,300+"}, "notes": "Lounges only; restaurants excluded per network-wide PP policy.", "source": "Venture X primary cardholders can enjoy access to 1,300+ participating lounges worldwide from Priority Pass — issuer page", "confidence": "high"},
+  {"program_id": "capital_one_premier_collection", "access_kind": "included", "overrides": {"experience_credit_usd": 100, "breakfast_for_two": true}, "notes": "Premier Collection hotels + vacation rentals.", "source": "Premier Collection hotel experience credit will be applied at checkout by hotel to qualifying charges up to $100 — issuer page", "confidence": "high"},
+  {"program_id": "capital_one_lifestyle_collection", "access_kind": "included", "overrides": {"experience_credit_usd": 50}, "notes": "Lifestyle Collection — no breakfast benefit.", "source": "Lifestyle Collection hotel experience credit will be applied at checkout by hotel to qualifying charges up to $50 — issuer page", "confidence": "high"},
+  {"program_id": "visa_infinite_lhc", "access_kind": "included", "overrides": {}, "notes": "Card is Visa Infinite.", "source": "derived from network status", "confidence": "high"},
+  {"program_id": "capital_one_entertainment", "access_kind": "included", "overrides": {"earn_5x": true}, "notes": "5x miles on Capital One Entertainment purchases.", "source": "Plus earn 5X miles on Capital One Entertainment purchases — issuer page", "confidence": "high"},
+  {"program_id": "capital_one_dining", "access_kind": "included", "overrides": {}, "notes": "Cap One Dining program.", "source": "Capital One Dining program page", "confidence": "medium"},
+  {"program_id": "centurion_lounge_network", "access_kind": "not_available", "overrides": {}, "notes": "Amex-only.", "source": "derived", "confidence": "high"},
+  {"program_id": "chase_sapphire_lounge_network", "access_kind": "not_available", "overrides": {}, "notes": "Chase-only.", "source": "derived", "confidence": "high"},
+  {"program_id": "delta_skyclub", "access_kind": "not_available", "overrides": {}, "notes": "Amex-Delta only.", "source": "derived", "confidence": "high"},
+  {"program_id": "fhr", "access_kind": "not_available", "overrides": {}, "notes": "Amex-only.", "source": "derived", "confidence": "high"},
+  {"program_id": "amex_hotel_collection", "access_kind": "not_available", "overrides": {}, "notes": "Amex-only.", "source": "derived", "confidence": "high"},
+  {"program_id": "chase_the_edit", "access_kind": "not_available", "overrides": {}, "notes": "Chase-only.", "source": "derived", "confidence": "high"},
+  {"program_id": "amex_global_dining_access", "access_kind": "not_available", "overrides": {}, "notes": "Amex-only.", "source": "derived", "confidence": "high"}
+]
+```
+
+## card_soul.co_brand_perks
+
+```json
+{
+  "hotel_status_grants": [],
+  "rental_status_grants": [
+    {"program": "hertz", "tier": "presidents_circle", "auto_grant": false, "source": "Venture X cardholders must enroll in the Hertz Gold+ status upgrade through the unique Benefits Tab … directly in or request an upgrade to Hertz President's Circle status — issuer page", "confidence": "high"}
+  ],
+  "premier_collection_experience_credit": {
+    "amount_usd_per_booking": 100,
+    "applied_at": "checkout by hotel for hotels; at booking by host for vacation rentals",
+    "qualifying_program": "capital_one_premier_collection",
+    "booking_channel": "Capital One Travel",
+    "ancillary_perks": ["daily_breakfast_for_two_hotels_only", "complimentary_wifi", "room_upgrade_if_available", "early_checkin", "late_checkout"],
+    "source": "Premier Collection hotel experience credit will be applied at checkout by hotel to qualifying charges up to $100 — issuer page"
+  },
+  "lifestyle_collection_experience_credit": {
+    "amount_usd_per_booking": 50,
+    "applied_at": "checkout by hotel",
+    "qualifying_program": "capital_one_lifestyle_collection",
+    "booking_channel": "Capital One Travel",
+    "ancillary_perks": ["complimentary_wifi", "room_upgrade_if_available", "early_checkin", "late_checkout"],
+    "source": "Lifestyle Collection hotel experience credit will be applied at checkout by hotel to qualifying charges up to $50 — issuer page"
+  },
+  "free_night_certificates": [],
+  "complimentary_dashpass": {"available": false},
+  "ten_pct_anniversary_bonus": {"available": false},
+  "spend_threshold_lounge_unlock": {
+    "unlock": "2 free Cap One Lounge guests + 1 free Landing guest (PP guests stay $35 each)",
+    "threshold_usd_per_calendar_year": 75000,
+    "effective_date": "2026-02-01",
+    "source": "Free guest access is no longer available unless you spend $75,000 or more in the prior calendar year. If you hit that threshold, you'll get two free guests for Lounges and one for Landings — https://www.dailydrop.com/pages/capital-one-lounge-access-changes"
+  },
+  "authorized_user_lounge_fee": {
+    "fee_usd_per_year": 125,
+    "effective_date": "2026-02-01",
+    "source": "Authorized users on the Venture X will no longer get free lounge access. You'll have to pay $125 per year (per user) — Daily Drop"
+  },
+  "guest_pricing_fallback": {
+    "capital_one_lounge_or_landing": {"adult_18plus_usd": 45, "child_2_to_17_usd": 25, "under_2": "free"},
+    "priority_pass": {"per_guest_usd": 35},
+    "source": "Daily Drop"
+  },
+  "welcome_offer_current_public": {
+    "amount_pts": 75000,
+    "spend_required_usd": 4000,
+    "spend_window_months": 3,
+    "source": "Enjoy premium travel benefits with 75,000 bonus miles — issuer page"
+  },
+  "additional_cardholders": {"fee_per_au": 0, "max_aus": 4, "source": "Daily Drop comparison table"}
+}
+```
+
+## card_soul.absent_perks
+
+```json
+[
+  {"perk_key": "hotel_elite_status_grant", "reason": "Venture X grants no hotel elite status (no Hilton Gold, Marriott Gold, IHG Platinum, Hyatt Explorist).", "workaround": "Pair with Amex Plat (Hilton+Marriott Gold), CSR (IHG Platinum + Hyatt Explorist at $75K), or a hotel co-brand.", "confidence": "high"},
+  {"perk_key": "purchase_protection", "reason": "Not listed on issuer page; Capital One has historically NOT included Purchase Protection on Venture X.", "workaround": "Pair with CSR or Plat for Purchase Protection.", "confidence": "high"},
+  {"perk_key": "return_protection", "reason": "Not listed; Visa Infinite does not standardly include Return Protection.", "workaround": "Use CSR or Amex Plat.", "confidence": "medium"},
+  {"perk_key": "complimentary_dashpass", "reason": "Not surfaced as a Venture X benefit.", "workaround": "Pair with CSR / CSP for DashPass.", "confidence": "high"},
+  {"perk_key": "anniversary_free_night", "reason": "Venture X is not a hotel co-brand.", "workaround": "Pair with Marriott Brilliant, Hilton Aspire, IHG Premier, or World of Hyatt.", "confidence": "high"},
+  {"perk_key": "free_authorized_user_lounge_access", "reason": "As of 2026-02-01, AUs no longer get free lounge access; $125/AU/yr fee required.", "workaround": "Pay $125/AU/yr per AU, or have AUs pay per-visit guest fees.", "confidence": "high"}
+]
+```
+
+## card_soul.fetch_log
+
+```
+- url: https://www.capitalone.com/credit-cards/venture-x/  status: 200  bytes: ~1.05MB
+- url: https://www.dailydrop.com/pages/capital-one-lounge-access-changes  status: 200  bytes: ~155K  used_for: 2026-02-01 lounge policy details
+- WebSearch: "Capital One Venture X lounge access changes February 2026 guests primary"
+```

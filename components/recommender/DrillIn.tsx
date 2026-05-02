@@ -256,10 +256,24 @@ export function DrillIn({ recommendation: r, view, userProfile, db }: Props) {
       </Section>
 
       <div style={{ marginTop: 22, display: "flex", gap: 8 }}>
-        <button className="btn btn-primary" style={{ flex: 1, justifyContent: "center" }} type="button">
+        <button
+          className="btn btn-primary"
+          style={{ flex: 1, justifyContent: "center", opacity: 0.55, cursor: "not-allowed" }}
+          type="button"
+          disabled
+          title="Coming soon"
+          aria-disabled="true"
+        >
           Add to comparison
         </button>
-        <button className="btn" type="button">
+        <button
+          className="btn"
+          type="button"
+          disabled
+          style={{ opacity: 0.55, cursor: "not-allowed" }}
+          title="Coming soon"
+          aria-disabled="true"
+        >
           Save for later
         </button>
       </div>

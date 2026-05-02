@@ -19,6 +19,8 @@
     "db:migrate-cards:report": "tsx scripts/migrate-cards-to-db.ts -- --report",
     "db:backfill-user-cards": "tsx scripts/backfill-user-cards-from-jsonb.ts",
     "db:verify-user-cards": "tsx scripts/verify-cards-held-parity.ts",
+    "db:verify-cards-soul": "tsx scripts/verify-cards-soul-parity.ts",
+    "cards:soul-status": "tsx scripts/soul-status.ts",
     "images:seed-synthetic": "tsx scripts/seed-synthetic-images.ts",
     "images:process": "tsx scripts/process-image.ts",
     "pretest": "npm run cards:build",

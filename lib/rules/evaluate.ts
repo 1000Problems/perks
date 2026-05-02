@@ -14,6 +14,7 @@ import type {
   UserCardRow,
   Verdict,
 } from "./types";
+import type { EligibilityResult as EngineEligibilityResult } from "@/lib/engine/types";
 
 const SEVERITY_RANK: Record<RuleSeverity, number> = { inform: 0, warn: 1, block: 2 };
 const SEVERITY_TO_VERDICT: Record<RuleSeverity, Verdict> = {
@@ -210,6 +211,32 @@ function monthsAgo(today: Date, months: number): Date {
 
 function examples(rows: UserCardRow[]): string[] {
   return rows.slice(0, 3).map((r) => r.card_id);
+}
+
+// Adapter: convert a rules-engine EligibilityResult ({verdict, reasons[]})
+// into the engine-side shape ({status, note}) that ranking.ts consumes.
+// Verdict colors map 1:1 to status colors. The note picks the
+// highest-severity reason's message — same rule the verdict aggregator
+// already uses — falling back to a sensible default when reasons is empty.
+const VERDICT_TO_STATUS: Record<Verdict, EngineEligibilityResult["status"]> = {
+  green: "green",
+  yellow: "yellow",
+  red: "red",
+};
+
+export function toEngineEligibility(
+  r: EligibilityResult,
+): EngineEligibilityResult {
+  if (r.reasons.length === 0) {
+    return { status: VERDICT_TO_STATUS[r.verdict], note: "Eligible" };
+  }
+  // Find the reason matching the verdict's severity — that's the user-
+  // facing headline. SEVERITY_RANK is already exported logic.
+  const targetSeverity: RuleSeverity =
+    r.verdict === "red" ? "block" : r.verdict === "yellow" ? "warn" : "inform";
+  const headline = r.reasons.find((x) => x.severity === targetSeverity)
+    ?? r.reasons[0];
+  return { status: VERDICT_TO_STATUS[r.verdict], note: headline.message };
 }
 
 function reason(

@@ -174,6 +174,12 @@ const EASE_MULT: Record<string, number> = {
   coupon_book: 0.2,
 };
 
+// Lowercase + collapse internal whitespace so "TSA PreCheck" and
+// "tsa  precheck" key the same. Also trims leading/trailing whitespace.
+function normalizePerkKey(s: string): string {
+  return s.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
 // Sum of dedup-trumped perk names already covered by the user's wallet.
 function alreadyCoveredPerks(
   walletCardIds: string[],
@@ -182,7 +188,7 @@ function alreadyCoveredPerks(
   const covered = new Set<string>();
   for (const entry of db.perksDedup) {
     const intersects = entry.card_ids.some((id) => walletCardIds.includes(id));
-    if (intersects) covered.add(entry.perk.toLowerCase());
+    if (intersects) covered.add(normalizePerkKey(entry.perk));
   }
   return covered;
 }
@@ -255,7 +261,7 @@ export function scoreCard(
   const duplicatedPerks: string[] = [];
   let perksValue = 0;
   for (const p of card.ongoing_perks) {
-    const key = p.name.toLowerCase();
+    const key = normalizePerkKey(p.name);
     const isCovered = covered.has(key);
     const value = p.value_estimate_usd ?? 0;
     if (isCovered) {

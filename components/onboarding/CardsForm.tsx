@@ -26,7 +26,7 @@ export function CardsForm({ initialProfile, serializedDb }: Props) {
   const router = useRouter();
   const { profile, update, flushNow, error } = useProfile(initialProfile);
 
-  async function go(target: "/recommendations") {
+  async function go(target: "/recommendations" | "/onboarding/brands") {
     await flushNow();
     router.push(target);
   }
@@ -309,30 +309,39 @@ export function CardsForm({ initialProfile, serializedDb }: Props) {
         style={{
           marginTop: 36,
           display: "flex",
-          justifyContent: "flex-end",
+          justifyContent: "space-between",
           alignItems: "center",
           gap: 12,
         }}
       >
-        {error && (
-          <span style={{ fontSize: 12, color: "var(--neg)" }}>
-            Couldn’t save — try again
-          </span>
-        )}
         <button
           type="button"
-          className="btn"
-          onClick={() => go("/recommendations")}
+          className="btn btn-ghost"
+          onClick={() => go("/onboarding/brands")}
         >
-          Skip
+          ← Back
         </button>
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={() => go("/recommendations")}
-        >
-          Continue →
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {error && (
+            <span style={{ fontSize: 12, color: "var(--neg)" }}>
+              Couldn’t save — try again
+            </span>
+          )}
+          <button
+            type="button"
+            className="btn"
+            onClick={() => go("/recommendations")}
+          >
+            Skip
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => go("/recommendations")}
+          >
+            Continue →
+          </button>
+        </div>
       </div>
     </div>
   );

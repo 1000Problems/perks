@@ -56,6 +56,18 @@ export function TripPlanner({ initialProfile, serializedDb }: Props) {
     profile.trips_planned[0]?.destination ?? null,
   );
 
+  function removeDestination(dest: string) {
+    update((prev) => ({
+      trips_planned: prev.trips_planned.filter((t) => t.destination !== dest),
+    }));
+    if (activeDest === dest) {
+      const remaining = profile.trips_planned.filter(
+        (t) => t.destination !== dest,
+      );
+      setActiveDest(remaining[0]?.destination ?? null);
+    }
+  }
+
   const cardsById = useMemo(() => new Map(cards.map((c) => [c.id, c])), [cards]);
   const heldCardIds = profile.cards_held.map((h) => h.card_id);
   const heldCards = heldCardIds
@@ -139,16 +151,44 @@ export function TripPlanner({ initialProfile, serializedDb }: Props) {
       <section style={{ marginTop: 24 }}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {profile.trips_planned.map((t) => (
-            <button
+            <span
               key={t.destination}
-              type="button"
               className="chip"
               data-active={activeDest === t.destination ? "true" : "false"}
-              onClick={() => setActiveDest(t.destination)}
-              style={{ cursor: "pointer", fontFamily: "inherit" }}
+              style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
             >
-              {t.destination}
-            </button>
+              <button
+                type="button"
+                onClick={() => setActiveDest(t.destination)}
+                style={{
+                  background: "transparent",
+                  border: 0,
+                  padding: 0,
+                  color: "inherit",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  fontSize: "inherit",
+                }}
+              >
+                {t.destination}
+              </button>
+              <button
+                type="button"
+                onClick={() => removeDestination(t.destination)}
+                aria-label={`Remove ${t.destination}`}
+                style={{
+                  background: "transparent",
+                  border: 0,
+                  color: "inherit",
+                  cursor: "pointer",
+                  fontSize: 12,
+                  padding: 0,
+                  lineHeight: 1,
+                }}
+              >
+                ×
+              </button>
+            </span>
           ))}
           <input
             type="text"

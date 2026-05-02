@@ -13,12 +13,34 @@
 
 import { readdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { sql } from "../lib/db";
+import type { Sql, TransactionSql } from "postgres";
+import { getMigrationDb } from "./lib/db-migrate-conn";
+
+// Use the unpooled connection for migrations. The pooled URL trips
+// Neon's idle-in-transaction timeout on the dry-run path. See
+// scripts/lib/db-migrate-conn.ts for details.
+const sql = getMigrationDb();
+
+// Helper: postgres-js types TransactionSql vs Sql separately. Our soul
+// helpers can run inside either, so we accept the union and cast inputs
+// to JSONValue where Zod-validated data exceeds postgres-js's narrow type.
+type AnySql = Sql | TransactionSql<Record<string, never>>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Json = any;
 import {
   CardSchema,
   ProgramSchema,
+  SoulCreditScoreSchema,
+  SoulAnnualCreditSchema,
+  SoulInsuranceSchema,
+  SoulProgramAccessEntrySchema,
+  SoulCoBrandPerksSchema,
+  SoulAbsentPerkSchema,
   type Card,
   type Program,
+  type Soul,
+  type SoulInsurance,
+  type SoulCoBrandPerks,
 } from "./lib/schemas";
 import { parseCardMarkdown } from "./lib/parse";
 import { slugify } from "./lib/slugify";
@@ -66,6 +88,7 @@ interface ParsedFile {
   filename: string;
   card?: Card;
   program?: Program;
+  soul?: Soul;
   parseError?: string;
 }
 
@@ -95,7 +118,59 @@ function parseAll(): ParsedFile[] {
       const pc = ProgramSchema.safeParse(parsed.program);
       if (pc.success) program = pc.data;
     }
-    out.push({ filename, card: cardCheck.data, program });
+
+    // Parse soul sub-sections defensively. Bad soul = skip card with
+    // explanatory error, never abort the whole run.
+    const soul: Soul = {};
+    let soulErr: string | null = null;
+    try {
+      if (parsed.soul.credit_score) {
+        soul.credit_score = SoulCreditScoreSchema.parse(parsed.soul.credit_score);
+      }
+      if (parsed.soul.annual_credits) {
+        if (!Array.isArray(parsed.soul.annual_credits)) {
+          throw new Error("card_soul.annual_credits must be a JSON array");
+        }
+        soul.annual_credits = (parsed.soul.annual_credits as unknown[]).map((c) =>
+          SoulAnnualCreditSchema.parse(c),
+        );
+      }
+      if (parsed.soul.insurance) {
+        soul.insurance = SoulInsuranceSchema.parse(parsed.soul.insurance);
+      }
+      if (parsed.soul.program_access) {
+        if (!Array.isArray(parsed.soul.program_access)) {
+          throw new Error("card_soul.program_access must be a JSON array");
+        }
+        soul.program_access = (parsed.soul.program_access as unknown[]).map((p) =>
+          SoulProgramAccessEntrySchema.parse(p),
+        );
+      }
+      if (parsed.soul.co_brand_perks) {
+        soul.co_brand_perks = SoulCoBrandPerksSchema.parse(parsed.soul.co_brand_perks);
+      }
+      if (parsed.soul.absent_perks) {
+        if (!Array.isArray(parsed.soul.absent_perks)) {
+          throw new Error("card_soul.absent_perks must be a JSON array");
+        }
+        soul.absent_perks = (parsed.soul.absent_perks as unknown[]).map((p) =>
+          SoulAbsentPerkSchema.parse(p),
+        );
+      }
+    } catch (e) {
+      soulErr = `soul: ${(e as Error).message}`;
+    }
+    if (soulErr) {
+      out.push({ filename, parseError: soulErr });
+      continue;
+    }
+
+    out.push({
+      filename,
+      card: cardCheck.data,
+      program,
+      soul: Object.keys(soul).length > 0 ? soul : undefined,
+    });
   }
   return out;
 }
@@ -268,9 +343,84 @@ function parseRatio(raw: string): [number, number] {
   return [parseInt(m[1], 10) || 1, parseInt(m[2], 10) || 1];
 }
 
+// ── soul fan-out helpers ───────────────────────────────────────────────
+
+// Coverage-kind keys recognized in soul.insurance. Anything else at the
+// top level is treated as metadata (primary_source_url, gtb_pdf_url) and
+// not turned into an insurance row.
+const COVERAGE_KINDS = new Set([
+  "auto_rental_cdw",
+  "trip_cancellation_interruption",
+  "trip_delay",
+  "baggage_delay",
+  "lost_baggage",
+  "cell_phone_protection",
+  "emergency_evacuation_medical",
+  "emergency_medical_dental",
+  "travel_accident_insurance",
+  "purchase_protection",
+  "extended_warranty",
+  "return_protection",
+  "roadside_assistance",
+]);
+
+async function insertSoulInsurance(
+  tx: AnySql,
+  cardId: string,
+  insurance: SoulInsurance,
+): Promise<void> {
+  const primaryUrl = (insurance.primary_source_url ?? insurance.gtb_pdf_url ?? null) as string | null;
+  for (const [key, value] of Object.entries(insurance)) {
+    if (!COVERAGE_KINDS.has(key)) continue; // skip primary_source_url etc
+    if (!value) continue;
+    await tx`
+      insert into card_insurance (card_id, coverage_kind, config, primary_source_url)
+      values (${cardId}, ${key}, ${sql.json(value as Json)}, ${primaryUrl})
+      on conflict (card_id, coverage_kind) do update set
+        config = excluded.config,
+        primary_source_url = excluded.primary_source_url
+    `;
+  }
+}
+
+// Map each top-level co_brand_perks group to one or more rows.
+// Arrays produce N rows; single objects produce 1 row.
+async function insertSoulCoBrandPerks(
+  tx: AnySql,
+  cardId: string,
+  perks: SoulCoBrandPerks,
+): Promise<void> {
+  for (const [key, value] of Object.entries(perks)) {
+    if (value === null || value === undefined) continue;
+    // Arrays → fan out one row per item, perk_kind = singular form
+    if (Array.isArray(value)) {
+      const singular = key.endsWith("s") ? key.slice(0, -1) : key;
+      for (const item of value) {
+        await tx`
+          insert into card_co_brand_perks (card_id, perk_kind, config, notes)
+          values (${cardId}, ${singular}, ${sql.json(item as Json)}, ${null})
+        `;
+      }
+    } else if (typeof value === "object") {
+      // Single object → one row, perk_kind = the group name as-is
+      await tx`
+        insert into card_co_brand_perks (card_id, perk_kind, config, notes)
+        values (${cardId}, ${key}, ${sql.json(value as Json)}, ${null})
+      `;
+    } else {
+      // Scalars (booleans like membership_rewards_pay_with_points) →
+      // store as {value: <scalar>}
+      await tx`
+        insert into card_co_brand_perks (card_id, perk_kind, config, notes)
+        values (${cardId}, ${key}, ${sql.json({ value } as Json)}, ${null})
+      `;
+    }
+  }
+}
+
 // ── per-card insert ────────────────────────────────────────────────────
 
-async function upsertCard(card: Card): Promise<"inserted" | "updated"> {
+async function upsertCard(card: Card, soul?: Soul): Promise<"inserted" | "updated"> {
   const issuerSlug = slugify(card.issuer);
   const networkSlug = card.network ? slugify(card.network) : null;
   const exists = await sql<{ id: string }[]>`select id from cards where id = ${card.id}`;
@@ -351,38 +501,115 @@ async function upsertCard(card: Card): Promise<"inserted" | "updated"> {
     }
 
     // annual credits — full replace
+    // If soul provides rich annual_credits, prefer those. Otherwise fall
+    // back to the basic card.annual_credits with ease_of_use → ease_score
+    // mapping.
     await tx`delete from card_annual_credits where card_id = ${card.id}`;
-    for (const c of card.annual_credits ?? []) {
-      const ease = (c.ease_of_use ?? "medium") as EaseGrade;
-      await tx`
-        insert into card_annual_credits (
-          card_id, name, face_value_usd, realistic_redemption_pct,
-          ease_score, period, qualifying_spend, notes
-        ) values (
-          ${card.id}, ${c.name}, ${c.value_usd ?? null}, ${EASE_PCT[ease]},
-          ${EASE_SCORE[ease]}, null,
-          ${c.type ?? null}, ${c.notes ?? null}
-        )
-      `;
+    if (soul?.annual_credits && soul.annual_credits.length > 0) {
+      for (const c of soul.annual_credits) {
+        await tx`
+          insert into card_annual_credits (
+            card_id, name, face_value_usd, realistic_redemption_pct,
+            ease_score, period, enrollment_required, qualifying_purchases_open_ended,
+            expires_if_unused, stackable_with_other_credits, qualifying_spend, notes
+          ) values (
+            ${card.id}, ${c.name}, ${c.face_value_usd}, ${c.realistic_redemption_pct},
+            ${c.ease_score}, ${c.period ?? null},
+            ${c.enrollment_required ?? null}, ${c.qualifying_purchases_open_ended ?? null},
+            ${c.expires_if_unused ?? true}, ${c.stackable_with_other_credits ?? false},
+            ${c.qualifying_spend ?? null}, ${c.notes ?? null}
+          )
+        `;
+      }
+    } else {
+      for (const c of card.annual_credits ?? []) {
+        const ease = (c.ease_of_use ?? "medium") as EaseGrade;
+        await tx`
+          insert into card_annual_credits (
+            card_id, name, face_value_usd, realistic_redemption_pct,
+            ease_score, period, qualifying_spend, notes
+          ) values (
+            ${card.id}, ${c.name}, ${c.value_usd ?? null}, ${EASE_PCT[ease]},
+            ${EASE_SCORE[ease]}, null,
+            ${c.type ?? null}, ${c.notes ?? null}
+          )
+        `;
+      }
     }
 
-    // ongoing perks → store as co_brand_perks rows with kind=ongoing_perk
-    await tx`
-      delete from card_co_brand_perks
-      where card_id = ${card.id} and perk_kind = 'ongoing_perk'
-    `;
-    for (const op of card.ongoing_perks ?? []) {
+    // co_brand_perks — full replace.
+    // Two paths: legacy ongoing_perks → perk_kind=ongoing_perk rows
+    // (preserved when soul absent), OR soul.co_brand_perks → fanned-out
+    // structured rows (when soul present, ongoing_perk rows are wiped
+    // too to avoid double-counting).
+    if (soul?.co_brand_perks) {
+      await tx`delete from card_co_brand_perks where card_id = ${card.id}`;
+      await insertSoulCoBrandPerks(tx, card.id, soul.co_brand_perks);
+    } else {
       await tx`
-        insert into card_co_brand_perks (card_id, perk_kind, config, notes)
-        values (
-          ${card.id}, 'ongoing_perk',
-          ${sql.json({
-            name: op.name,
-            value_estimate_usd: op.value_estimate_usd ?? null,
-            category: op.category,
-          })},
-          ${op.notes ?? null}
-        )
+        delete from card_co_brand_perks
+        where card_id = ${card.id} and perk_kind = 'ongoing_perk'
+      `;
+      for (const op of card.ongoing_perks ?? []) {
+        await tx`
+          insert into card_co_brand_perks (card_id, perk_kind, config, notes)
+          values (
+            ${card.id}, 'ongoing_perk',
+            ${sql.json({
+              name: op.name,
+              value_estimate_usd: op.value_estimate_usd ?? null,
+              category: op.category,
+            })},
+            ${op.notes ?? null}
+          )
+        `;
+      }
+    }
+
+    // card_insurance — full replace from soul if present; no fallback.
+    await tx`delete from card_insurance where card_id = ${card.id}`;
+    if (soul?.insurance) {
+      await insertSoulInsurance(tx, card.id, soul.insurance);
+    }
+
+    // card_program_access — full replace from soul if present.
+    await tx`delete from card_program_access where card_id = ${card.id}`;
+    if (soul?.program_access) {
+      for (const p of soul.program_access) {
+        await tx`
+          insert into card_program_access (card_id, program_id, access_kind, overrides, notes)
+          values (
+            ${card.id}, ${p.program_id}, ${p.access_kind},
+            ${sql.json((p.overrides ?? {}) as Json)}, ${p.notes ?? null}
+          )
+          on conflict (card_id, program_id) do update set
+            access_kind = excluded.access_kind,
+            overrides = excluded.overrides,
+            notes = excluded.notes
+        `;
+      }
+    }
+
+    // card_absent_perks — full replace from soul if present.
+    await tx`delete from card_absent_perks where card_id = ${card.id}`;
+    if (soul?.absent_perks) {
+      for (const a of soul.absent_perks) {
+        await tx`
+          insert into card_absent_perks (card_id, perk_key, reason, workaround)
+          values (${card.id}, ${a.perk_key}, ${a.reason}, ${a.workaround ?? null})
+          on conflict (card_id, perk_key) do update set
+            reason = excluded.reason, workaround = excluded.workaround
+        `;
+      }
+    }
+
+    // Stash the credit_score band on cards.credit_score_required if soul
+    // provides the structured form. The basic card.credit_score_required
+    // already handled above; this overrides with the soul band when both.
+    if (soul?.credit_score) {
+      await tx`
+        update cards set credit_score_required = ${soul.credit_score.band}
+        where id = ${card.id}
       `;
     }
   });
@@ -429,15 +656,27 @@ async function main() {
   // We bracket the whole run in one outer transaction in dry-run mode so
   // nothing persists. In normal mode we commit per card.
   const runBody = async () => {
-    console.log("Seeding issuers / networks / programs / transfer partners…");
+    console.log("Seeding issuers…");
     await upsertIssuers(seeds);
+    console.log(`  ✓ ${seeds.issuers.size} issuers`);
+    console.log("Seeding networks…");
     await upsertNetworks(seeds);
+    console.log(`  ✓ ${seeds.networks.size} networks`);
+    console.log("Seeding programs…");
     await upsertPrograms(seeds);
+    console.log(`  ✓ ${seeds.programs.size} programs`);
+    console.log("Seeding transfer partners…");
     await upsertTransferPartners(seeds);
+    console.log(`  ✓ ${seeds.transferPartners.size} transfer partners`);
+    console.log("Seeding program ↔ transfer-partner links…");
     await upsertProgramTransferPartnerLinks(seeds);
+    console.log(`  ✓ links seeded`);
 
-    console.log("Migrating cards…");
+    console.log(`Migrating ${parsed.length} cards…`);
+    let i = 0;
     for (const p of parsed) {
+      i++;
+      if (i % 25 === 0) console.log(`  …${i}/${parsed.length}`);
       if (!p.card) {
         report.totals.cards_skipped++;
         report.entries.push({
@@ -448,7 +687,7 @@ async function main() {
         continue;
       }
       try {
-        const result = await upsertCard(p.card);
+        const result = await upsertCard(p.card, p.soul);
         if (result === "inserted") report.totals.cards_inserted++;
         else report.totals.cards_updated++;
         report.entries.push({

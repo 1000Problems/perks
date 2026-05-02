@@ -13,7 +13,11 @@ import { fromSerialized, type SerializedDb } from "@/lib/data/serialized";
 import type { SpendCategoryId } from "@/lib/data/types";
 import { rankCards } from "@/lib/engine/ranking";
 import { bestRateForCategory } from "@/lib/engine/scoring";
-import type { RankFilter, RankOptions } from "@/lib/engine/types";
+import type {
+  EligibilityResult,
+  RankFilter,
+  RankOptions,
+} from "@/lib/engine/types";
 import { variantForCard } from "@/lib/cardArt";
 import type { UserProfile } from "@/lib/profile/types";
 import { fmt } from "@/lib/utils/format";
@@ -32,9 +36,14 @@ const FILTER_OPTIONS: { value: RankFilter; label: string }[] = [
 export interface RecPanelMobileProps {
   profile: UserProfile;
   serializedDb: SerializedDb;
+  eligibilityOverrides: Record<string, EligibilityResult> | null;
 }
 
-export function RecPanelMobile({ profile, serializedDb }: RecPanelMobileProps) {
+export function RecPanelMobile({
+  profile,
+  serializedDb,
+  eligibilityOverrides,
+}: RecPanelMobileProps) {
   const db = useMemo(() => fromSerialized(serializedDb), [serializedDb]);
   const [view, setView] = useState<ViewMode>("ongoing");
   const [credits, setCredits] = useState<CreditsMode>("realistic");
@@ -46,8 +55,9 @@ export function RecPanelMobile({ profile, serializedDb }: RecPanelMobileProps) {
       filter,
       scoring: { creditsMode: credits, subAmortizeMonths: 24 },
       limit: 5,
+      eligibilityOverrides: eligibilityOverrides ?? undefined,
     }),
-    [filter, credits],
+    [filter, credits, eligibilityOverrides],
   );
 
   const ranked = useMemo(

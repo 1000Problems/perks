@@ -211,11 +211,15 @@ function boaEligibility(
     monthsBetween(today, parseOpenedAt(held.opened_at)) <= 24,
   ).length;
 
-  if (last30 >= 2 || last12mo >= 3 || last24mo >= 4) {
-    return { status: "red", note: "BoA 2/3/4 rule blocks new approvals" };
-  }
+  // Check the 7/12 ceiling first — it's the more specific (and severe)
+  // diagnostic. The 2/3/4 rule subsumes it counting-wise (anyone at 7/12
+  // is also at ≥3/12), so without this ordering the 7/12 message would
+  // never surface.
   if (last12mo >= 7) {
     return { status: "red", note: "BoA 7/12 rule blocks new approvals" };
+  }
+  if (last30 >= 2 || last12mo >= 3 || last24mo >= 4) {
+    return { status: "red", note: "BoA 2/3/4 rule blocks new approvals" };
   }
 
   return { status: "green", note: "Eligible" };

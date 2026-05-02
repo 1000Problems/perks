@@ -8,6 +8,7 @@
 //     legacy WalletCardHeld shape; the engine sees identical data.
 
 import "server-only";
+import { cache } from "react";
 import { sql, isUndefinedTableError } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
 import type { CreditScoreBand, UserProfile, WalletCardHeld } from "./types";
@@ -49,7 +50,9 @@ function isoDate(d: Date | null): string {
   return d ? d.toISOString().slice(0, 10) : "";
 }
 
-export async function getCurrentProfile(): Promise<UserProfile> {
+export const getCurrentProfile = cache(_getCurrentProfile);
+
+async function _getCurrentProfile(): Promise<UserProfile> {
   const user = await getCurrentUser();
   if (!user) {
     throw new Error("not_authenticated");

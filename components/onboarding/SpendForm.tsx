@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
+import type { Route } from "next";
 import { SPEND_CATEGORIES } from "@/lib/categories";
 import { useProfile } from "@/lib/profile/client";
 import type { SpendCategoryId, UserProfile } from "@/lib/profile/types";
@@ -171,10 +172,21 @@ export function SpendForm({ initialProfile }: Props) {
         style={{
           marginTop: 36,
           display: "flex",
-          justifyContent: "flex-end",
+          justifyContent: "space-between",
+          alignItems: "center",
           gap: 12,
         }}
       >
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={async () => {
+            await flushNow();
+            router.push("/onboarding/credit" as Route);
+          }}
+        >
+          ← Back
+        </button>
         <button
           type="button"
           className="btn btn-primary"

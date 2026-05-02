@@ -210,3 +210,287 @@
 - **Hilton 1:2 transfer**: A trap; never transfer MR to Hilton at 1:2. Amex points are worth more than Hilton points.
 - **JetBlue 1.25:1**: Also unfavorable; transfer for redemption only when JetBlue mileage runs are demonstrably better.
 - **Once-per-lifetime**: User who has held Gold (or its predecessor Premier Rewards Gold) before may not earn a new SUB. Pop-up message confirms eligibility before submitting.
+- **2026 spring refresh**: Hertz Five Star (NEW), $96 Uber One LTO Apr-Oct 2026, dining-credit roster updated (BWW + Wonder added), welcome bonus spend bumped to $8K from $6K.
+
+## card_soul.credit_score
+
+```json
+{
+  "band": "very_good",
+  "source": "Issuer page 'Good to Excellent' application gate. Approved cardholders typically 700+ FICO. — https://www.americanexpress.com/us/credit-cards/card/gold-card/",
+  "confidence": "high",
+  "notes": "Gold is a charge card (NPSL); doesn't formally count toward Amex 5-credit-card cap."
+}
+```
+
+## card_soul.annual_credits
+
+```json
+[
+  {
+    "name": "Dining Credit (Grubhub/Seamless/BWW/Five Guys/Cheesecake/Wonder)",
+    "face_value_usd": 120,
+    "period": "monthly",
+    "ease_score": 3,
+    "realistic_redemption_pct": 0.65,
+    "enrollment_required": true,
+    "qualifying_purchases_open_ended": false,
+    "expires_if_unused": true,
+    "stackable_with_other_credits": false,
+    "qualifying_spend": "Grubhub (incl Seamless), Buffalo Wild Wings, Five Guys, The Cheesecake Factory, Wonder",
+    "notes": "$10/month. 2026 refresh added BWW + Wonder.",
+    "source": "When you pay with the Gold Card at Grubhub (including Seamless), Buffalo Wild Wings, Five Guys, The Cheesecake Factory, and Wonder. This can be an annual savings of up to $120. Enrollment required. — issuer page",
+    "confidence": "high"
+  },
+  {
+    "name": "Uber Cash",
+    "face_value_usd": 120,
+    "period": "monthly",
+    "ease_score": 5,
+    "realistic_redemption_pct": 0.95,
+    "enrollment_required": false,
+    "qualifying_purchases_open_ended": false,
+    "expires_if_unused": true,
+    "stackable_with_other_credits": false,
+    "qualifying_spend": "U.S. Uber rides + Uber Eats",
+    "notes": "$10/month; Basic Card Member only.",
+    "source": "Get up to $120 annually in Uber Cash for U.S. rides — issuer page",
+    "confidence": "high"
+  },
+  {
+    "name": "Resy Credit",
+    "face_value_usd": 100,
+    "period": "split_h1_h2",
+    "ease_score": 3,
+    "realistic_redemption_pct": 0.65,
+    "enrollment_required": true,
+    "qualifying_purchases_open_ended": false,
+    "expires_if_unused": true,
+    "stackable_with_other_credits": false,
+    "qualifying_spend": "U.S. Resy restaurants (10,000+ qualifying)",
+    "notes": "$50 H1 + $50 H2.",
+    "source": "Get up to $100 in statement credits each calendar year at over 10,000 qualifying U.S. Resy restaurants … $50 H1 + $50 H2 — issuer page",
+    "confidence": "high"
+  },
+  {
+    "name": "Dunkin' Credit",
+    "face_value_usd": 84,
+    "period": "monthly",
+    "ease_score": 1,
+    "realistic_redemption_pct": 0.30,
+    "enrollment_required": true,
+    "qualifying_purchases_open_ended": false,
+    "expires_if_unused": true,
+    "stackable_with_other_credits": false,
+    "qualifying_spend": "U.S. Dunkin' locations",
+    "notes": "$7/month; underused for non-Dunkin-regulars.",
+    "source": "$7 in monthly statement credits when you pay with your Gold Card at U.S. Dunkin' locations — issuer page",
+    "confidence": "high"
+  },
+  {
+    "name": "Uber One Limited-Time Credit (2026 only)",
+    "face_value_usd": 96,
+    "period": "calendar_year",
+    "ease_score": 3,
+    "realistic_redemption_pct": 0.50,
+    "enrollment_required": true,
+    "qualifying_purchases_open_ended": false,
+    "expires_if_unused": true,
+    "stackable_with_other_credits": false,
+    "qualifying_spend": "Annual Uber One membership",
+    "notes": "One-time, valid Apr 30 - Oct 30 2026.",
+    "source": "Holders of the American Express Gold Card will receive a one-time statement credit, up to $96, when they use their card to pay for an annual Uber One membership. This offer is available from April 30 through Oct. 30, 2026. — Amex newsroom (via WebSearch)",
+    "confidence": "high"
+  }
+]
+```
+
+## card_soul.insurance
+
+```json
+{
+  "primary_source_url": "https://www.americanexpress.com/us/credit-cards/card/gold-card/",
+  "gtb_pdf_url": null,
+  "auto_rental_cdw": {
+    "available": true,
+    "coverage_type": "secondary",
+    "coverage_max_usd": null,
+    "domestic": true,
+    "international": true,
+    "liability_included": false,
+    "exclusions": ["exotic_cars", "antiques", "trucks", "motorcycles"],
+    "notes": "Default secondary; PCRP opt-in for primary.",
+    "source": "Standard Amex consumer secondary CDW; per-vehicle cap requires GTB PDF.",
+    "confidence": "medium"
+  },
+  "trip_cancellation_interruption": {
+    "available": true,
+    "max_per_trip_usd": 10000,
+    "max_per_card_per_12mo_usd": 20000,
+    "underwriter": "New Hampshire Insurance Company, an AIG Company",
+    "source": "Trip Cancellation and Interruption Insurance can help reimburse your non-refundable expenses … up to $10,000 per trip and up to $20,000 per Eligible Card per 12 consecutive month period — issuer page",
+    "confidence": "high"
+  },
+  "trip_delay": {
+    "available": true,
+    "threshold_hours": 12,
+    "max_per_trip_usd": 300,
+    "max_claims_per_12mo": 2,
+    "underwriter": "AIG (NH Insurance Company)",
+    "notes": "Gold's 12hr/$300 is materially weaker than Plat's 6hr/$500.",
+    "source": "If your trip is delayed more than 12 hours, Trip Delay Insurance can help reimburse … up to $300 per trip, maximum 2 claims per Eligible Card per 12 consecutive month period — issuer page",
+    "confidence": "high"
+  },
+  "baggage_delay": {
+    "available": true,
+    "notes": "Baggage Insurance Plan; per-day cap requires GTB PDF.",
+    "source": "issuer page Baggage Insurance Plan reference",
+    "confidence": "medium"
+  },
+  "lost_baggage": {
+    "available": true,
+    "carry_on_max_usd": 1250,
+    "checked_max_usd": 500,
+    "ny_resident_aggregate_max_usd": 10000,
+    "source": "Coverage can be provided for up to $1,250 for carry-on Baggage and up to $500 for checked Baggage … For New York State residents, there is a $10,000 aggregate maximum limit — issuer page",
+    "confidence": "high"
+  },
+  "cell_phone_protection": {
+    "available": true,
+    "coverage_max_per_claim_usd": 800,
+    "deductible_usd": 50,
+    "max_claims_per_12mo": 2,
+    "requires_phone_bill_paid_with_card": true,
+    "source": "Cell Phone Protection — header confirmed on issuer page; standard Amex consumer terms ($800/$50/2-claims).",
+    "confidence": "medium"
+  },
+  "emergency_evacuation_medical": {
+    "available": true,
+    "notes": "Premium Global Assist Hotline included.",
+    "source": "issuer page Premium Global Assist reference",
+    "confidence": "medium"
+  },
+  "travel_accident_insurance": {
+    "available": false,
+    "source": "Not listed in 2026 benefit set on issuer page. Amex retired standalone TAI from most consumer cards in 2025 refresh wave.",
+    "confidence": "medium"
+  },
+  "purchase_protection": {
+    "available": true,
+    "window_days": 90,
+    "max_per_purchase_usd": 10000,
+    "max_per_calendar_year_usd": 50000,
+    "source": "Purchase Protection can help protect Covered Purchases for up to 90 days … Up to $10,000 per Covered Purchase, up to $50,000 per calendar year — issuer page",
+    "confidence": "high"
+  },
+  "extended_warranty": {
+    "available": true,
+    "extra_year_added": 1,
+    "applies_to_warranties_of_max_years": 5,
+    "max_per_item_usd": 10000,
+    "max_per_year_usd": 50000,
+    "source": "Extended Warranty can provide up to one extra year added to the Original Manufacturer's Warranty. Applies to warranties of 5 years or less — issuer page",
+    "confidence": "high"
+  },
+  "return_protection": {
+    "available": true,
+    "window_days": 90,
+    "max_per_item_usd": 300,
+    "max_per_year_usd": 1000,
+    "region": "U.S. and territories only",
+    "source": "Return Protection … up to $300 per item, up to a maximum of $1,000 per calendar year per Card account — issuer page",
+    "confidence": "high"
+  },
+  "roadside_assistance": {
+    "available": true,
+    "type": "pay-per-use; via Roadside Assistance Hotline",
+    "source": "issuer page Roadside Assistance Hotline reference",
+    "confidence": "medium"
+  }
+}
+```
+
+## card_soul.program_access
+
+```json
+[
+  {"program_id": "amex_hotel_collection", "access_kind": "included", "overrides": {"min_nights": 2, "credit_usd": 100}, "notes": "$100 hotel credit at booking + room upgrade when available.", "source": "issuer page Hotel Collection block", "confidence": "high"},
+  {"program_id": "amex_global_dining_access", "access_kind": "included", "overrides": {}, "notes": "Resy ownership grants Resy app perks for Gold cardholders.", "source": "issuer page Resy reference", "confidence": "medium"},
+  {"program_id": "amex_presale", "access_kind": "included", "overrides": {}, "notes": "Card Members access Amex Presale Tickets.", "source": "issuer page Special Ticket Access block", "confidence": "high"},
+  {"program_id": "amex_experiences", "access_kind": "included", "overrides": {}, "notes": "Same Special Ticket Access program.", "source": "issuer page", "confidence": "high"},
+  {"program_id": "platinum_nights_resy", "access_kind": "not_available", "overrides": {}, "notes": "Plat-only branded variant.", "source": "derived", "confidence": "high"},
+  {"program_id": "centurion_lounge_network", "access_kind": "not_available", "overrides": {}, "notes": "Plat / Biz Plat-only.", "source": "derived", "confidence": "high"},
+  {"program_id": "priority_pass_select", "access_kind": "not_available", "overrides": {}, "notes": "Plat-only on Amex consumer side.", "source": "derived", "confidence": "high"},
+  {"program_id": "delta_skyclub", "access_kind": "not_available", "overrides": {}, "notes": "Plat / Reserve / Biz Plat-only.", "source": "derived", "confidence": "high"},
+  {"program_id": "fhr", "access_kind": "not_available", "overrides": {}, "notes": "Plat-only. Gold uses Hotel Collection.", "source": "derived", "confidence": "high"},
+  {"program_id": "chase_sapphire_lounge_network", "access_kind": "not_available", "overrides": {}, "notes": "Chase-only.", "source": "derived", "confidence": "high"},
+  {"program_id": "capital_one_lounge_network", "access_kind": "not_available", "overrides": {}, "notes": "Capital One-only.", "source": "derived", "confidence": "high"},
+  {"program_id": "chase_the_edit", "access_kind": "not_available", "overrides": {}, "notes": "Chase-only.", "source": "derived", "confidence": "high"},
+  {"program_id": "visa_infinite_lhc", "access_kind": "not_available", "overrides": {}, "notes": "Card is Amex network.", "source": "derived", "confidence": "high"}
+]
+```
+
+## card_soul.co_brand_perks
+
+```json
+{
+  "hotel_status_grants": [],
+  "rental_status_grants": [
+    {"program": "hertz", "tier": "five_star", "auto_grant": false, "via_spend_threshold": null, "valid_through": "ongoing", "source": "This is an all-new benefit to the Amex Gold: complimentary Hertz Five Star status — Amex newsroom 2026 refresh announcement (via WebSearch)", "confidence": "high"}
+  ],
+  "prepaid_hotel_credit": {
+    "amount_usd_per_period": 100,
+    "period": "calendar_year",
+    "qualifying_programs": ["amex_hotel_collection"],
+    "min_nights": 2,
+    "booking_channel": "Amex Travel",
+    "source": "issuer page Hotel Collection block; $100 hotel credit toward eligible on-property charges + room upgrade when available"
+  },
+  "free_night_certificates": [],
+  "complimentary_dashpass": {"available": false},
+  "ten_pct_anniversary_bonus": {"available": false},
+  "spend_threshold_lounge_unlock": null,
+  "membership_rewards_pay_with_points": true,
+  "welcome_offer_current_public": {
+    "amount_pts": 60000,
+    "spend_required_usd": 8000,
+    "spend_window_months": 6,
+    "source": "Amex newsroom + WebSearch confirm 2026 refresh raised the spend requirement to $8,000 (33% increase from $6,000).",
+    "notes": "Lifetime once-per-product. CardMatch / elevated public offers have hit 75K-100K.",
+    "confidence": "high"
+  },
+  "additional_cards": {
+    "fee_first_5": 0,
+    "fee_per_card_after_5": 35,
+    "source": "Additional Cards (up to the first 5) have a $0 annual fee. The annual fee for the sixth or more Additional Card is $35 each. — issuer page footnote"
+  },
+  "uber_one_2026_limited_time_credit": {
+    "available": true,
+    "max_usd": 96,
+    "window": "April 30, 2026 - October 30, 2026",
+    "source": "Holders of the American Express Gold Card will receive a one-time statement credit, up to $96, when they use their card to pay for an annual Uber One membership — Amex newsroom"
+  }
+}
+```
+
+## card_soul.absent_perks
+
+```json
+[
+  {"perk_key": "priority_pass_select", "reason": "Gold does not include Priority Pass. PP is a Plat-tier benefit on Amex consumer side.", "workaround": "Pair with Amex Plat or CSR for PP access.", "confidence": "high"},
+  {"perk_key": "centurion_lounge_access", "reason": "Centurion Lounges are Plat / Biz Plat only.", "workaround": "Pair with Amex Plat (or Biz Plat).", "confidence": "high"},
+  {"perk_key": "delta_skyclub", "reason": "Plat / Reserve / Biz Plat-only when flying Delta.", "workaround": "Use Amex Plat or Delta Reserve.", "confidence": "high"},
+  {"perk_key": "hotel_status_grant", "reason": "Gold grants no hotel elite status.", "workaround": "Pair with Plat for Marriott + Hilton Gold; or use a hotel co-brand.", "confidence": "high"},
+  {"perk_key": "clear_plus_credit", "reason": "Clear+ credit is on Plat / Green; not Gold.", "workaround": "Hold Plat for CLEAR+, or Green if you only need CLEAR+ + transit-protection.", "confidence": "high"},
+  {"perk_key": "global_entry_credit", "reason": "Gold does not include the GE/TSA-PreCheck credit.", "workaround": "Pair with Plat or any premium card with GE credit.", "confidence": "high"},
+  {"perk_key": "fhr", "reason": "FHR is Plat / Biz Plat-only. Gold uses Hotel Collection (lower tier; 2-night minimum).", "workaround": "Use Hotel Collection on Gold; or pair with Plat for FHR.", "confidence": "high"}
+]
+```
+
+## card_soul.fetch_log
+
+```
+- url: https://www.americanexpress.com/us/credit-cards/card/gold-card/  status: 200  bytes: ~999K
+- WebSearch: "Amex Gold 2026 refresh new benefits changes annual fee" — confirmed Hertz Five Star, dining-partner roster, $96 Uber One LTO, $8K spend bump
+- Amex newsroom (Tier 1 via WebSearch): https://www.americanexpress.com/en-us/newsroom/articles/products-and-services/u-s--consumer-american-express-gold--card-introduces-new-and-enh.html
+```

@@ -18,7 +18,7 @@ interface CardRow {
 interface DefaultRow {
   front_asset_id: number | null;
   back_asset_id: number | null;
-  hero_asset_id: number | null;
+  marketing_asset_id: number | null;
 }
 
 export default async function AdminCardImages({
@@ -39,11 +39,11 @@ export default async function AdminCardImages({
     order by created_at desc
   `;
   const defaults = await sql<DefaultRow[]>`
-    select front_asset_id, back_asset_id, hero_asset_id
+    select front_asset_id, back_asset_id, marketing_asset_id
     from card_image_default where card_id = ${card_id}
     limit 1
   `;
-  const def = defaults[0] ?? { front_asset_id: null, back_asset_id: null, hero_asset_id: null };
+  const def = defaults[0] ?? { front_asset_id: null, back_asset_id: null, marketing_asset_id: null };
 
   return (
     <section>
@@ -81,7 +81,7 @@ export default async function AdminCardImages({
           const isDefault =
             (a.role === "front" && def.front_asset_id === a.id) ||
             (a.role === "back" && def.back_asset_id === a.id) ||
-            (a.role === "hero" && def.hero_asset_id === a.id);
+            (a.role === "marketing" && def.marketing_asset_id === a.id);
           return (
             <li key={a.id}>
               <code>#{a.id}</code> · {a.role} · {a.status}

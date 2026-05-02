@@ -133,8 +133,7 @@ async function processImage(opts: ProcessOpts): Promise<void> {
     const col = ({
       front: "front_asset_id",
       back: "back_asset_id",
-      hero: "hero_asset_id",
-      marketing: "front_asset_id",
+      marketing: "marketing_asset_id",
       lifestyle: "front_asset_id",
     } as const)[opts.role];
     await sql`

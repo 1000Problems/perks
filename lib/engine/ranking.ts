@@ -244,14 +244,20 @@ export function rankCards(
     if (card.closed_to_new_apps) continue;
 
     const score = scoreCard(card, userProfile, wallet, db, options.scoring);
-    const eligibility = evaluateEligibility(
-      card,
-      wallet,
-      db,
-      today,
-      userBand,
-      userProfile.brands_used,
-    );
+    // Prefer a server-supplied verdict (from the catalog-driven rules
+    // evaluator). Fall back to the in-engine path for any card the
+    // overrides map doesn't cover — keeps the engine usable on a
+    // partially-migrated database or in client-only mode.
+    const eligibility =
+      options.eligibilityOverrides?.[card.id] ??
+      evaluateEligibility(
+        card,
+        wallet,
+        db,
+        today,
+        userBand,
+        userProfile.brands_used,
+      );
     const why = generateWhy({ card, score, eligibility, userProfile, db });
 
     const row: Row = { card, score, eligibility, why, rank: 0 };
@@ -282,12 +288,14 @@ export function rankCards(
 
   // Sort by a credit-band-adjusted delta — a 670 user gets a Sapphire
   // Reserve down-ranked, but it's still visible. The displayed
-  // score.deltaOngoing is unchanged.
-  filtered.sort(
-    (a, b) =>
-      rankAdjustedDelta(b.card, b.score.deltaOngoing, userBand) -
-      rankAdjustedDelta(a.card, a.score.deltaOngoing, userBand),
-  );
+  // score.deltaOngoing is unchanged. Tiebreak on card.id so equal-scoring
+  // cards don't reshuffle between renders.
+  filtered.sort((a, b) => {
+    const da = rankAdjustedDelta(b.card, b.score.deltaOngoing, userBand) -
+      rankAdjustedDelta(a.card, a.score.deltaOngoing, userBand);
+    if (da !== 0) return da;
+    return a.card.id < b.card.id ? -1 : a.card.id > b.card.id ? 1 : 0;
+  });
 
   // Pin brand-matched cobrand cards to the top. When the user said they
   // shop at Costco, the Costco card surfaces first even if a $550-AF
@@ -305,11 +313,12 @@ export function rankCards(
   const visible = combined.slice(0, limit).map((r, i) => ({ ...r, rank: i + 1 }));
 
   // Rank denied as well — useful when surfacing them.
-  denied.sort(
-    (a, b) =>
-      rankAdjustedDelta(b.card, b.score.deltaOngoing, userBand) -
-      rankAdjustedDelta(a.card, a.score.deltaOngoing, userBand),
-  );
+  denied.sort((a, b) => {
+    const da = rankAdjustedDelta(b.card, b.score.deltaOngoing, userBand) -
+      rankAdjustedDelta(a.card, a.score.deltaOngoing, userBand);
+    if (da !== 0) return da;
+    return a.card.id < b.card.id ? -1 : a.card.id > b.card.id ? 1 : 0;
+  });
   denied.forEach((d, i) => (d.rank = i + 1));
 
   return { visible, denied };

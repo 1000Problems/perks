@@ -1,14 +1,19 @@
 import { redirect } from "next/navigation";
 import { RecPanelDesktop } from "@/components/recommender/RecPanelDesktop";
 import { RecPanelMobile } from "@/components/recommender/RecPanelMobile";
-import { getCurrentProfile } from "@/lib/profile/server";
+import { getCurrentProfile, getCurrentUserId } from "@/lib/profile/server";
 import { loadCardDatabase } from "@/lib/data/loader";
 import { toSerialized } from "@/lib/data/serialized";
+import { loadEngineVerdicts } from "@/lib/rules/serverEligibility";
 
 export default async function RecommendationsPage() {
   let profile;
+  let userId: string;
   try {
-    profile = await getCurrentProfile();
+    [profile, userId] = await Promise.all([
+      getCurrentProfile(),
+      getCurrentUserId(),
+    ]);
   } catch {
     redirect("/login");
   }
@@ -23,13 +28,28 @@ export default async function RecommendationsPage() {
   }
   const db = loadCardDatabase();
   const serializedDb = toSerialized(db);
+
+  // Server-side eligibility via the catalog-driven rules engine. When
+  // RULES_ENGINE=client (or migrations haven't run), this returns null
+  // and the rec panel falls back to the legacy in-engine path.
+  const cardIds = db.cards.map((c) => c.id);
+  const eligibilityOverrides = await loadEngineVerdicts(userId, cardIds);
+
   return (
     <>
       <div className="hidden md:block">
-        <RecPanelDesktop profile={profile} serializedDb={serializedDb} />
+        <RecPanelDesktop
+          profile={profile}
+          serializedDb={serializedDb}
+          eligibilityOverrides={eligibilityOverrides}
+        />
       </div>
       <div className="block md:hidden">
-        <RecPanelMobile profile={profile} serializedDb={serializedDb} />
+        <RecPanelMobile
+          profile={profile}
+          serializedDb={serializedDb}
+          eligibilityOverrides={eligibilityOverrides}
+        />
       </div>
     </>
   );

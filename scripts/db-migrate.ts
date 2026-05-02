@@ -10,7 +10,11 @@
 
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { sql } from "../lib/db";
+// Schema migrations also benefit from the unpooled connection — a single
+// .sql file may execute many statements inside one transaction. See
+// scripts/lib/db-migrate-conn.ts.
+import { getMigrationDb } from "./lib/db-migrate-conn";
+const sql = getMigrationDb();
 
 const MIGRATIONS_DIR = join(process.cwd(), "db", "migrations");
 

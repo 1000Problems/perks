@@ -86,6 +86,11 @@ export interface RankOptions {
   scoring: ScoringOptions;
   today?: Date;
   limit?: number; // default 5
+  // When provided, the ranker uses these verdicts instead of computing
+  // eligibility in-engine. The recommendations page populates this from
+  // the catalog-driven rules evaluator when RULES_ENGINE=server. Keys
+  // are card IDs; missing keys fall back to the in-engine path.
+  eligibilityOverrides?: Record<string, EligibilityResult>;
 }
 
 export interface RankedRecommendation {

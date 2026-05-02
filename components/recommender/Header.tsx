@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import type { Route } from "next";
 import { Segmented } from "@/components/perks/Segmented";
 import { logoutAction } from "@/lib/auth/actions";
 
@@ -83,9 +84,13 @@ export function RecHeader({ view, setView, credits, setCredits }: Props) {
               { value: "face", label: "Face value" },
             ]}
           />
-          <button className="btn btn-ghost" style={{ fontSize: 12 }} type="button">
+          <Link
+            href={"/onboarding/credit" as Route}
+            className="btn btn-ghost"
+            style={{ fontSize: 12, textDecoration: "none" }}
+          >
             Edit profile
-          </button>
+          </Link>
         </div>
         {/* Mobile filter trigger — only visible <768px. */}
         <button
@@ -136,7 +141,10 @@ export function RecHeader({ view, setView, credits, setCredits }: Props) {
             <div className="eyebrow">Display options</div>
             <Segmented
               value={view}
-              onChange={setView}
+              onChange={(v) => {
+                setView(v);
+                setSheetOpen(false);
+              }}
               options={[
                 { value: "ongoing", label: "Ongoing year" },
                 { value: "year1", label: "Year 1 (with bonus)" },
@@ -144,7 +152,10 @@ export function RecHeader({ view, setView, credits, setCredits }: Props) {
             />
             <Segmented
               value={credits}
-              onChange={setCredits}
+              onChange={(v) => {
+                setCredits(v);
+                setSheetOpen(false);
+              }}
               options={[
                 { value: "realistic", label: "Realistic credits" },
                 { value: "face", label: "Face value" },

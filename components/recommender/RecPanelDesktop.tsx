@@ -13,7 +13,11 @@ import { fromSerialized, type SerializedDb } from "@/lib/data/serialized";
 import type { SpendCategoryId } from "@/lib/data/types";
 import { rankCards } from "@/lib/engine/ranking";
 import { bestRateForCategory } from "@/lib/engine/scoring";
-import type { RankFilter, RankOptions } from "@/lib/engine/types";
+import type {
+  EligibilityResult,
+  RankFilter,
+  RankOptions,
+} from "@/lib/engine/types";
 import { variantForCard } from "@/lib/cardArt";
 import type { UserProfile } from "@/lib/profile/types";
 import { fmt } from "@/lib/utils/format";
@@ -30,9 +34,17 @@ const FILTER_OPTIONS: { value: RankFilter; label: string }[] = [
 export interface RecPanelDesktopProps {
   profile: UserProfile;
   serializedDb: SerializedDb;
+  // Server-precomputed verdicts from the catalog-driven rules engine.
+  // null when the rules path is disabled or unavailable — the engine
+  // computes eligibility client-side as a fallback.
+  eligibilityOverrides: Record<string, EligibilityResult> | null;
 }
 
-export function RecPanelDesktop({ profile, serializedDb }: RecPanelDesktopProps) {
+export function RecPanelDesktop({
+  profile,
+  serializedDb,
+  eligibilityOverrides,
+}: RecPanelDesktopProps) {
   // Reconstruct lookup Maps once per render of the client tree. The
   // serializedDb arrays are stable (server reloads are full
   // remounts), so this useMemo keys on identity and runs once.
@@ -46,8 +58,9 @@ export function RecPanelDesktop({ profile, serializedDb }: RecPanelDesktopProps)
       filter,
       scoring: { creditsMode: credits, subAmortizeMonths: 24 },
       limit: 5,
+      eligibilityOverrides: eligibilityOverrides ?? undefined,
     }),
-    [filter, credits],
+    [filter, credits, eligibilityOverrides],
   );
 
   const ranked = useMemo(

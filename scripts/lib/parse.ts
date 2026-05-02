@@ -1,6 +1,9 @@
 // Markdown extractor. Each card file has six labeled sections, each
 // optionally containing a single ```json fenced block. We pull the JSON
 // out and ignore the prose around it.
+//
+// Soul sections (## card_soul.X) are optional and carry the rich
+// per-card enrichment data. See docs/SOUL_SCHEMA_PROPOSAL.md.
 
 export interface ParsedCard {
   filename: string;
@@ -10,6 +13,15 @@ export interface ParsedCard {
   perksDedup: unknown[] | null;
   destinationPerks: Record<string, unknown> | null;
   notes: string;
+  soul: {
+    credit_score: unknown | null;
+    annual_credits: unknown | null;
+    insurance: unknown | null;
+    program_access: unknown | null;
+    co_brand_perks: unknown | null;
+    absent_perks: unknown | null;
+    fetch_log: string;
+  };
 }
 
 const SECTION_KEYS = {
@@ -19,6 +31,14 @@ const SECTION_KEYS = {
   perksDedup: /^## perks_dedup\.json/,
   destinationPerks: /^## destination_perks\.json/,
   notes: /^## RESEARCH_NOTES/,
+  // Soul sections (additive — all optional)
+  soulCreditScore: /^## card_soul\.credit_score\b/,
+  soulAnnualCredits: /^## card_soul\.annual_credits\b/,
+  soulInsurance: /^## card_soul\.insurance\b/,
+  soulProgramAccess: /^## card_soul\.program_access\b/,
+  soulCoBrandPerks: /^## card_soul\.co_brand_perks\b/,
+  soulAbsentPerks: /^## card_soul\.absent_perks\b/,
+  soulFetchLog: /^## card_soul\.fetch_log\b/,
 } as const;
 
 type SectionKey = keyof typeof SECTION_KEYS;
@@ -90,6 +110,24 @@ export function parseCardMarkdown(filename: string, md: string): ParsedCard {
     throw new Error(`${filename}: ${(e as Error).message}`);
   }
 
+  let soulCreditScore: unknown | null = null;
+  let soulAnnualCredits: unknown | null = null;
+  let soulInsurance: unknown | null = null;
+  let soulProgramAccess: unknown | null = null;
+  let soulCoBrandPerks: unknown | null = null;
+  let soulAbsentPerks: unknown | null = null;
+
+  try {
+    soulCreditScore = extractJson(sections.soulCreditScore);
+    soulAnnualCredits = extractJson(sections.soulAnnualCredits);
+    soulInsurance = extractJson(sections.soulInsurance);
+    soulProgramAccess = extractJson(sections.soulProgramAccess);
+    soulCoBrandPerks = extractJson(sections.soulCoBrandPerks);
+    soulAbsentPerks = extractJson(sections.soulAbsentPerks);
+  } catch (e) {
+    throw new Error(`${filename} (soul section): ${(e as Error).message}`);
+  }
+
   return {
     filename,
     card,
@@ -98,5 +136,14 @@ export function parseCardMarkdown(filename: string, md: string): ParsedCard {
     perksDedup,
     destinationPerks,
     notes: (sections.notes ?? "").trim(),
+    soul: {
+      credit_score: soulCreditScore,
+      annual_credits: soulAnnualCredits,
+      insurance: soulInsurance,
+      program_access: soulProgramAccess,
+      co_brand_perks: soulCoBrandPerks,
+      absent_perks: soulAbsentPerks,
+      fetch_log: (sections.soulFetchLog ?? "").trim(),
+    },
   };
 }

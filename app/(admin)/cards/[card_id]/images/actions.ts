@@ -124,9 +124,9 @@ export async function markAssetBroken(cardId: string, assetId: number): Promise<
   // If this was the default for any role, clear it.
   await sql`
     update card_image_default set
-      front_asset_id = case when front_asset_id = ${assetId} then null else front_asset_id end,
-      back_asset_id  = case when back_asset_id  = ${assetId} then null else back_asset_id  end,
-      hero_asset_id  = case when hero_asset_id  = ${assetId} then null else hero_asset_id  end,
+      front_asset_id     = case when front_asset_id     = ${assetId} then null else front_asset_id     end,
+      back_asset_id      = case when back_asset_id      = ${assetId} then null else back_asset_id      end,
+      marketing_asset_id = case when marketing_asset_id = ${assetId} then null else marketing_asset_id end,
       updated_at = now()
     where card_id = ${cardId}
   `;

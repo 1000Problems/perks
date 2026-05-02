@@ -57,9 +57,11 @@ export function RecHeader({ view, setView, credits, setCredits }: Props) {
           <Link href="/recommendations" style={{ padding: "6px 10px", color: "var(--ink)", fontWeight: 500, textDecoration: "none" }}>
             Recommendation
           </Link>
+          {/* Hidden for MVP — restore in v1.
           <Link href="/trips" style={{ padding: "6px 10px", textDecoration: "none", color: "inherit" }}>
             Trip planner
           </Link>
+          */}
           <Link href="/onboarding/cards" style={{ padding: "6px 10px", textDecoration: "none", color: "inherit" }}>
             My wallet
           </Link>
@@ -68,6 +70,7 @@ export function RecHeader({ view, setView, credits, setCredits }: Props) {
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         {/* Desktop controls — hidden on small screens. */}
         <div className="rec-header-desktop" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {/* View + credits toggles hidden for MVP — restore in v1.
           <Segmented
             value={view}
             onChange={setView}
@@ -84,6 +87,7 @@ export function RecHeader({ view, setView, credits, setCredits }: Props) {
               { value: "face", label: "Face value" },
             ]}
           />
+          */}
           <Link
             href={"/settings" as Route}
             className="btn btn-ghost"
@@ -92,7 +96,8 @@ export function RecHeader({ view, setView, credits, setCredits }: Props) {
             Settings
           </Link>
         </div>
-        {/* Mobile filter trigger — only visible <768px. */}
+        {/* Mobile filter trigger — hidden for MVP (would open an empty sheet
+            with the toggles above commented out). Restore in v1.
         <button
           className="rec-header-mobile-only btn btn-ghost"
           style={{ fontSize: 12 }}
@@ -102,6 +107,7 @@ export function RecHeader({ view, setView, credits, setCredits }: Props) {
         >
           ⚙ Filters
         </button>
+        */}
         <form action={logoutAction}>
           <button
             className="btn btn-ghost"

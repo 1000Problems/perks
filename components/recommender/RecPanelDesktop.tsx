@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { CardArt } from "@/components/perks/CardArt";
 import { EligibilityChip } from "@/components/perks/EligibilityChip";
 import { Eyebrow } from "@/components/perks/Eyebrow";
-import { HeatRow } from "@/components/perks/HeatRow";
+import { CoverageRow } from "@/components/perks/CoverageRow";
 import { Money } from "@/components/perks/Money";
 import { Segmented } from "@/components/perks/Segmented";
 import { ValuePillars } from "@/components/perks/ValuePillars";
@@ -440,11 +440,13 @@ export function RecPanelDesktop({
                 </Eyebrow>
                 <div style={{ display: "flex", flexDirection: "column" }}>
                   {SPEND_CATEGORIES.map((c) => (
-                    <HeatRow
+                    <CoverageRow
                       key={c.id}
                       category={c}
-                      rate={walletBestRates[c.id].rate}
-                      from={walletBestRates[c.id].from}
+                      bestRate={walletBestRates[c.id].rate}
+                      walletCards={walletCards}
+                      trialCards={consideringCards}
+                      db={db}
                     />
                   ))}
                 </div>

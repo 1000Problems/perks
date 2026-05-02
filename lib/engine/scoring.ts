@@ -379,6 +379,10 @@ export function scoreCard(
   // cobrand bonuses are dollar-back rebates regardless of currency.
   // Perks and fee unchanged. Each component is rounded so the back-
   // compat `spendOngoing` reconciles exactly to `cashOngoing + points$`.
+  //
+  // Pts derive from the rounded $ value (not from raw earningsDelta) so
+  // the displayed "X pts ≈ $Y" reverse-reconciles cleanly when the user
+  // does X × cpp / 100 in their head. Drifts otherwise — see code review #4.
   const earningsDeltaRounded = Math.round(earningsDelta);
   const brandFitRounded = Math.round(brandFitValue);
   const mode = cardNorm.mode;
@@ -388,7 +392,7 @@ export function scoreCard(
   const pointsValueUsd = isLoyalty ? earningsDeltaRounded : 0;
   const pointsRaw =
     isLoyalty && mode.cpp > 0
-      ? Math.round((earningsDelta * 100) / mode.cpp)
+      ? Math.round((pointsValueUsd * 100) / mode.cpp)
       : 0;
   const pointsOngoing: PointsBucket | null =
     isLoyalty && pointsRaw > 0 && mode.programId && mode.programName

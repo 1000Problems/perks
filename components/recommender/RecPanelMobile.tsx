@@ -220,6 +220,17 @@ export function RecPanelMobile({
     [credits],
   );
 
+  // Per-card "wallet without this card" baselines. Stable references so
+  // each WalletRow's scoreCard memo doesn't reset on every parent
+  // re-render. (Code review #13.)
+  const ownedBaselines = useMemo(() => {
+    const m = new Map<string, WalletCardHeld[]>();
+    for (const h of profile.cards_held) {
+      m.set(h.card_id, profile.cards_held.filter((x) => x.card_id !== h.card_id));
+    }
+    return m;
+  }, [profile.cards_held]);
+
   function pickCard(id: string) {
     setSelectedId(id);
     setTab("detail");
@@ -348,24 +359,19 @@ export function RecPanelMobile({
                 <div style={{ marginTop: 24 }}>
                   <Eyebrow style={{ marginBottom: 10 }}>Wallet · {walletCards.length}</Eyebrow>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {walletCards.map((c) => {
-                      const baselineWallet = profile.cards_held.filter(
-                        (h) => h.card_id !== c.id,
-                      );
-                      return (
-                        <WalletRow
-                          key={c.id}
-                          card={c}
-                          mode="owned"
-                          baselineWallet={baselineWallet}
-                          currentWalletNet={walletNet}
-                          profile={profile}
-                          db={db}
-                          scoringOptions={scoringOptions}
-                          onRemove={() => removeFromWallet(c.id)}
-                        />
-                      );
-                    })}
+                    {walletCards.map((c) => (
+                      <WalletRow
+                        key={c.id}
+                        card={c}
+                        mode="owned"
+                        baselineWallet={ownedBaselines.get(c.id) ?? []}
+                        currentWalletNet={walletNet}
+                        profile={profile}
+                        db={db}
+                        scoringOptions={scoringOptions}
+                        onRemove={() => removeFromWallet(c.id)}
+                      />
+                    ))}
                   </div>
                   {saveError && (
                     <div

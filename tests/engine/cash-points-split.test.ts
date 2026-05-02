@@ -173,6 +173,38 @@ describe("scoreCard split — cash vs points buckets", () => {
     expect(sub!.valueUsd).toBe(score.components.subYear1);
   });
 
+  it("displayed pts × cpp reverse-reconciles to displayed $ (no rounding drift)", () => {
+    // The user reads "X pts ≈ $Y portal" and expects X × cpp / 100 ≈ Y.
+    // Pre-fix this drifted by up to a cent because pts were derived
+    // from unrounded earningsDelta while $ was the rounded value.
+    const p = profile({
+      groceries: 6000,
+      dining: 8000,
+      airfare: 4000,
+      hotels: 3000,
+      shopping: 4000,
+      other: 25000,
+    });
+    const sample = [
+      "chase_sapphire_preferred",
+      "chase_sapphire_reserve",
+      "amex_gold",
+      "amex_platinum",
+      "citi_strata_premier",
+      "capital_one_venture_x",
+      "bilt_blue",
+      "united_explorer",
+    ];
+    for (const id of sample) {
+      const score = scoreCard(get(id), p, [], db, SCORING);
+      const pts = score.components.pointsOngoing;
+      if (!pts) continue;
+      // pts × cpp / 100, rounded, must equal displayed valueUsd exactly.
+      const reconstructed = Math.round((pts.pts * pts.cpp) / 100);
+      expect(reconstructed).toBe(pts.valueUsd);
+    }
+  });
+
   it("cash SUB has pts=0 in subYear1Detail", () => {
     const p = profile({ groceries: 4000 });
     const score = scoreCard(get("amex_blue_cash_preferred"), p, [], db, SCORING);

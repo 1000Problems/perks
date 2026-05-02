@@ -294,6 +294,19 @@ export function RecPanelDesktop({
     [credits],
   );
 
+  // Per-card "wallet without this card" baselines. Memoized as a Map so
+  // each WalletRow gets a stable array reference between renders — the
+  // row's scoreCard useMemo dep keys on it. Without this, every parent
+  // setState rebuilt every baseline and re-scored every row. (Code
+  // review #13.)
+  const ownedBaselines = useMemo(() => {
+    const m = new Map<string, WalletCardHeld[]>();
+    for (const h of profile.cards_held) {
+      m.set(h.card_id, profile.cards_held.filter((x) => x.card_id !== h.card_id));
+    }
+    return m;
+  }, [profile.cards_held]);
+
   // Held perks, deduplicated by name (first card wins for the source label).
   const heldPerks: { perk: string; from: string }[] = useMemo(() => {
     const seen = new Map<string, string>();
@@ -372,26 +385,22 @@ export function RecPanelDesktop({
                   Wallet · {walletCards.length} {walletCards.length === 1 ? "card" : "cards"}
                 </Eyebrow>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {walletCards.map((c) => {
-                    // Owned baseline = wallet WITHOUT this card. Score
-                    // against that to derive "what we'd lose if dropped".
-                    const baselineWallet = profile.cards_held.filter(
-                      (h) => h.card_id !== c.id,
-                    );
-                    return (
-                      <WalletRow
-                        key={c.id}
-                        card={c}
-                        mode="owned"
-                        baselineWallet={baselineWallet}
-                        currentWalletNet={walletNet}
-                        profile={profile}
-                        db={db}
-                        scoringOptions={scoringOptions}
-                        onRemove={() => removeFromWallet(c.id)}
-                      />
-                    );
-                  })}
+                  {walletCards.map((c) => (
+                    <WalletRow
+                      key={c.id}
+                      card={c}
+                      mode="owned"
+                      // Stable per-card baseline (wallet without this card)
+                      // from the memoized map above — preserves WalletRow's
+                      // scoreCard memoization on parent re-renders.
+                      baselineWallet={ownedBaselines.get(c.id) ?? []}
+                      currentWalletNet={walletNet}
+                      profile={profile}
+                      db={db}
+                      scoringOptions={scoringOptions}
+                      onRemove={() => removeFromWallet(c.id)}
+                    />
+                  ))}
                 </div>
                 {saveError && (
                   <div

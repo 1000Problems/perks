@@ -105,7 +105,7 @@ export function ValuePillars({ components, view, variant }: Props) {
             )}
             {showFee && (
               <span style={{ color: "var(--neg)" }}>
-                −${Math.abs(feeOngoing).toLocaleString()} fee
+                −{fmt.usd(Math.abs(feeOngoing))} fee
               </span>
             )}
           </div>
@@ -181,7 +181,7 @@ export function ValuePillars({ components, view, variant }: Props) {
           )}
           {showFee && (
             <span style={{ color: "var(--neg)" }}>
-              −${Math.abs(feeOngoing).toLocaleString()} fee
+              −{fmt.usd(Math.abs(feeOngoing))} fee
             </span>
           )}
         </div>
@@ -196,9 +196,9 @@ function subYear1Caption(
   subYear1Detail: CardScoreComponents["subYear1Detail"],
 ): string {
   if (subYear1Detail && subYear1Detail.mode === "loyalty" && subYear1Detail.pts > 0) {
-    return `+${fmtPts(subYear1Detail.pts)} pts y1 (≈$${subYear1.toLocaleString()})`;
+    return `+${fmtPts(subYear1Detail.pts)} pts y1 (≈${fmt.usd(subYear1)})`;
   }
-  return `+$${subYear1.toLocaleString()} SUB y1`;
+  return `+${fmt.usd(subYear1)} SUB y1`;
 }
 
 // ── inline (stacked) pillars ─────────────────────────────────────────
@@ -284,7 +284,7 @@ function PillarInlinePoints({
       </span>
       {!isZero && (
         <span style={{ fontSize: captionSize ?? 10, color: "var(--ink-3)" }}>
-          ≈ ${points!.valueUsd.toLocaleString()}
+          ≈ {fmt.usd(points!.valueUsd)}
         </span>
       )}
     </div>
@@ -425,7 +425,7 @@ function PointsPillar({
           whiteSpace: "nowrap",
         }}
       >
-        {isZero ? "—" : `≈ $${points!.valueUsd.toLocaleString()} portal`}
+        {isZero ? "—" : `≈ ${fmt.usd(points!.valueUsd)} portal`}
       </span>
     </div>
   );

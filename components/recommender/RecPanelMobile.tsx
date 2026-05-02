@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CardArt } from "@/components/perks/CardArt";
 import { EligibilityChip } from "@/components/perks/EligibilityChip";
 import { Eyebrow } from "@/components/perks/Eyebrow";
@@ -12,6 +13,7 @@ import { WalletRow } from "@/components/perks/WalletRow";
 import { SPEND_CATEGORIES } from "@/lib/categories";
 import type { Card } from "@/lib/data/loader";
 import { fromSerialized, type SerializedDb } from "@/lib/data/serialized";
+import { makeQueryPredicate, nameMatch, segmentMatches } from "@/lib/data/searchIndex";
 import type { SpendCategoryId } from "@/lib/data/types";
 import { rankCards } from "@/lib/engine/ranking";
 import { bestRateForCategory } from "@/lib/engine/scoring";
@@ -36,6 +38,16 @@ const FILTER_OPTIONS: { value: RankFilter; label: string }[] = [
   { value: "premium", label: "Premium" },
 ];
 
+const FILTER_LABEL: Record<RankFilter, string> = {
+  total: "All cards",
+  nofee: "No fee",
+  premium: "Premium",
+};
+
+function isRankFilter(s: string | null): s is RankFilter {
+  return s === "total" || s === "nofee" || s === "premium";
+}
+
 export interface RecPanelMobileProps {
   profile: UserProfile;
   serializedDb: SerializedDb;
@@ -48,9 +60,67 @@ export function RecPanelMobile({
   eligibilityOverrides,
 }: RecPanelMobileProps) {
   const db = useMemo(() => fromSerialized(serializedDb), [serializedDb]);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const [view, setView] = useState<ViewMode>("ongoing");
   const [credits, setCredits] = useState<CreditsMode>("realistic");
-  const [filter, setFilter] = useState<RankFilter>("total");
+  // Initialize segment + query from URL on mount.
+  const initialQuery = searchParams.get("q") ?? "";
+  const initialSegRaw = searchParams.get("seg");
+  const initialFilter: RankFilter =
+    initialQuery && isRankFilter(initialSegRaw) ? initialSegRaw : "total";
+  const [filter, setFilterRaw] = useState<RankFilter>(initialFilter);
+  const [query, setQuery] = useState<string>(initialQuery);
+  const [originalFilter, setOriginalFilter] = useState<RankFilter | null>(
+    null,
+  );
+
+  function setFilter(next: RankFilter) {
+    setFilterRaw(next);
+    setOriginalFilter(null);
+  }
+
+  function escapeToAllCards() {
+    setOriginalFilter(filter);
+    setFilterRaw("total");
+  }
+
+  function restoreSegment() {
+    if (originalFilter) {
+      setFilterRaw(originalFilter);
+      setOriginalFilter(null);
+    }
+  }
+
+  // Auto-restore on cleared query.
+  useEffect(() => {
+    if (query.trim() === "" && originalFilter) {
+      setFilterRaw(originalFilter);
+      setOriginalFilter(null);
+    }
+  }, [query, originalFilter]);
+
+  // Debounced URL sync — same shape as desktop.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const params = new URLSearchParams(window.location.search);
+      const isSearching = query.trim().length > 0;
+      if (isSearching) {
+        params.set("q", query);
+        params.set("seg", filter);
+      } else {
+        params.delete("q");
+        params.delete("seg");
+      }
+      const qs = params.toString();
+      router.replace((qs ? `${pathname}?${qs}` : pathname) as never, {
+        scroll: false,
+      });
+    }, 150);
+    return () => clearTimeout(t);
+  }, [query, filter, pathname, router]);
   // Category sort — session-only. "overall" → engine default; otherwise
   // pass a category sort and swap the per-row headline number for that
   // category's marginal delta.
@@ -83,11 +153,13 @@ export function RecPanelMobile({
     [profile.cards_held, consideringIds, todayIso],
   );
 
+  const isSearching = query.trim().length > 0;
+
   const rankOptions: RankOptions = useMemo(
     () => ({
-      filter,
+      filter: isSearching ? "total" : filter,
       scoring: { creditsMode: credits, subAmortizeMonths: 24 },
-      limit: 5,
+      limit: isSearching ? db.cards.length : 5,
       eligibilityOverrides:
         consideringIds.length === 0 && profile.cards_held === serverProfile.cards_held
           ? eligibilityOverrides ?? undefined
@@ -105,6 +177,8 @@ export function RecPanelMobile({
       profile.cards_held,
       serverProfile.cards_held,
       sortCategory,
+      isSearching,
+      db.cards.length,
     ],
   );
 
@@ -126,11 +200,42 @@ export function RecPanelMobile({
     [profile, effectiveWallet, db, rankOptions],
   );
 
+  // Search-time display pipeline — mirrors RecPanelDesktop.
+  const queryPredicate = useMemo(() => makeQueryPredicate(query), [query]);
+  const matchesSegment = useMemo(
+    () =>
+      isSearching
+        ? ranked.visible.filter((r) =>
+            segmentMatches(filter, r.card.annual_fee_usd),
+          )
+        : ranked.visible,
+    [isSearching, ranked.visible, filter],
+  );
+  const matchesAll = useMemo(
+    () =>
+      isSearching ? ranked.visible.filter((r) => queryPredicate(r.card)) : [],
+    [isSearching, ranked.visible, queryPredicate],
+  );
+  const display = useMemo(() => {
+    if (!isSearching) return ranked.visible;
+    const inBoth = matchesSegment.filter((r) => queryPredicate(r.card));
+    const hit = nameMatch(inBoth, query);
+    const ordered = hit
+      ? [hit, ...inBoth.filter((r) => r.card.id !== hit.card.id)]
+      : inBoth;
+    return ordered.slice(0, 5);
+  }, [isSearching, ranked.visible, matchesSegment, queryPredicate, query]);
+
+  const showEscapeHatch =
+    isSearching && display.length === 0 && matchesAll.length > 0;
+  const noMatchesAtAll =
+    isSearching && display.length === 0 && matchesAll.length === 0;
+
   const [selectedId, setSelectedId] = useState<string | null>(
-    ranked.visible[0]?.card.id ?? null,
+    display[0]?.card.id ?? null,
   );
   const selected =
-    ranked.visible.find((r) => r.card.id === selectedId) ?? ranked.visible[0];
+    display.find((r) => r.card.id === selectedId) ?? display[0];
 
   const consideringCards: Card[] = useMemo(
     () =>
@@ -288,7 +393,14 @@ export function RecPanelMobile({
         flexDirection: "column",
       }}
     >
-      <RecHeader view={view} setView={setView} credits={credits} setCredits={setCredits} />
+      <RecHeader
+        view={view}
+        setView={setView}
+        credits={credits}
+        setCredits={setCredits}
+        query={query}
+        setQuery={setQuery}
+      />
 
       <div style={{ padding: "16px 16px 8px" }}>
         <div className="eyebrow">Recommendations</div>
@@ -482,24 +594,83 @@ export function RecPanelMobile({
                 ))}
               </select>
             </div>
-            {ranked.visible.length === 0 ? (
+            {display.length === 0 ? (
               <p style={{ fontSize: 14, color: "var(--ink-2)" }}>
-                {sortCategory === "overall"
-                  ? "No cards match this filter."
-                  : (() => {
-                      const cat = SPEND_CATEGORIES.find((c) => c.id === sortCategory);
-                      const label = cat?.label.toLowerCase() ?? sortCategory;
-                      const baseline = bestRateForCategory(sortCategory, walletCards, db);
-                      if (baseline.rate > 0 && baseline.from !== "—") {
-                        const pct = (baseline.rate * 100).toFixed(1).replace(/\.0$/, "");
-                        return `No card in this view beats your ${baseline.from} for ${label} at ${pct}%.`;
-                      }
-                      return `No card in this view adds value for ${label}.`;
-                    })()}
+                {noMatchesAtAll ? (
+                  <>No cards match &ldquo;{query.trim()}&rdquo;.</>
+                ) : showEscapeHatch ? (
+                  <>
+                    No matches in {FILTER_LABEL[filter]}.{" "}
+                    <button
+                      type="button"
+                      onClick={escapeToAllCards}
+                      style={{
+                        border: 0,
+                        background: "transparent",
+                        padding: 0,
+                        color: "var(--ink)",
+                        fontWeight: 600,
+                        textDecoration: "underline",
+                        cursor: "pointer",
+                        font: "inherit",
+                      }}
+                    >
+                      {matchesAll.length} in all cards →
+                    </button>
+                  </>
+                ) : sortCategory === "overall" ? (
+                  "No cards match this filter."
+                ) : (
+                  (() => {
+                    const cat = SPEND_CATEGORIES.find((c) => c.id === sortCategory);
+                    const label = cat?.label.toLowerCase() ?? sortCategory;
+                    const baseline = bestRateForCategory(sortCategory, walletCards, db);
+                    if (baseline.rate > 0 && baseline.from !== "—") {
+                      const pct = (baseline.rate * 100).toFixed(1).replace(/\.0$/, "");
+                      return `No card in this view beats your ${baseline.from} for ${label} at ${pct}%.`;
+                    }
+                    return `No card in this view adds value for ${label}.`;
+                  })()
+                )}
               </p>
             ) : (
+              <>
+                {isSearching && originalFilter && (
+                  <div
+                    style={{
+                      marginBottom: 10,
+                      padding: "8px 12px",
+                      border: "1px dashed var(--rule)",
+                      borderRadius: 8,
+                      background: "var(--paper-2)",
+                      fontSize: 12,
+                      color: "var(--ink-2)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <span>Showing all cards.</span>
+                    <button
+                      type="button"
+                      onClick={restoreSegment}
+                      style={{
+                        border: 0,
+                        background: "transparent",
+                        padding: 0,
+                        color: "var(--ink)",
+                        fontWeight: 600,
+                        textDecoration: "underline",
+                        cursor: "pointer",
+                        font: "inherit",
+                      }}
+                    >
+                      Restore {FILTER_LABEL[originalFilter]}
+                    </button>
+                  </div>
+                )}
               <ol style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
-                {ranked.visible.map((r) => {
+                {display.map((r) => {
                   const fee = r.card.annual_fee_usd ?? 0;
                   const subVal = r.card.signup_bonus?.estimated_value_usd ?? 0;
                   return (
@@ -618,6 +789,7 @@ export function RecPanelMobile({
                   );
                 })}
               </ol>
+              </>
             )}
           </div>
         )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import { Segmented } from "@/components/perks/Segmented";
@@ -14,10 +14,47 @@ interface Props {
   setView: (v: ViewMode) => void;
   credits: CreditsMode;
   setCredits: (v: CreditsMode) => void;
+  query?: string;
+  setQuery?: (q: string) => void;
 }
 
-export function RecHeader({ view, setView, credits, setCredits }: Props) {
+export function RecHeader({ view, setView, credits, setCredits, query, setQuery }: Props) {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const desktopInputRef = useRef<HTMLInputElement>(null);
+  const mobileInputRef = useRef<HTMLInputElement>(null);
+
+  // Cmd/Ctrl+K focuses the search input from anywhere on the page. We
+  // bind once at the document level and act only when the chord
+  // matches — never compete with native form typing.
+  useEffect(() => {
+    if (!setQuery) return;
+    function onKey(e: KeyboardEvent) {
+      const isK = e.key === "k" || e.key === "K";
+      if (!isK) return;
+      if (!(e.metaKey || e.ctrlKey)) return;
+      e.preventDefault();
+      // Mobile: open the bar and focus once it mounts.
+      if (window.matchMedia("(max-width: 767px)").matches) {
+        setMobileSearchOpen(true);
+        requestAnimationFrame(() => mobileInputRef.current?.focus());
+        return;
+      }
+      desktopInputRef.current?.focus();
+      desktopInputRef.current?.select();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [setQuery]);
+
+  function handleSearchKey(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Escape") {
+      setQuery?.("");
+      e.currentTarget.blur();
+      setMobileSearchOpen(false);
+    }
+  }
+
   return (
     <header
       style={{
@@ -28,6 +65,7 @@ export function RecHeader({ view, setView, credits, setCredits }: Props) {
         padding: "0 32px",
         background: "var(--paper)",
         height: 64,
+        position: "relative",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
@@ -70,6 +108,36 @@ export function RecHeader({ view, setView, credits, setCredits }: Props) {
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         {/* Desktop controls — hidden on small screens. */}
         <div className="rec-header-desktop" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {setQuery && (
+            <div className="rec-header-search-wrap">
+              <SearchIcon className="rec-header-search-icon" />
+              <input
+                ref={desktopInputRef}
+                type="search"
+                value={query ?? ""}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={handleSearchKey}
+                placeholder="Search cards"
+                aria-label="Search cards"
+                className="rec-header-search"
+                spellCheck={false}
+                autoComplete="off"
+              />
+              {query && (
+                <button
+                  type="button"
+                  className="rec-header-search-clear"
+                  onClick={() => {
+                    setQuery("");
+                    desktopInputRef.current?.focus();
+                  }}
+                  aria-label="Clear search"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          )}
           {/* View + credits toggles hidden for MVP — restore in v1.
           <Segmented
             value={view}
@@ -96,6 +164,21 @@ export function RecHeader({ view, setView, credits, setCredits }: Props) {
             Settings
           </Link>
         </div>
+        {/* Mobile-only search trigger. */}
+        {setQuery && (
+          <button
+            type="button"
+            className="rec-header-mobile-only btn btn-ghost"
+            style={{ padding: "6px 8px" }}
+            aria-label="Search cards"
+            onClick={() => {
+              setMobileSearchOpen(true);
+              requestAnimationFrame(() => mobileInputRef.current?.focus());
+            }}
+          >
+            <SearchIcon />
+          </button>
+        )}
         {/* Mobile filter trigger — hidden for MVP (would open an empty sheet
             with the toggles above commented out). Restore in v1.
         <button
@@ -118,6 +201,49 @@ export function RecHeader({ view, setView, credits, setCredits }: Props) {
           </button>
         </form>
       </div>
+
+      {/* Mobile search overlay — full-width bar over the header. */}
+      {mobileSearchOpen && setQuery && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "var(--paper)",
+            borderBottom: "1px solid var(--rule)",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "0 12px",
+            zIndex: 50,
+          }}
+        >
+          <SearchIcon className="rec-header-search-icon" style={{ position: "static" }} />
+          <input
+            ref={mobileInputRef}
+            type="search"
+            value={query ?? ""}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={handleSearchKey}
+            placeholder="Search cards"
+            aria-label="Search cards"
+            className="rec-header-search"
+            spellCheck={false}
+            autoComplete="off"
+            style={{ flex: 1, paddingLeft: 8 }}
+          />
+          <button
+            type="button"
+            className="btn btn-ghost"
+            style={{ fontSize: 12 }}
+            onClick={() => {
+              setQuery("");
+              setMobileSearchOpen(false);
+            }}
+          >
+            Done
+          </button>
+        </div>
+      )}
 
       {sheetOpen && (
         <div
@@ -179,5 +305,32 @@ export function RecHeader({ view, setView, credits, setCredits }: Props) {
         </div>
       )}
     </header>
+  );
+}
+
+function SearchIcon({
+  className,
+  style,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <svg
+      className={className}
+      style={style}
+      width="14"
+      height="14"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="7" cy="7" r="5" />
+      <path d="M14 14L11 11" />
+    </svg>
   );
 }

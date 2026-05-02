@@ -354,3 +354,58 @@ html, body {
   .rec-header-desktop { display: none !important; }
   .rec-header-mobile-only { display: inline-flex !important; }
 }
+
+/* Recommendations search input. Lives top-right of the header next to
+   Settings on desktop; mobile uses a full-width overlay (see Header.tsx). */
+.rec-header-search-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.rec-header-search {
+  width: 220px;
+  height: 32px;
+  padding: 0 28px 0 30px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 12.5px;
+  outline: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.rec-header-search::placeholder { color: var(--ink-4); }
+.rec-header-search:focus {
+  border-color: var(--ink-3);
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.04);
+}
+/* Hide the WebKit search clear (X) — we render our own. */
+.rec-header-search::-webkit-search-decoration,
+.rec-header-search::-webkit-search-cancel-button { -webkit-appearance: none; }
+.rec-header-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-4);
+  pointer-events: none;
+}
+.rec-header-search-clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--paper-3);
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.rec-header-search-clear:hover { background: var(--rule); color: var(--ink); }

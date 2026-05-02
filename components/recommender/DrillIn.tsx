@@ -6,7 +6,6 @@ import { EligibilityChip } from "@/components/perks/EligibilityChip";
 import { Eyebrow } from "@/components/perks/Eyebrow";
 import { Money } from "@/components/perks/Money";
 import { Section } from "@/components/perks/Section";
-import { ValuePillars } from "@/components/perks/ValuePillars";
 import { SPEND_CATEGORIES } from "@/lib/categories";
 import type { CardDatabase } from "@/lib/data/loader";
 import type { SpendCategory } from "@/lib/data/types";
@@ -81,22 +80,22 @@ export function DrillIn({
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em" }}>{card.name}</div>
           <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>{card.issuer}</div>
-          <div style={{ marginTop: 14 }}>
-            <ValuePillars components={score.components} view={view} variant="hero" />
-            <div
+          {/* CASH/POINTS/PERKS pillars are shown in the selected list
+              card — repeating them here was redundant. Keep the NET
+              takeaway as the headline number and bump it up since it's
+              now the only big number in the header. */}
+          <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 4 }}>
+            <span
               style={{
                 fontSize: 11,
                 color: "var(--ink-3)",
-                marginTop: 10,
                 fontFamily: "var(--font-mono), ui-monospace, monospace",
-                display: "flex",
-                gap: 8,
-                alignItems: "baseline",
+                letterSpacing: "0.06em",
               }}
             >
-              <span>{view === "ongoing" ? "NET / YEAR" : "NET, YEAR 1"}</span>
-              <Money value={delta} sign size="sm" />
-            </div>
+              {view === "ongoing" ? "NET / YEAR" : "NET, YEAR 1"}
+            </span>
+            <Money value={delta} sign size="md" />
           </div>
           <div style={{ marginTop: 12 }}>
             <EligibilityChip status={eligibility.status} label={eligibility.note} />

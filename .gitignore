@@ -13,10 +13,16 @@
 
 # next.js
 /.next/
+/.next2/
+/.next2-log.txt
 /out/
+/tmp/
 
 # production
 /build
+
+# claude
+/.claude/
 
 # misc
 .DS_Store

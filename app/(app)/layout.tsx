@@ -1,7 +1,24 @@
-// Layout for the auth-gated app routes. Auth gating gets wired up in a TASK
-// for Code (read session via lib/supabase/server.ts, redirect to /login if
-// missing). For now this is a passthrough.
+// Layout for all auth-gated app routes. Reads the session via the
+// server-side Supabase client and redirects unauthenticated users to /login.
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
+
+export default async function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
   return <>{children}</>;
 }

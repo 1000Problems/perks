@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Segmented } from "@/components/perks/Segmented";
+import { logoutAction } from "@/lib/auth/actions";
 
 export type ViewMode = "ongoing" | "year1";
 export type CreditsMode = "realistic" | "face";
@@ -81,6 +82,15 @@ export function RecHeader({ view, setView, credits, setCredits }: Props) {
         <button className="btn btn-ghost" style={{ fontSize: 12 }} type="button">
           Edit profile
         </button>
+        <form action={logoutAction}>
+          <button
+            className="btn btn-ghost"
+            style={{ fontSize: 12, color: "var(--ink-3)" }}
+            type="submit"
+          >
+            Sign out
+          </button>
+        </form>
       </div>
     </header>
   );

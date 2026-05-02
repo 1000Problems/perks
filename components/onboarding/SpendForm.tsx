@@ -58,7 +58,11 @@ export function SpendForm({ initialProfile, editMode }: Props) {
   async function continueNext() {
     const ok = await flushNow();
     if (!ok) return;
-    router.push((editMode ? "/settings" : "/onboarding/brands") as Route);
+    router.push((editMode ? "/recommendations" : "/onboarding/brands") as Route);
+    // Invalidate App Router Client Cache so the destination's server
+    // components re-execute with the just-saved profile. force-dynamic
+    // on the layout doesn't cover this cache layer.
+    if (editMode) router.refresh();
   }
 
   return (
@@ -188,6 +192,7 @@ export function SpendForm({ initialProfile, editMode }: Props) {
             router.push(
               (editMode ? "/settings" : "/onboarding/credit") as Route,
             );
+            if (editMode) router.refresh();
           }}
         >
           ← Back
@@ -198,7 +203,7 @@ export function SpendForm({ initialProfile, editMode }: Props) {
           onClick={continueNext}
           disabled={total === 0}
         >
-          {editMode ? "Save & close" : "Continue →"}
+          {editMode ? "Save & view recs →" : "Continue →"}
         </button>
       </div>
     </div>

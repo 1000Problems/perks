@@ -50,7 +50,10 @@ export function CreditForm({ initialBand, editMode }: Props) {
         setError("Couldn't save — try again.");
         return;
       }
-      router.push((editMode ? "/settings" : "/onboarding/spend") as Route);
+      router.push((editMode ? "/recommendations" : "/onboarding/spend") as Route);
+      // Invalidate App Router Client Cache so the destination's server
+      // components re-execute with the just-saved band.
+      if (editMode) router.refresh();
     });
   }
 
@@ -161,7 +164,7 @@ export function CreditForm({ initialBand, editMode }: Props) {
           onClick={handleContinue}
           disabled={isPending || !selected}
         >
-          {isPending ? "Saving…" : editMode ? "Save & close" : "Continue →"}
+          {isPending ? "Saving…" : editMode ? "Save & view recs →" : "Continue →"}
         </button>
       </div>
     </div>

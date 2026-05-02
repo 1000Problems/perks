@@ -52,11 +52,18 @@ export function BrandsForm({ initialProfile, editMode }: Props) {
   const { profile, update, flushNow, error } = useProfile(initialProfile);
 
   async function go(
-    target: "/onboarding/cards" | "/onboarding/spend" | "/settings",
+    target:
+      | "/onboarding/cards"
+      | "/onboarding/spend"
+      | "/settings"
+      | "/recommendations",
   ) {
     const ok = await flushNow();
     if (!ok) return; // stay on form so the user sees the error
     router.push(target as Route);
+    // Invalidate the App Router Client Cache so the destination's
+    // server components re-execute with the just-saved profile.
+    router.refresh();
   }
   const [tripDraft, setTripDraft] = useState("");
 
@@ -211,9 +218,9 @@ export function BrandsForm({ initialProfile, editMode }: Props) {
           <button
             type="button"
             className="btn btn-primary"
-            onClick={() => go(editMode ? "/settings" : "/onboarding/cards")}
+            onClick={() => go(editMode ? "/recommendations" : "/onboarding/cards")}
           >
-            {editMode ? "Save & close" : "Continue →"}
+            {editMode ? "Save & view recs →" : "Continue →"}
           </button>
         </div>
       </div>

@@ -22,7 +22,7 @@ export default function SignupPage() {
         submitLabel="Create account"
         submittingLabel="Creating…"
         passwordAutoComplete="new-password"
-        helperText="Letters, numbers, dots, and dashes. Minimum 3 characters."
+        helperText="Letters, numbers, dots, dashes, and underscores. 3 to 64 characters."
       />
     </AuthShell>
   );

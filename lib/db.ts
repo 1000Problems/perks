@@ -1,0 +1,43 @@
+// Postgres client. Single shared connection pool, lazily initialized,
+// reused across the serverless instance.
+
+import postgres, { type Sql } from "postgres";
+
+declare global {
+  // eslint-disable-next-line no-var
+  var __perksDb: Sql | undefined;
+}
+
+function getDb(): Sql {
+  if (globalThis.__perksDb) return globalThis.__perksDb;
+
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    throw new Error(
+      "Missing DATABASE_URL. Set it to your Neon Postgres connection string in .env.local and Vercel project env.",
+    );
+  }
+
+  // Neon recommends `prepare: false` for the pooled connection string and a
+  // small max for serverless (each invocation gets its own pool).
+  const client = postgres(url, {
+    max: 1,
+    prepare: false,
+    idle_timeout: 20,
+    connect_timeout: 10,
+  });
+
+  globalThis.__perksDb = client;
+  return client;
+}
+
+export const sql = new Proxy({} as Sql, {
+  get(_t, key) {
+    const inst = getDb() as unknown as Record<string | symbol, unknown>;
+    const v = inst[key];
+    return typeof v === "function" ? v.bind(inst) : v;
+  },
+  apply(_t, _this, args) {
+    return (getDb() as unknown as (...a: unknown[]) => unknown)(...args);
+  },
+}) as Sql;

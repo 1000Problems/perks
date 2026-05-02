@@ -39,10 +39,12 @@ export function profileErrorMessage(code: ProfileErrorCode | null): string | nul
 export interface UseProfileApi {
   profile: UserProfile;
   update: (updater: Updater) => void;
-  // Force any pending debounced write to flush immediately. Returns
-  // when the write completes — call before navigating away from the
-  // form so the next page reads the freshest profile.
-  flushNow: () => Promise<void>;
+  // Force any pending debounced write to flush immediately. Resolves to
+  // true if there was nothing to save or the write succeeded; false if
+  // the write failed (callers should NOT navigate in that case so the
+  // user stays on the form to see the error). Always call before
+  // navigating away.
+  flushNow: () => Promise<boolean>;
   saving: boolean;
   error: ProfileErrorCode | null;
   // Raw SQL message when the server couldn't classify the error. Useful
@@ -59,10 +61,10 @@ export function useProfile(initial: UserProfile): UseProfileApi {
   const pendingRef = useRef<Partial<UserProfile> | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const flush = useCallback(async () => {
+  const flush = useCallback(async (): Promise<boolean> => {
     const payload = pendingRef.current;
     pendingRef.current = null;
-    if (!payload) return;
+    if (!payload) return true;
     setSaving(true);
     setError(null);
     setErrorDetail(null);
@@ -71,7 +73,12 @@ export function useProfile(initial: UserProfile): UseProfileApi {
     if (!result.ok) {
       setError(result.error ?? "update_failed");
       setErrorDetail(result.detail ?? null);
+      // Re-queue the failed payload so a subsequent flushNow can retry
+      // (e.g. the user fixes the issue and clicks Continue again).
+      pendingRef.current = payload;
+      return false;
     }
+    return true;
   }, []);
 
   const update = useCallback(
@@ -107,12 +114,12 @@ export function useProfile(initial: UserProfile): UseProfileApi {
     [flush],
   );
 
-  const flushNow = useCallback(async () => {
+  const flushNow = useCallback(async (): Promise<boolean> => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-    await flush();
+    return await flush();
   }, [flush]);
 
   // Flush on unmount so navigating away doesn't drop a pending write.

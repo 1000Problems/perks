@@ -34,7 +34,8 @@ export function CardsForm({ initialProfile, serializedDb, editMode }: Props) {
       | "/onboarding/brands"
       | "/settings",
   ) {
-    await flushNow();
+    const ok = await flushNow();
+    if (!ok) return; // stay on form so the user sees the error
     router.push(target as Route);
   }
   // Initialize TODAY inside the component so it doesn't drift if the tab
@@ -168,7 +169,7 @@ export function CardsForm({ initialProfile, serializedDb, editMode }: Props) {
                 color: "inherit",
               }}
             >
-              <CardArt variant={variantForCard(c)} size="sm" />
+              <CardArt variant={variantForCard(c)} size="sm" issuer={c.issuer} network={c.network} />
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 500 }}>{c.name}</div>
                 <div style={{ fontSize: 12, color: "var(--ink-3)" }}>
@@ -196,7 +197,7 @@ export function CardsForm({ initialProfile, serializedDb, editMode }: Props) {
             }}
           >
             <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-              <CardArt variant={variantForCard(card)} size="md" name={card.name} issuer={card.issuer} />
+              <CardArt variant={variantForCard(card)} size="md" issuer={card.issuer} network={card.network} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 600 }}>{card.name}</div>
                 <div style={{ fontSize: 12, color: "var(--ink-3)" }}>{card.issuer}</div>
@@ -325,7 +326,7 @@ export function CardsForm({ initialProfile, serializedDb, editMode }: Props) {
                     background: "var(--paper)",
                   }}
                 >
-                  <CardArt variant={variantForCard(c)} size="sm" />
+                  <CardArt variant={variantForCard(c)} size="sm" issuer={c.issuer} network={c.network} />
                   <button
                     type="button"
                     onClick={() => editHeld(h)}

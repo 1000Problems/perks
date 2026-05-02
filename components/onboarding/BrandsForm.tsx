@@ -54,7 +54,8 @@ export function BrandsForm({ initialProfile, editMode }: Props) {
   async function go(
     target: "/onboarding/cards" | "/onboarding/spend" | "/settings",
   ) {
-    await flushNow();
+    const ok = await flushNow();
+    if (!ok) return; // stay on form so the user sees the error
     router.push(target as Route);
   }
   const [tripDraft, setTripDraft] = useState("");

@@ -116,6 +116,8 @@ html, body {
   background: linear-gradient(135deg, oklch(0.82 0.04 85), oklch(0.7 0.04 85));
   border-radius: 3px;
 }
+/* Compact layout — sm (64px) and md (96px). Wordmark + network mark in
+   opposite bottom corners. Container queries scale text with the card. */
 .card-art .label {
   position: absolute;
   bottom: 9%;
@@ -127,6 +129,39 @@ html, body {
   text-transform: uppercase;
   font-weight: 600;
   opacity: 0.88;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.card-art .label .net {
+  font-size: clamp(7px, 9.5cqw, 18px);
+  letter-spacing: 0.1em;
+  opacity: 0.85;
+}
+/* Detail layout — lg (160px) and xl (240px). Original look: product name on
+   the left, issuer abbreviation on the right. Absolute pixel sizes so the
+   detail panel renders the same as before this redesign. */
+.card-art .label-detail {
+  position: absolute;
+  bottom: 10%;
+  left: 8%;
+  right: 8%;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 500;
+  opacity: 0.92;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 8px;
+}
+.card-art .label-detail .name {
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: 10px;
 }
 
 .art-navy { background: linear-gradient(135deg, oklch(0.28 0.05 250), oklch(0.18 0.04 260)); }

@@ -190,7 +190,7 @@ export function RecPanelMobile({
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {walletCards.map((c) => (
                       <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <CardArt variant={variantForCard(c)} size="sm" />
+                        <CardArt variant={variantForCard(c)} size="sm" issuer={c.issuer} network={c.network} />
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 500 }}>{c.name}</div>
                           <div style={{ fontSize: 11, color: "var(--ink-3)" }}>
@@ -244,7 +244,7 @@ export function RecPanelMobile({
                         cursor: "pointer",
                       }}
                     >
-                      <CardArt variant={variantForCard(r.card)} size="sm" name={r.card.name} issuer={r.card.issuer} />
+                      <CardArt variant={variantForCard(r.card)} size="sm" issuer={r.card.issuer} network={r.card.network} />
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: "-0.01em" }}>
                           {r.card.name}

@@ -56,7 +56,8 @@ export function SpendForm({ initialProfile, editMode }: Props) {
   }
 
   async function continueNext() {
-    await flushNow();
+    const ok = await flushNow();
+    if (!ok) return;
     router.push((editMode ? "/settings" : "/onboarding/brands") as Route);
   }
 
@@ -182,7 +183,8 @@ export function SpendForm({ initialProfile, editMode }: Props) {
           type="button"
           className="btn btn-ghost"
           onClick={async () => {
-            await flushNow();
+            const ok = await flushNow();
+            if (!ok) return;
             router.push(
               (editMode ? "/settings" : "/onboarding/credit") as Route,
             );

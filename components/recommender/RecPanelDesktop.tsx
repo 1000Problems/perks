@@ -186,7 +186,7 @@ export function RecPanelDesktop({
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {walletCards.map((c) => (
                     <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <CardArt variant={variantForCard(c)} size="sm" />
+                      <CardArt variant={variantForCard(c)} size="sm" issuer={c.issuer} network={c.network} />
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontSize: 12.5, fontWeight: 500 }}>{c.name}</div>
                         <div style={{ fontSize: 11, color: "var(--ink-3)" }}>
@@ -331,7 +331,7 @@ export function RecPanelDesktop({
                     >
                       {String(r.rank).padStart(2, "0")}
                     </div>
-                    <CardArt variant={variantForCard(r.card)} name={r.card.name} issuer={r.card.issuer} size="md" />
+                    <CardArt variant={variantForCard(r.card)} issuer={r.card.issuer} network={r.card.network} size="md" />
                     <div style={{ minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                         <span style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em" }}>

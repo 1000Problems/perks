@@ -61,7 +61,7 @@ export function DrillIn({ recommendation: r, view, userProfile, db }: Props) {
     <div>
       <Eyebrow>Card detail</Eyebrow>
       <div style={{ marginTop: 14, display: "flex", gap: 16, alignItems: "flex-start" }}>
-        <CardArt variant={variantForCard(card)} name={card.name} issuer={card.issuer} size="lg" />
+        <CardArt variant={variantForCard(card)} name={card.name} issuer={card.issuer} network={card.network} size="lg" />
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em" }}>{card.name}</div>
           <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>{card.issuer}</div>

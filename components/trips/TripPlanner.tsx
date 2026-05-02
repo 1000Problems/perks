@@ -2,16 +2,14 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import type { Route } from "next";
 import { useProfile } from "@/lib/profile/client";
 import type { UserProfile } from "@/lib/profile/types";
 import type { Card, CardDatabase, Program } from "@/lib/data/loader";
+import { fromSerialized, type SerializedDb } from "@/lib/data/serialized";
 
 interface Props {
   initialProfile: UserProfile;
-  cards: Card[];
-  programs: Program[];
-  destinationPerks: CardDatabase["destinationPerks"];
+  serializedDb: SerializedDb;
 }
 
 const TRIP_KEY_NORMALIZERS = (s: string) =>
@@ -49,12 +47,9 @@ function transferPartnersForCard(
   return out;
 }
 
-export function TripPlanner({
-  initialProfile,
-  cards,
-  programs,
-  destinationPerks,
-}: Props) {
+export function TripPlanner({ initialProfile, serializedDb }: Props) {
+  const db = useMemo(() => fromSerialized(serializedDb), [serializedDb]);
+  const { cards, programs, destinationPerks } = db;
   const { profile, update } = useProfile(initialProfile);
   const [draft, setDraft] = useState("");
   const [activeDest, setActiveDest] = useState<string | null>(
@@ -295,7 +290,7 @@ function Bucket({
             return linkToRec ? (
               <Link
                 key={card.id}
-                href={`/recommendations?card=${card.id}` as Route}
+                href={{ pathname: "/recommendations", query: { card: card.id } }}
                 style={{ textDecoration: "none", color: "inherit" }}
               >
                 {inner}

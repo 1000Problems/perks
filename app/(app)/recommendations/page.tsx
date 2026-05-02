@@ -3,6 +3,7 @@ import { RecPanelDesktop } from "@/components/recommender/RecPanelDesktop";
 import { RecPanelMobile } from "@/components/recommender/RecPanelMobile";
 import { getCurrentProfile } from "@/lib/profile/server";
 import { loadCardDatabase } from "@/lib/data/loader";
+import { toSerialized } from "@/lib/data/serialized";
 
 export default async function RecommendationsPage() {
   let profile;
@@ -17,13 +18,14 @@ export default async function RecommendationsPage() {
     redirect("/onboarding/spend");
   }
   const db = loadCardDatabase();
+  const serializedDb = toSerialized(db);
   return (
     <>
       <div className="hidden md:block">
-        <RecPanelDesktop profile={profile} db={db} />
+        <RecPanelDesktop profile={profile} serializedDb={serializedDb} />
       </div>
       <div className="block md:hidden">
-        <RecPanelMobile profile={profile} db={db} />
+        <RecPanelMobile profile={profile} serializedDb={serializedDb} />
       </div>
     </>
   );

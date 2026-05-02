@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import type { Route } from "next";
 import { SPEND_CATEGORIES } from "@/lib/categories";
 import { useProfile } from "@/lib/profile/client";
 import type { SpendCategoryId, UserProfile } from "@/lib/profile/types";
@@ -24,7 +23,7 @@ function buildDefaults(): Partial<Record<SpendCategoryId, number>> {
 
 export function SpendForm({ initialProfile }: Props) {
   const router = useRouter();
-  const { profile, update, flushNow, saving } = useProfile(initialProfile);
+  const { profile, update, flushNow, saving, error } = useProfile(initialProfile);
 
   // If the user lands here with an empty spend_profile, capture the
   // defaults immediately. Otherwise clicking Continue without touching
@@ -56,7 +55,7 @@ export function SpendForm({ initialProfile }: Props) {
 
   async function continueNext() {
     await flushNow();
-    router.push("/onboarding/brands" as Route);
+    router.push("/onboarding/brands");
   }
 
   return (
@@ -86,8 +85,8 @@ export function SpendForm({ initialProfile }: Props) {
             {fmt.usd(total)}
           </div>
         </div>
-        <div style={{ fontSize: 12, color: "var(--ink-3)" }}>
-          {saving ? "Saving…" : ""}
+        <div style={{ fontSize: 12, color: error ? "var(--neg)" : "var(--ink-3)" }}>
+          {error ? "Couldn’t save — try again" : saving ? "Saving…" : ""}
         </div>
       </div>
 

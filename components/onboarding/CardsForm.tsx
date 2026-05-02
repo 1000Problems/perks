@@ -2,28 +2,17 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Route } from "next";
 import { CardArt } from "@/components/perks/CardArt";
 import { useProfile } from "@/lib/profile/client";
 import { evaluateEligibility } from "@/lib/engine/eligibility";
 import { variantForCard } from "@/lib/cardArt";
 import type { UserProfile, WalletCardHeld } from "@/lib/profile/types";
 import type { Card, CardDatabase } from "@/lib/data/loader";
+import { fromSerialized, type SerializedDb } from "@/lib/data/serialized";
 
 interface Props {
   initialProfile: UserProfile;
-  // The card database is loaded server-side and serialized into the
-  // page; we pass the slim shape needed for search and eligibility.
-  cards: Card[];
-  // Issuer-rules and dedup data are pulled separately so we can
-  // reconstruct a CardDatabase-compatible object client-side.
   serializedDb: SerializedDb;
-}
-
-export interface SerializedDb {
-  cards: Card[];
-  issuerRules: CardDatabase["issuerRules"];
-  perksDedup: CardDatabase["perksDedup"];
 }
 
 const ANCHOR_CARDS_FOR_PRE_CHECK = [
@@ -33,22 +22,24 @@ const ANCHOR_CARDS_FOR_PRE_CHECK = [
   "capital_one_venture",
 ];
 
-const TODAY = new Date();
-
-export function CardsForm({ initialProfile, cards, serializedDb }: Props) {
+export function CardsForm({ initialProfile, serializedDb }: Props) {
   const router = useRouter();
-  const { profile, update, flushNow } = useProfile(initialProfile);
+  const { profile, update, flushNow, error } = useProfile(initialProfile);
 
   async function go(target: "/recommendations") {
     await flushNow();
-    router.push(target as Route);
+    router.push(target);
   }
+  // Initialize TODAY inside the component so it doesn't drift if the tab
+  // stays open across midnight or month rollovers.
+  const [today] = useState(() => new Date());
   const [query, setQuery] = useState("");
   const [openCardId, setOpenCardId] = useState<string | null>(null);
-  const [openMonth, setOpenMonth] = useState<number>(TODAY.getMonth() + 1);
-  const [openYear, setOpenYear] = useState<number>(TODAY.getFullYear());
+  const [openMonth, setOpenMonth] = useState<number>(today.getMonth() + 1);
+  const [openYear, setOpenYear] = useState<number>(today.getFullYear());
   const [openBonus, setOpenBonus] = useState<boolean>(true);
 
+  const cards = serializedDb.cards;
   const heldIds = new Set(profile.cards_held.map((h) => h.card_id));
 
   const matches = useMemo(() => {
@@ -63,31 +54,12 @@ export function CardsForm({ initialProfile, cards, serializedDb }: Props) {
       .slice(0, 8);
   }, [query, cards, heldIds]);
 
-  // Reconstruct a database-shaped object for the eligibility engine.
-  const db: CardDatabase = useMemo(
-    () => ({
-      cards: serializedDb.cards,
-      programs: [],
-      issuerRules: serializedDb.issuerRules,
-      perksDedup: serializedDb.perksDedup,
-      destinationPerks: {},
-      manifest: {
-        compiled_at: "",
-        counts: { cards: 0, programs: 0, issuers: 0, perks_dedup: 0, destinations: 0 },
-      },
-      cardById: new Map(serializedDb.cards.map((c) => [c.id, c])),
-      programById: new Map(),
-      issuerRulesByIssuer: new Map(
-        serializedDb.issuerRules.map((r) => [r.issuer, r]),
-      ),
-    }),
-    [serializedDb],
-  );
+  const db = useMemo(() => fromSerialized(serializedDb), [serializedDb]);
 
   function addCard(card: Card) {
     setOpenCardId(card.id);
-    setOpenMonth(TODAY.getMonth() + 1);
-    setOpenYear(TODAY.getFullYear());
+    setOpenMonth(today.getMonth() + 1);
+    setOpenYear(today.getFullYear());
     setOpenBonus(true);
   }
 
@@ -232,7 +204,7 @@ export function CardsForm({ initialProfile, cards, serializedDb }: Props) {
                     style={selectStyle}
                   >
                     {Array.from({ length: 8 }).map((_, i) => {
-                      const y = TODAY.getFullYear() - i;
+                      const y = today.getFullYear() - i;
                       return <option key={y} value={y}>{y}</option>;
                     })}
                   </select>
@@ -324,7 +296,7 @@ export function CardsForm({ initialProfile, cards, serializedDb }: Props) {
         </section>
       )}
 
-      <PreCheck wallet={profile.cards_held} db={db} />
+      <PreCheck wallet={profile.cards_held} db={db} today={today} />
 
       {profile.cards_held.length === 0 && (
         <p style={{ marginTop: 24, fontSize: 13, color: "var(--ink-2)", lineHeight: 1.5 }}>
@@ -338,9 +310,15 @@ export function CardsForm({ initialProfile, cards, serializedDb }: Props) {
           marginTop: 36,
           display: "flex",
           justifyContent: "flex-end",
+          alignItems: "center",
           gap: 12,
         }}
       >
+        {error && (
+          <span style={{ fontSize: 12, color: "var(--neg)" }}>
+            Couldn’t save — try again
+          </span>
+        )}
         <button
           type="button"
           className="btn"
@@ -360,13 +338,21 @@ export function CardsForm({ initialProfile, cards, serializedDb }: Props) {
   );
 }
 
-function PreCheck({ wallet, db }: { wallet: WalletCardHeld[]; db: CardDatabase }) {
+function PreCheck({
+  wallet,
+  db,
+  today,
+}: {
+  wallet: WalletCardHeld[];
+  db: CardDatabase;
+  today: Date;
+}) {
   if (wallet.length === 0) return null;
   const lines: string[] = [];
   for (const anchorId of ANCHOR_CARDS_FOR_PRE_CHECK) {
     const c = db.cardById.get(anchorId);
     if (!c) continue;
-    const r = evaluateEligibility(c, wallet, db, TODAY);
+    const r = evaluateEligibility(c, wallet, db, today);
     lines.push(`${c.issuer}: ${r.note}`);
   }
   if (lines.length === 0) return null;

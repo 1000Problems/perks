@@ -123,16 +123,20 @@ function mergeFile(db: DB, filename: string): void {
     }
     const existing = db.issuerRules.get(rules.issuer);
     if (!existing) {
-      db.issuerRules.set(rules.issuer, rules);
+      // Spread the parsed object so we don't mutate the Zod output if a
+      // future Zod option freezes it.
+      db.issuerRules.set(rules.issuer, { issuer: rules.issuer, rules: [...rules.rules] });
     } else {
       // Merge rule lists by rule id, preserving first definition.
       const seen = new Set(existing.rules.map((r) => r.id));
+      const merged = [...existing.rules];
       for (const r of rules.rules) {
         if (!seen.has(r.id)) {
-          existing.rules.push(r);
+          merged.push(r);
           seen.add(r.id);
         }
       }
+      db.issuerRules.set(rules.issuer, { issuer: existing.issuer, rules: merged });
     }
   }
 

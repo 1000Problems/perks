@@ -64,25 +64,56 @@ export function categorizeEarningLabel(label: string): SpendCategoryId | null {
 
 interface NormalizedRule {
   category: SpendCategoryId;
-  rate: number; // multiplier on spend (0.05 = 5%)
+  rate: number; // dollar value per dollar spent (0.05 = 5¢/$)
   cap_usd_per_year: number | null;
 }
 
+// Effective cents-per-point for a card's earned currency. Conservative:
+// uses portal_redemption_cpp when present (Chase Travel 1.25, US Bank
+// FlexPoints 1.5 etc.), otherwise fixed_redemption_cpp, otherwise 1.
+// We deliberately do NOT model peak transfer-partner sweet spots here
+// (Hyatt at 2¢, ANA biz at 4¢). Those are the why-sentence story; the
+// rec score stays conservative so the headline number is defensible.
+//
+// Cards without a currency_earned (no-rewards builder/secured cards)
+// get 1¢/pt because their rate_pts_per_dollar is already a percent
+// (or is null and falls through to 0).
+function cppForCurrency(currencyId: string | null | undefined, db: CardDatabase): number {
+  if (!currencyId) return 1;
+  const prog = db.programById.get(currencyId);
+  if (!prog) return 1;
+  const portal = prog.portal_redemption_cpp ?? 0;
+  const fixed = prog.fixed_redemption_cpp ?? 0;
+  return Math.max(portal, fixed, 1);
+}
+
+// Per-process memoization of normalizeEarning. Keyed by card.id since
+// the card database is loaded once and immutable. The map is reset at
+// process boundaries (serverless cold start), which is fine.
+const normalizeCache = new Map<
+  string,
+  { byCat: Map<SpendCategoryId, NormalizedRule>; base: number }
+>();
+
 // Convert a card's earning rules into a normalized shape keyed by
-// SpendCategoryId. Multiple labels may map to the same category — keep
-// the highest rate. Fall back to the card's "other" rate if no specific
-// rule matches a category at scoring time.
-function normalizeEarning(card: Card): {
-  byCat: Map<SpendCategoryId, NormalizedRule>;
-  base: number;
-} {
+// SpendCategoryId. Rates are dollar value per dollar spent: a 4× MR
+// rule with MR at 1.25¢/pt becomes rate = 0.05.
+function normalizeEarning(
+  card: Card,
+  db: CardDatabase,
+): { byCat: Map<SpendCategoryId, NormalizedRule>; base: number } {
+  const cached = normalizeCache.get(card.id);
+  if (cached) return cached;
+
+  const cpp = cppForCurrency(card.currency_earned, db);
   const byCat = new Map<SpendCategoryId, NormalizedRule>();
   let base = 0.01; // default 1% baseline if not specified
 
   for (const rule of card.earning) {
     const cat = categorizeEarningLabel(rule.category);
     if (cat == null) continue;
-    const rate = (rule.rate_pts_per_dollar ?? 0) / 100; // pts→% (assumes 1cpp)
+    // pts/$ × ¢/pt / 100 = $/$
+    const rate = ((rule.rate_pts_per_dollar ?? 0) * cpp) / 100;
     if (cat === "other") {
       if (rate > base) base = rate;
       continue;
@@ -97,7 +128,9 @@ function normalizeEarning(card: Card): {
     }
   }
 
-  return { byCat, base };
+  const result = { byCat, base };
+  normalizeCache.set(card.id, result);
+  return result;
 }
 
 // Best earning rate the user gets in a category given a list of cards.
@@ -105,10 +138,11 @@ function normalizeEarning(card: Card): {
 function bestRateForCategory(
   category: SpendCategoryId,
   cards: Card[],
+  db: CardDatabase,
 ): { rate: number; from: string } {
   let best = { rate: 0, from: "—" };
   for (const c of cards) {
-    const norm = normalizeEarning(c);
+    const norm = normalizeEarning(c, db);
     const r = norm.byCat.get(category)?.rate ?? norm.base;
     if (r > best.rate) {
       best = { rate: r, from: c.name };
@@ -169,13 +203,13 @@ export function scoreCard(
   // Spend impact — best rate per category, before vs after.
   const spendImpact = {} as Record<SpendCategoryId, { current: number; new: number }>;
   for (const cat of ALL_CATS) {
-    const cur = bestRateForCategory(cat, walletCards).rate;
-    const nw = bestRateForCategory(cat, walletPlus).rate;
+    const cur = bestRateForCategory(cat, walletCards, db).rate;
+    const nw = bestRateForCategory(cat, walletPlus, db).rate;
     spendImpact[cat] = { current: cur, new: nw };
   }
 
   // Earnings delta — only the marginal portion this card contributes.
-  const cardNorm = normalizeEarning(card);
+  const cardNorm = normalizeEarning(card, db);
   let earningsDelta = 0;
   for (const cat of ALL_CATS) {
     const spend = userProfile.spend_profile[cat] ?? 0;

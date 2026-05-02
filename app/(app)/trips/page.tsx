@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { TripPlanner } from "@/components/trips/TripPlanner";
 import { getCurrentProfile } from "@/lib/profile/server";
 import { loadCardDatabase } from "@/lib/data/loader";
+import { toSerialized } from "@/lib/data/serialized";
 
 export default async function TripsPage() {
   let profile;
@@ -11,12 +12,5 @@ export default async function TripsPage() {
     redirect("/login");
   }
   const db = loadCardDatabase();
-  return (
-    <TripPlanner
-      initialProfile={profile}
-      cards={db.cards}
-      programs={db.programs}
-      destinationPerks={db.destinationPerks}
-    />
-  );
+  return <TripPlanner initialProfile={profile} serializedDb={toSerialized(db)} />;
 }

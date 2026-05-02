@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Route } from "next";
 import { useProfile } from "@/lib/profile/client";
 import type { UserProfile } from "@/lib/profile/types";
 
@@ -48,11 +47,11 @@ const SERVICES = [
 
 export function BrandsForm({ initialProfile }: Props) {
   const router = useRouter();
-  const { profile, update, flushNow } = useProfile(initialProfile);
+  const { profile, update, flushNow, error } = useProfile(initialProfile);
 
   async function go(target: "/onboarding/cards") {
     await flushNow();
-    router.push(target as Route);
+    router.push(target);
   }
   const [tripDraft, setTripDraft] = useState("");
 
@@ -178,9 +177,15 @@ export function BrandsForm({ initialProfile }: Props) {
           marginTop: 36,
           display: "flex",
           justifyContent: "flex-end",
+          alignItems: "center",
           gap: 12,
         }}
       >
+        {error && (
+          <span style={{ fontSize: 12, color: "var(--neg)" }}>
+            Couldn’t save — try again
+          </span>
+        )}
         <button
           type="button"
           className="btn"

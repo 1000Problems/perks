@@ -8,7 +8,8 @@ import { HeatRow } from "@/components/perks/HeatRow";
 import { Money } from "@/components/perks/Money";
 import { Segmented } from "@/components/perks/Segmented";
 import { SPEND_CATEGORIES } from "@/lib/categories";
-import type { Card, CardDatabase } from "@/lib/data/loader";
+import type { Card } from "@/lib/data/loader";
+import { fromSerialized, type SerializedDb } from "@/lib/data/serialized";
 import type { SpendCategoryId } from "@/lib/data/types";
 import { rankCards } from "@/lib/engine/ranking";
 import { bestRateForCategory } from "@/lib/engine/scoring";
@@ -30,10 +31,11 @@ const FILTER_OPTIONS: { value: RankFilter; label: string }[] = [
 
 export interface RecPanelMobileProps {
   profile: UserProfile;
-  db: CardDatabase;
+  serializedDb: SerializedDb;
 }
 
-export function RecPanelMobile({ profile, db }: RecPanelMobileProps) {
+export function RecPanelMobile({ profile, serializedDb }: RecPanelMobileProps) {
+  const db = useMemo(() => fromSerialized(serializedDb), [serializedDb]);
   const [view, setView] = useState<ViewMode>("ongoing");
   const [credits, setCredits] = useState<CreditsMode>("realistic");
   const [filter, setFilter] = useState<RankFilter>("total");
@@ -59,9 +61,13 @@ export function RecPanelMobile({ profile, db }: RecPanelMobileProps) {
   const selected =
     ranked.visible.find((r) => r.card.id === selectedId) ?? ranked.visible[0];
 
-  const walletCards: Card[] = profile.cards_held
-    .map((h) => db.cardById.get(h.card_id))
-    .filter((c): c is Card => Boolean(c));
+  const walletCards: Card[] = useMemo(
+    () =>
+      profile.cards_held
+        .map((h) => db.cardById.get(h.card_id))
+        .filter((c): c is Card => Boolean(c)),
+    [profile.cards_held, db],
+  );
 
   const walletBestRates = useMemo(() => {
     const out: Record<SpendCategoryId, { rate: number; from: string }> = {} as Record<
@@ -69,7 +75,7 @@ export function RecPanelMobile({ profile, db }: RecPanelMobileProps) {
       { rate: number; from: string }
     >;
     for (const c of SPEND_CATEGORIES) {
-      out[c.id] = bestRateForCategory(c.id, walletCards);
+      out[c.id] = bestRateForCategory(c.id, walletCards, db);
     }
     return out;
   }, [walletCards]);

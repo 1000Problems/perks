@@ -4,7 +4,7 @@ import type { Route } from "next";
 interface Props {
   step: 1 | 2 | 3;
   title: string;
-  next?: string;
+  next?: Route;
   children: React.ReactNode;
   // If true, the shell skips its own Continue link — the child renders
   // the navigation itself (for forms that need to persist before moving on).
@@ -44,7 +44,7 @@ export function OnboardingShell({
       <div style={{ marginTop: 24 }}>{children}</div>
       {!hideContinue && next && (
         <div style={{ marginTop: 48, display: "flex", gap: 8, justifyContent: "flex-end" }}>
-          <Link href={next as Route} className="btn btn-primary">
+          <Link href={next} className="btn btn-primary">
             Continue
           </Link>
         </div>

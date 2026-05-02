@@ -8,7 +8,8 @@ import { HeatRow } from "@/components/perks/HeatRow";
 import { Money } from "@/components/perks/Money";
 import { Segmented } from "@/components/perks/Segmented";
 import { SPEND_CATEGORIES } from "@/lib/categories";
-import type { Card, CardDatabase } from "@/lib/data/loader";
+import type { Card } from "@/lib/data/loader";
+import { fromSerialized, type SerializedDb } from "@/lib/data/serialized";
 import type { SpendCategoryId } from "@/lib/data/types";
 import { rankCards } from "@/lib/engine/ranking";
 import { bestRateForCategory } from "@/lib/engine/scoring";
@@ -28,10 +29,14 @@ const FILTER_OPTIONS: { value: RankFilter; label: string }[] = [
 
 export interface RecPanelDesktopProps {
   profile: UserProfile;
-  db: CardDatabase;
+  serializedDb: SerializedDb;
 }
 
-export function RecPanelDesktop({ profile, db }: RecPanelDesktopProps) {
+export function RecPanelDesktop({ profile, serializedDb }: RecPanelDesktopProps) {
+  // Reconstruct lookup Maps once per render of the client tree. The
+  // serializedDb arrays are stable (server reloads are full
+  // remounts), so this useMemo keys on identity and runs once.
+  const db = useMemo(() => fromSerialized(serializedDb), [serializedDb]);
   const [view, setView] = useState<ViewMode>("ongoing");
   const [credits, setCredits] = useState<CreditsMode>("realistic");
   const [filter, setFilter] = useState<RankFilter>("total");
@@ -57,9 +62,13 @@ export function RecPanelDesktop({ profile, db }: RecPanelDesktopProps) {
   const selected =
     ranked.visible.find((r) => r.card.id === selectedId) ?? ranked.visible[0];
 
-  const walletCards: Card[] = profile.cards_held
-    .map((h) => db.cardById.get(h.card_id))
-    .filter((c): c is Card => Boolean(c));
+  const walletCards: Card[] = useMemo(
+    () =>
+      profile.cards_held
+        .map((h) => db.cardById.get(h.card_id))
+        .filter((c): c is Card => Boolean(c)),
+    [profile.cards_held, db],
+  );
 
   // Wallet "now" — best-rate per category and net annual value summary.
   const walletBestRates = useMemo(() => {
@@ -68,7 +77,7 @@ export function RecPanelDesktop({ profile, db }: RecPanelDesktopProps) {
       { rate: number; from: string }
     >;
     for (const c of SPEND_CATEGORIES) {
-      out[c.id] = bestRateForCategory(c.id, walletCards);
+      out[c.id] = bestRateForCategory(c.id, walletCards, db);
     }
     return out;
   }, [walletCards]);

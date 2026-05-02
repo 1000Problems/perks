@@ -1,63 +1,102 @@
 "use client";
 
-import { useState } from "react";
-import type { UserProfile } from "@/lib/profile/types";
+import { useMemo, useState } from "react";
 import { CardArt } from "@/components/perks/CardArt";
 import { EligibilityChip } from "@/components/perks/EligibilityChip";
 import { Eyebrow } from "@/components/perks/Eyebrow";
 import { HeatRow } from "@/components/perks/HeatRow";
 import { Money } from "@/components/perks/Money";
 import { Segmented } from "@/components/perks/Segmented";
-import {
-  RECOMMEND_CARDS,
-  SPEND_CATEGORIES,
-  WALLET_BEST_RATES,
-  WALLET_CARDS,
-} from "@/lib/data/stub";
+import { SPEND_CATEGORIES } from "@/lib/categories";
+import type { Card, CardDatabase } from "@/lib/data/loader";
+import type { SpendCategoryId } from "@/lib/data/types";
+import { rankCards } from "@/lib/engine/ranking";
+import { bestRateForCategory } from "@/lib/engine/scoring";
+import type { RankFilter, RankOptions } from "@/lib/engine/types";
+import { variantForCard } from "@/lib/cardArt";
+import type { UserProfile } from "@/lib/profile/types";
 import { fmt } from "@/lib/utils/format";
 import { DrillIn } from "./DrillIn";
 import { RecHeader, type CreditsMode, type ViewMode } from "./Header";
 
-type FilterMode = "total" | "payself" | "nofee" | "premium";
-
-const FILTER_OPTIONS: { value: FilterMode; label: string }[] = [
+const FILTER_OPTIONS: { value: RankFilter; label: string }[] = [
   { value: "total", label: "Best total value" },
   { value: "payself", label: "Pays for itself" },
   { value: "nofee", label: "No annual fee" },
   { value: "premium", label: "Premium tier" },
 ];
 
-const HELD_PERKS: [string, string][] = [
-  ["No FX fees", "Voyager Travel"],
-  ["Trip delay insurance", "Voyager Travel"],
-  ["Primary CDW", "Voyager Travel"],
-  ["Cell phone protection", "Everyday Rewards"],
-];
-
 export interface RecPanelDesktopProps {
-  profile?: UserProfile;
+  profile: UserProfile;
+  db: CardDatabase;
 }
 
-// TASK-09 will replace stub data with real engine output keyed on `profile`.
-// For TASK-05 we just thread the prop through so the server component can
-// pass it down without breaking the existing visual layout.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function RecPanelDesktop(_props: RecPanelDesktopProps = {}) {
+export function RecPanelDesktop({ profile, db }: RecPanelDesktopProps) {
   const [view, setView] = useState<ViewMode>("ongoing");
   const [credits, setCredits] = useState<CreditsMode>("realistic");
-  const [filter, setFilter] = useState<FilterMode>("total");
-  const [selectedId, setSelectedId] = useState<string>("sapphire-tier");
+  const [filter, setFilter] = useState<RankFilter>("total");
 
-  const cards = RECOMMEND_CARDS;
-  const selected = cards.find((c) => c.id === selectedId) ?? cards[0];
-  const cats = SPEND_CATEGORIES;
-  const wallet = WALLET_BEST_RATES;
+  const rankOptions: RankOptions = useMemo(
+    () => ({
+      filter,
+      scoring: { creditsMode: credits, subAmortizeMonths: 24 },
+      limit: 5,
+    }),
+    [filter, credits],
+  );
 
-  // Stub totals — engine replaces these once it's wired up.
-  const walletNet = 412;
-  const walletEarned = 1180;
-  const walletFees = 95;
-  const walletCredits = 0;
+  const ranked = useMemo(
+    () => rankCards(profile, profile.cards_held, db, rankOptions),
+    [profile, db, rankOptions],
+  );
+
+  const [selectedId, setSelectedId] = useState<string | null>(
+    ranked.visible[0]?.card.id ?? null,
+  );
+  // Keep selection valid when the rank list changes shape.
+  const selected =
+    ranked.visible.find((r) => r.card.id === selectedId) ?? ranked.visible[0];
+
+  const walletCards: Card[] = profile.cards_held
+    .map((h) => db.cardById.get(h.card_id))
+    .filter((c): c is Card => Boolean(c));
+
+  // Wallet "now" — best-rate per category and net annual value summary.
+  const walletBestRates = useMemo(() => {
+    const out: Record<SpendCategoryId, { rate: number; from: string }> = {} as Record<
+      SpendCategoryId,
+      { rate: number; from: string }
+    >;
+    for (const c of SPEND_CATEGORIES) {
+      out[c.id] = bestRateForCategory(c.id, walletCards);
+    }
+    return out;
+  }, [walletCards]);
+
+  const walletEarned = useMemo(() => {
+    let total = 0;
+    for (const c of SPEND_CATEGORIES) {
+      const spend = profile.spend_profile[c.id] ?? 0;
+      total += spend * walletBestRates[c.id].rate;
+    }
+    return total;
+  }, [profile.spend_profile, walletBestRates]);
+
+  const walletFees = walletCards.reduce((acc, c) => acc + (c.annual_fee_usd ?? 0), 0);
+  const walletNet = Math.round(walletEarned - walletFees);
+
+  // Held perks, deduplicated by name (first card wins for the source label).
+  const heldPerks: { perk: string; from: string }[] = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const c of walletCards) {
+      for (const p of c.ongoing_perks) {
+        if (!seen.has(p.name)) seen.set(p.name, c.name);
+      }
+    }
+    return Array.from(seen.entries())
+      .slice(0, 8)
+      .map(([perk, from]) => ({ perk, from }));
+  }, [walletCards]);
 
   return (
     <div
@@ -90,110 +129,115 @@ export function RecPanelDesktop(_props: RecPanelDesktopProps = {}) {
           }}
         >
           <Eyebrow>Your wallet today</Eyebrow>
-          <div style={{ marginTop: 14, display: "flex", alignItems: "baseline", gap: 8 }}>
-            <Money value={walletNet} sign size="lg" />
-            <span style={{ fontSize: 12, color: "var(--ink-3)" }}>net / year</span>
-          </div>
-          <div
-            style={{
-              marginTop: 14,
-              fontSize: 12,
-              color: "var(--ink-2)",
-              lineHeight: 1.6,
-              fontFamily: "var(--font-mono), ui-monospace, monospace",
-            }}
-          >
-            <Row label="Rewards earned" value={fmt.usd(walletEarned)} />
-            <Row label="Annual fees" value={`−${fmt.usd(walletFees)}`} valueColor="var(--neg)" />
-            <Row label="Credits used" value={fmt.usd(walletCredits)} />
-          </div>
+          {walletCards.length === 0 ? (
+            <div style={{ marginTop: 14 }}>
+              <Money value={0} sign size="lg" />
+              <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 4 }}>
+                No cards yet. Add some →{" "}
+                <a href="/onboarding/cards" style={{ color: "var(--ink)" }}>
+                  /onboarding/cards
+                </a>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div style={{ marginTop: 14, display: "flex", alignItems: "baseline", gap: 8 }}>
+                <Money value={walletNet} sign size="lg" />
+                <span style={{ fontSize: 12, color: "var(--ink-3)" }}>net / year</span>
+              </div>
+              <div
+                style={{
+                  marginTop: 14,
+                  fontSize: 12,
+                  color: "var(--ink-2)",
+                  lineHeight: 1.6,
+                  fontFamily: "var(--font-mono), ui-monospace, monospace",
+                }}
+              >
+                <Row label="Rewards earned" value={fmt.usd(Math.round(walletEarned))} />
+                <Row label="Annual fees" value={`−${fmt.usd(walletFees)}`} valueColor="var(--neg)" />
+              </div>
 
-          <div style={{ marginTop: 28 }}>
-            <Eyebrow style={{ marginBottom: 10 }}>Wallet · {WALLET_CARDS.length} cards</Eyebrow>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {WALLET_CARDS.map((c) => (
-                <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <CardArt variant={c.art} size="sm" />
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 12.5, fontWeight: 500 }}>{c.name}</div>
-                    <div style={{ fontSize: 11, color: "var(--ink-3)" }}>
-                      {c.issuer} · {c.fee === 0 ? "No fee" : "$" + c.fee + "/yr"}
+              <div style={{ marginTop: 28 }}>
+                <Eyebrow style={{ marginBottom: 10 }}>
+                  Wallet · {walletCards.length} {walletCards.length === 1 ? "card" : "cards"}
+                </Eyebrow>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {walletCards.map((c) => (
+                    <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <CardArt variant={variantForCard(c)} size="sm" />
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 12.5, fontWeight: 500 }}>{c.name}</div>
+                        <div style={{ fontSize: 11, color: "var(--ink-3)" }}>
+                          {c.issuer} · {(c.annual_fee_usd ?? 0) === 0 ? "No fee" : "$" + c.annual_fee_usd + "/yr"}
+                        </div>
+                      </div>
                     </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginTop: 28 }}>
+                <Eyebrow style={{ marginBottom: 10 }}>Spend coverage</Eyebrow>
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  {SPEND_CATEGORIES.map((c) => (
+                    <HeatRow
+                      key={c.id}
+                      category={c}
+                      rate={walletBestRates[c.id].rate}
+                      from={walletBestRates[c.id].from}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {heldPerks.length > 0 && (
+                <div style={{ marginTop: 28 }}>
+                  <Eyebrow style={{ marginBottom: 10 }}>Perks held · deduplicated</Eyebrow>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 6,
+                      fontSize: 12,
+                    }}
+                  >
+                    {heldPerks.map(({ perk, from }) => (
+                      <div
+                        key={perk}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          color: "var(--ink-2)",
+                        }}
+                      >
+                        <span>{perk}</span>
+                        <span style={{ color: "var(--ink-4)", fontSize: 11 }}>{from}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ marginTop: 28 }}>
-            <Eyebrow style={{ marginBottom: 10 }}>Spend coverage</Eyebrow>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {cats.map((c) => (
-                <HeatRow
-                  key={c.id}
-                  category={c}
-                  rate={wallet[c.id].rate}
-                  from={wallet[c.id].from}
-                />
-              ))}
-            </div>
-            <div style={{ marginTop: 8, fontSize: 11, color: "var(--ink-3)", lineHeight: 1.5 }}>
-              4 of 12 categories earning under 2%. Biggest gaps: airfare, hotels, online shopping.
-            </div>
-          </div>
-
-          <div style={{ marginTop: 28 }}>
-            <Eyebrow style={{ marginBottom: 10 }}>Perks held · deduplicated</Eyebrow>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 6,
-                fontSize: 12,
-              }}
-            >
-              {HELD_PERKS.map(([p, src]) => (
-                <div
-                  key={p}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    color: "var(--ink-2)",
-                  }}
-                >
-                  <span>{p}</span>
-                  <span style={{ color: "var(--ink-4)", fontSize: 11 }}>{src}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+              )}
+            </>
+          )}
         </aside>
 
         {/* MIDDLE — top 5 to add */}
         <main style={{ padding: "28px 32px", overflowY: "auto" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "space-between",
-              marginBottom: 4,
-            }}
-          >
-            <div>
-              <Eyebrow>Top 5 cards to add next</Eyebrow>
-              <h1
-                style={{
-                  margin: "6px 0 0",
-                  fontSize: 28,
-                  letterSpacing: "-0.02em",
-                  fontWeight: 600,
-                  lineHeight: 1.2,
-                  maxWidth: 540,
-                }}
-              >
-                Based on your spend and what you already hold, these would do the most.
-              </h1>
-            </div>
+          <div>
+            <Eyebrow>Top {ranked.visible.length} cards to add next</Eyebrow>
+            <h1
+              style={{
+                margin: "6px 0 0",
+                fontSize: 28,
+                letterSpacing: "-0.02em",
+                fontWeight: 600,
+                lineHeight: 1.2,
+                maxWidth: 540,
+              }}
+            >
+              Based on your spend and what you already hold, these would do the most.
+            </h1>
           </div>
           <p
             style={{
@@ -212,100 +256,112 @@ export function RecPanelDesktop(_props: RecPanelDesktopProps = {}) {
             <Segmented value={filter} onChange={setFilter} options={FILTER_OPTIONS} />
           </div>
 
-          <ol
-            style={{
-              listStyle: "none",
-              padding: 0,
-              margin: "20px 0 0",
-              display: "flex",
-              flexDirection: "column",
-              gap: 10,
-            }}
-          >
-            {cards.map((c, i) => {
-              const isSel = c.id === selectedId;
-              const delta = view === "ongoing" ? c.delta : c.deltaY1;
-              return (
-                <li
-                  key={c.id}
-                  onClick={() => setSelectedId(c.id)}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "24px 88px 1fr auto",
-                    gap: 18,
-                    alignItems: "center",
-                    padding: "16px 18px",
-                    borderRadius: 14,
-                    border: "1px solid " + (isSel ? "var(--ink)" : "var(--rule)"),
-                    background: isSel ? "white" : "var(--paper-2)",
-                    boxShadow: isSel ? "var(--shadow-2)" : "none",
-                    cursor: "pointer",
-                    transition: "all 140ms ease",
-                  }}
-                >
-                  <div
+          {ranked.visible.length === 0 ? (
+            <p
+              style={{
+                marginTop: 30,
+                fontSize: 14,
+                color: "var(--ink-2)",
+                lineHeight: 1.5,
+              }}
+            >
+              No cards match this filter. Try another.
+            </p>
+          ) : (
+            <ol
+              style={{
+                listStyle: "none",
+                padding: 0,
+                margin: "20px 0 0",
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+              }}
+            >
+              {ranked.visible.map((r) => {
+                const isSel = r.card.id === selected?.card.id;
+                const delta = view === "ongoing" ? r.score.deltaOngoing : r.score.deltaYear1;
+                const fee = r.card.annual_fee_usd ?? 0;
+                const subVal = r.card.signup_bonus?.estimated_value_usd ?? 0;
+                return (
+                  <li
+                    key={r.card.id}
+                    onClick={() => setSelectedId(r.card.id)}
                     style={{
-                      fontFamily: "var(--font-mono), ui-monospace, monospace",
-                      fontSize: 12,
-                      color: "var(--ink-3)",
+                      display: "grid",
+                      gridTemplateColumns: "24px 88px 1fr auto",
+                      gap: 18,
+                      alignItems: "center",
+                      padding: "16px 18px",
+                      borderRadius: 14,
+                      border: "1px solid " + (isSel ? "var(--ink)" : "var(--rule)"),
+                      background: isSel ? "white" : "var(--paper-2)",
+                      boxShadow: isSel ? "var(--shadow-2)" : "none",
+                      cursor: "pointer",
+                      transition: "all 140ms ease",
                     }}
                   >
-                    {String(i + 1).padStart(2, "0")}
-                  </div>
-                  <CardArt variant={c.art} name={c.name} issuer={c.issuer} size="md" />
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em" }}>
-                        {c.name}
-                      </span>
-                      <span style={{ fontSize: 12, color: "var(--ink-3)" }}>{c.issuer}</span>
-                      <EligibilityChip status={c.eligibility} label={c.eligibilityNote} />
-                    </div>
                     <div
                       style={{
-                        marginTop: 6,
-                        fontSize: 13,
-                        color: "var(--ink-2)",
-                        lineHeight: 1.45,
-                        maxWidth: 480,
-                      }}
-                    >
-                      {c.why}
-                    </div>
-                    <div
-                      style={{
-                        marginTop: 8,
-                        fontSize: 11,
-                        color: "var(--ink-3)",
-                        display: "flex",
-                        gap: 14,
                         fontFamily: "var(--font-mono), ui-monospace, monospace",
-                      }}
-                    >
-                      <span>{c.fee === 0 ? "NO ANNUAL FEE" : "$" + c.fee + " FEE"}</span>
-                      {c.bonus.valueUSD > 0 && <span>SUB ≈ ${c.bonus.valueUSD}</span>}
-                      {c.transferPartners.length > 0 && (
-                        <span>{c.transferPartners.length} TRANSFER PARTNERS</span>
-                      )}
-                    </div>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <Money value={delta} sign size="md" />
-                    <div
-                      style={{
-                        fontSize: 11,
+                        fontSize: 12,
                         color: "var(--ink-3)",
-                        marginTop: 4,
-                        fontFamily: "var(--font-mono), ui-monospace, monospace",
                       }}
                     >
-                      {view === "ongoing" ? "NET / YEAR" : "NET, YEAR 1"}
+                      {String(r.rank).padStart(2, "0")}
                     </div>
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
+                    <CardArt variant={variantForCard(r.card)} name={r.card.name} issuer={r.card.issuer} size="md" />
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                        <span style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em" }}>
+                          {r.card.name}
+                        </span>
+                        <span style={{ fontSize: 12, color: "var(--ink-3)" }}>{r.card.issuer}</span>
+                        <EligibilityChip status={r.eligibility.status} label={r.eligibility.note} />
+                      </div>
+                      <div
+                        style={{
+                          marginTop: 6,
+                          fontSize: 13,
+                          color: "var(--ink-2)",
+                          lineHeight: 1.45,
+                          maxWidth: 480,
+                        }}
+                      >
+                        {r.why}
+                      </div>
+                      <div
+                        style={{
+                          marginTop: 8,
+                          fontSize: 11,
+                          color: "var(--ink-3)",
+                          display: "flex",
+                          gap: 14,
+                          fontFamily: "var(--font-mono), ui-monospace, monospace",
+                        }}
+                      >
+                        <span>{fee === 0 ? "NO ANNUAL FEE" : "$" + fee + " FEE"}</span>
+                        {subVal > 0 && <span>SUB ≈ ${Math.round(subVal)}</span>}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <Money value={delta} sign size="md" />
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: "var(--ink-3)",
+                          marginTop: 4,
+                          fontFamily: "var(--font-mono), ui-monospace, monospace",
+                        }}
+                      >
+                        {view === "ongoing" ? "NET / YEAR" : "NET, YEAR 1"}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
 
           <p
             style={{
@@ -319,6 +375,16 @@ export function RecPanelDesktop(_props: RecPanelDesktopProps = {}) {
             Ranking is based on your spend profile, your held cards, and issuer rules. We do not take
             affiliate revenue and do not boost cards based on payouts.
           </p>
+          <p
+            style={{
+              marginTop: 6,
+              fontSize: 11,
+              color: "var(--ink-4)",
+              fontFamily: "var(--font-mono), ui-monospace, monospace",
+            }}
+          >
+            Card data verified {db.manifest.compiled_at.slice(0, 10)}
+          </p>
         </main>
 
         {/* RIGHT — drill-in detail */}
@@ -330,7 +396,16 @@ export function RecPanelDesktop(_props: RecPanelDesktopProps = {}) {
             padding: "28px 28px",
           }}
         >
-          <DrillIn card={selected} view={view} credits={credits} />
+          {selected ? (
+            <DrillIn
+              recommendation={selected}
+              view={view}
+              userProfile={profile}
+              db={db}
+            />
+          ) : (
+            <p style={{ fontSize: 13, color: "var(--ink-3)" }}>Select a card to see the breakdown.</p>
+          )}
         </aside>
       </div>
     </div>

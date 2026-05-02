@@ -6,31 +6,62 @@ import { EligibilityChip } from "@/components/perks/EligibilityChip";
 import { Eyebrow } from "@/components/perks/Eyebrow";
 import { HeatRow } from "@/components/perks/HeatRow";
 import { Money } from "@/components/perks/Money";
-import {
-  SPEND_CATEGORIES,
-  WALLET_BEST_RATES,
-} from "@/lib/data/stub";
-import type { RecommendCard } from "@/lib/data/types";
-import type { ViewMode, CreditsMode } from "./Header";
+import { SPEND_CATEGORIES } from "@/lib/categories";
+import type { CardDatabase } from "@/lib/data/loader";
+import { variantForCard } from "@/lib/cardArt";
+import type { RankedRecommendation, UserProfile } from "@/lib/engine/types";
+import type { ViewMode } from "./Header";
 
 interface Props {
-  card: RecommendCard;
+  recommendation: RankedRecommendation;
   view: ViewMode;
-  credits: CreditsMode;
+  userProfile: UserProfile;
+  db: CardDatabase;
 }
 
-export function DrillIn({ card, view }: Props) {
-  const cats = SPEND_CATEGORIES;
-  const wallet = WALLET_BEST_RATES;
-  const newRates = card.rates;
-  const delta = view === "ongoing" ? card.delta : card.deltaY1;
+const TRIP_KEY_NORMALIZERS = (s: string) =>
+  s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+
+function findDestination(
+  trips: UserProfile["trips_planned"],
+  db: CardDatabase,
+): { trip: { destination: string; month?: string }; key: string } | null {
+  for (const trip of trips) {
+    const norm = TRIP_KEY_NORMALIZERS(trip.destination);
+    const keys = Object.keys(db.destinationPerks);
+    if (keys.includes(norm)) return { trip, key: norm };
+    for (const k of keys) {
+      const kn = TRIP_KEY_NORMALIZERS(k);
+      if (kn.includes(norm) || norm.includes(kn)) return { trip, key: k };
+    }
+  }
+  return null;
+}
+
+export function DrillIn({ recommendation: r, view, userProfile, db }: Props) {
+  const { card, score, eligibility } = r;
+  const delta = view === "ongoing" ? score.deltaOngoing : score.deltaYear1;
   const [mathOpen, setMathOpen] = useState(false);
+
+  // Transfer partners for the card's currency_earned program.
+  const program = card.currency_earned ? db.programById.get(card.currency_earned) : null;
+  const transferPartners = program ? program.transfer_partners.map((tp) => tp.partner) : [];
+
+  // Destination match — only show this section if a real match exists.
+  const dest = findDestination(userProfile.trips_planned, db);
+  const destPerk = dest ? db.destinationPerks[dest.key] : null;
+  const destMatchPartner = destPerk
+    ? findPartnerInPhrases(transferPartners, [
+        ...(destPerk.hotel_chains_strong ?? []),
+        ...(destPerk.airline_routes_strong ?? []),
+      ])
+    : null;
 
   return (
     <div>
       <Eyebrow>Card detail</Eyebrow>
       <div style={{ marginTop: 14, display: "flex", gap: 16, alignItems: "flex-start" }}>
-        <CardArt variant={card.art} name={card.name} issuer={card.issuer} size="lg" />
+        <CardArt variant={variantForCard(card)} name={card.name} issuer={card.issuer} size="lg" />
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em" }}>{card.name}</div>
           <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>{card.issuer}</div>
@@ -48,24 +79,23 @@ export function DrillIn({ card, view }: Props) {
             </div>
           </div>
           <div style={{ marginTop: 10 }}>
-            <EligibilityChip status={card.eligibility} label={card.eligibilityNote} />
+            <EligibilityChip status={eligibility.status} label={eligibility.note} />
           </div>
         </div>
       </div>
 
       <Section num="1" title="Spend impact">
         <div style={{ marginTop: 4 }}>
-          {cats.map((c) => {
-            const cur = wallet[c.id].rate;
-            const fallback = newRates.other ?? 0;
-            const newRate = newRates[c.id] ?? fallback;
-            const nw = Math.max(cur, newRate);
+          {SPEND_CATEGORIES.map((c) => {
+            const impact = score.spendImpact[c.id];
+            const cur = impact?.current ?? 0;
+            const nw = impact?.new ?? cur;
             return (
               <HeatRow
                 key={c.id}
                 category={c}
                 rate={cur}
-                from={wallet[c.id].from}
+                from=""
                 ratesNew={nw}
               />
             );
@@ -73,43 +103,45 @@ export function DrillIn({ card, view }: Props) {
         </div>
       </Section>
 
-      <Section num="2" title="New perks gained">
-        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          {card.newPerks
-            .filter((p) => p.value !== 0)
-            .map((p) => (
-              <li
-                key={p.name}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr auto",
-                  alignItems: "baseline",
-                  gap: 12,
-                  padding: "8px 0",
-                  borderBottom: "1px solid var(--rule)",
-                }}
-              >
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 500 }}>{p.name}</div>
-                  {p.note && (
-                    <div style={{ fontSize: 11.5, color: "var(--ink-3)", marginTop: 2 }}>{p.note}</div>
-                  )}
-                </div>
-                <div
-                  className="mono"
-                  style={{ fontSize: 13, color: "var(--pos)", whiteSpace: "nowrap" }}
+      {score.newPerks.filter((p) => p.value !== 0).length > 0 && (
+        <Section num="2" title="New perks gained">
+          <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+            {score.newPerks
+              .filter((p) => p.value !== 0)
+              .map((p) => (
+                <li
+                  key={p.name}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr auto",
+                    alignItems: "baseline",
+                    gap: 12,
+                    padding: "8px 0",
+                    borderBottom: "1px solid var(--rule)",
+                  }}
                 >
-                  {p.value === "unlocks" ? "unlocks" : "+$" + p.value}
-                </div>
-              </li>
-            ))}
-        </ul>
-      </Section>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 500 }}>{p.name}</div>
+                    {p.note && (
+                      <div style={{ fontSize: 11.5, color: "var(--ink-3)", marginTop: 2 }}>{p.note}</div>
+                    )}
+                  </div>
+                  <div
+                    className="mono"
+                    style={{ fontSize: 13, color: "var(--pos)", whiteSpace: "nowrap" }}
+                  >
+                    {p.value === "unlocks" ? "unlocks" : "+$" + p.value}
+                  </div>
+                </li>
+              ))}
+          </ul>
+        </Section>
+      )}
 
-      {card.duplicatedPerks.length > 0 && (
+      {score.duplicatedPerks.length > 0 && (
         <Section num="3" title="Perks you'd duplicate">
           <ul style={{ listStyle: "none", padding: 0, margin: 0, color: "var(--ink-4)" }}>
-            {card.duplicatedPerks.map((p) => (
+            {score.duplicatedPerks.map((p) => (
               <li
                 key={p}
                 style={{
@@ -129,10 +161,10 @@ export function DrillIn({ card, view }: Props) {
         </Section>
       )}
 
-      {card.transferPartners.length > 0 && (
+      {transferPartners.length > 0 && (
         <Section num="4" title="Transfer partners unlocked">
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
-            {card.transferPartners.map((p) => (
+            {transferPartners.slice(0, 12).map((p) => (
               <span
                 key={p}
                 style={{
@@ -147,22 +179,23 @@ export function DrillIn({ card, view }: Props) {
               </span>
             ))}
           </div>
-          <div
-            style={{
-              marginTop: 14,
-              padding: "12px 14px",
-              background: "var(--paper-2)",
-              borderRadius: 10,
-              borderLeft: "2px solid var(--pos)",
-              fontSize: 12.5,
-              lineHeight: 1.55,
-              color: "var(--ink-2)",
-            }}
-          >
-            <b style={{ color: "var(--ink)" }}>For your Phoenix trip in March: </b>
-            transfer 12,000 points to Hyatt and book Andaz Scottsdale at ~$400 retail. That&apos;s ≈3.3¢ per
-            point versus 1.25¢ as travel statement credit.
-          </div>
+          {dest && destMatchPartner && destPerk && (
+            <div
+              style={{
+                marginTop: 14,
+                padding: "12px 14px",
+                background: "var(--paper-2)",
+                borderRadius: 10,
+                borderLeft: "2px solid var(--pos)",
+                fontSize: 12.5,
+                lineHeight: 1.55,
+                color: "var(--ink-2)",
+              }}
+            >
+              <b style={{ color: "var(--ink)" }}>For your {dest.trip.destination} trip:</b>{" "}
+              {destPerk.notes ?? `transfer to ${destMatchPartner.split(/\s+/).slice(0, 2).join(" ")}.`}
+            </div>
+          )}
         </Section>
       )}
 
@@ -204,17 +237,20 @@ export function DrillIn({ card, view }: Props) {
               lineHeight: 1.7,
             }}
           >
-            <MathRow label="Dining $4,200 × 5%" v="+$210" />
-            <MathRow label="Airfare $1,800 × 5%" v="+$90" />
-            <MathRow label="Hotels $1,500 × 5%" v="+$75" />
-            <MathRow label="Other $14,400 × 1%" v="+$144" />
-            <MathRow label="Travel credit (realistic)" v="+$280" />
-            <MathRow label="Lounge access" v="+$90" />
-            <MathRow label="Trip protections" v="+$60" />
-            <MathRow label="Annual fee" v="−$550" neg />
-            <MathRow label="SUB amortized over 24mo" v={view === "ongoing" ? "+$0" : "+$875"} />
+            {score.breakdown.map((line, i) => (
+              <MathRow
+                key={`${line.label}-${i}`}
+                label={line.label}
+                v={(line.value >= 0 ? "+$" : "−$") + Math.abs(line.value).toLocaleString()}
+                neg={line.value < 0}
+              />
+            ))}
             <hr className="hr" style={{ margin: "6px 0" }} />
-            <MathRow label="Net" v={"+$" + delta} bold />
+            <MathRow
+              label="Net"
+              v={(delta >= 0 ? "+$" : "−$") + Math.abs(delta).toLocaleString()}
+              bold
+            />
           </div>
         )}
       </Section>
@@ -229,6 +265,19 @@ export function DrillIn({ card, view }: Props) {
       </div>
     </div>
   );
+}
+
+function findPartnerInPhrases(partners: string[], phrases: string[]): string | null {
+  if (partners.length === 0 || phrases.length === 0) return null;
+  for (const p of partners) {
+    const pLower = p.toLowerCase();
+    const firstTwo = pLower.split(/\s+/).slice(0, 2).join(" ");
+    for (const phrase of phrases) {
+      const phLower = phrase.toLowerCase();
+      if (phLower.includes(pLower) || phLower.includes(firstTwo)) return p;
+    }
+  }
+  return null;
 }
 
 function Section({

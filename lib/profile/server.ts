@@ -1,11 +1,16 @@
 // Server-side profile reader. Looks up the row for the currently
 // authenticated user. Returns a default empty profile if no row exists
 // (signup writes one, but be defensive).
+//
+// CARDS_HELD_READ_SOURCE controls where cards_held comes from:
+//   - "jsonb" (default during cutover) — read perks_profiles.cards_held
+//   - "relational" — read user_cards where status='held' and map to the
+//     legacy WalletCardHeld shape; the engine sees identical data.
 
 import "server-only";
 import { sql } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
-import type { UserProfile } from "./types";
+import type { UserProfile, WalletCardHeld } from "./types";
 
 interface ProfileRow {
   spend_profile: UserProfile["spend_profile"];
@@ -15,6 +20,14 @@ interface ProfileRow {
   preferences: UserProfile["preferences"];
 }
 
+interface UserCardReadRow {
+  card_id: string;
+  status: "held" | "closed_in_past_year" | "closed_long_ago";
+  opened_at: Date | null;
+  closed_at: Date | null;
+  bonus_received: boolean;
+}
+
 const EMPTY: UserProfile = {
   spend_profile: {},
   brands_used: [],
@@ -22,6 +35,14 @@ const EMPTY: UserProfile = {
   trips_planned: [],
   preferences: {},
 };
+
+function readSource(): "jsonb" | "relational" {
+  return process.env.CARDS_HELD_READ_SOURCE === "relational" ? "relational" : "jsonb";
+}
+
+function isoDate(d: Date | null): string {
+  return d ? d.toISOString().slice(0, 10) : "";
+}
 
 export async function getCurrentProfile(): Promise<UserProfile> {
   const user = await getCurrentUser();
@@ -35,14 +56,61 @@ export async function getCurrentProfile(): Promise<UserProfile> {
     limit 1
   `;
   const row = rows[0];
-  if (!row) return { ...EMPTY };
-  return {
-    spend_profile: row.spend_profile ?? {},
-    brands_used: Array.isArray(row.brands_used) ? row.brands_used : [],
-    cards_held: Array.isArray(row.cards_held) ? row.cards_held : [],
-    trips_planned: Array.isArray(row.trips_planned) ? row.trips_planned : [],
-    preferences: row.preferences ?? {},
-  };
+  const base: UserProfile = row
+    ? {
+        spend_profile: row.spend_profile ?? {},
+        brands_used: Array.isArray(row.brands_used) ? row.brands_used : [],
+        cards_held: Array.isArray(row.cards_held) ? row.cards_held : [],
+        trips_planned: Array.isArray(row.trips_planned) ? row.trips_planned : [],
+        preferences: row.preferences ?? {},
+      }
+    : { ...EMPTY };
+
+  if (readSource() === "relational") {
+    const heldRows = await sql<UserCardReadRow[]>`
+      select card_id, status, opened_at, closed_at, bonus_received
+        from user_cards
+       where user_id = ${user.id} and status = 'held'
+       order by opened_at desc nulls last
+    `;
+    const cards_held: WalletCardHeld[] = heldRows.map((r) => ({
+      card_id: r.card_id,
+      opened_at: isoDate(r.opened_at),
+      bonus_received: r.bonus_received,
+    }));
+    return { ...base, cards_held };
+  }
+
+  return base;
+}
+
+export interface UserCardFull {
+  card_id: string;
+  status: "held" | "closed_in_past_year" | "closed_long_ago";
+  opened_at: string | null;
+  closed_at: string | null;
+  bonus_received: boolean;
+}
+
+// Full relational shape including closed cards. New UI flows call this
+// when they need the "previously held" history rather than the engine's
+// held-only view.
+export async function getCurrentUserCards(): Promise<UserCardFull[]> {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("not_authenticated");
+  const rows = await sql<UserCardReadRow[]>`
+    select card_id, status, opened_at, closed_at, bonus_received
+      from user_cards
+     where user_id = ${user.id}
+     order by status, opened_at desc nulls last
+  `;
+  return rows.map((r) => ({
+    card_id: r.card_id,
+    status: r.status,
+    opened_at: r.opened_at ? r.opened_at.toISOString().slice(0, 10) : null,
+    closed_at: r.closed_at ? r.closed_at.toISOString().slice(0, 10) : null,
+    bonus_received: r.bonus_received,
+  }));
 }
 
 export async function getCurrentUserId(): Promise<string> {

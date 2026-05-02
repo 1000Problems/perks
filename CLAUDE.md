@@ -50,10 +50,10 @@ run `npm run cards:build`. Don't write to `data/*.json`.
   no magic links, no MFA. Account names are letters/numbers/dots/dashes/
   underscores, 3–64 chars. Passwords are scrypt'd. Sessions are 30-day
   cookies, only the SHA-256 hash of the token is stored in `perks_sessions`.
-- **Postgres (Neon), not Supabase.** `lib/db.ts` is a thin postgres-js wrapper
-  around `DATABASE_URL`. Auth is server-side only; every query is scoped by
-  the cookie session, so we don't run RLS. Tables are namespaced `perks_*`
-  so the project can share an instance with other apps.
+- **Neon Postgres.** `lib/db.ts` is a thin postgres-js wrapper around
+  `DATABASE_URL`. Auth is server-side only; every query is scoped by the
+  cookie session, so we don't run RLS. Tables are namespaced `perks_*` so
+  the project can share an instance with other apps.
 - **`app/(app)/layout.tsx` is the auth gate** for everything under `(app)/`.
   It calls `getCurrentUser()` and redirects to `/login` when there's no
   session. Per-page `getCurrentProfile()` calls reuse the cached user via

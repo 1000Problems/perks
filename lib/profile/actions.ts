@@ -4,15 +4,27 @@
 // authenticated user. Accepts a partial UserProfile and merges into the
 // existing row in a single UPDATE. JSON columns are sent via sql.json so
 // the postgres driver handles type tagging.
+//
+// Cutover behavior:
+//   - When CARDS_HELD_DUAL_WRITE=on (default), updateProfile writes
+//     cards_held to BOTH perks_profiles.cards_held (jsonb) and
+//     user_cards (relational, status='held'), inside one transaction.
+//   - When CARDS_HELD_DUAL_WRITE=off, only user_cards is written.
+//   - updateUserCard() always writes only to user_cards — used by new
+//     UI flows that need closed-card support.
 
 import { sql } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getCurrentProfile } from "./server";
-import type { UserProfile } from "./types";
+import type { UserProfile, WalletCardHeld } from "./types";
 
 export interface UpdateResult {
   ok: boolean;
   error?: string;
+}
+
+function dualWriteEnabled(): boolean {
+  return (process.env.CARDS_HELD_DUAL_WRITE ?? "on") !== "off";
 }
 
 export async function updateProfile(
@@ -31,19 +43,56 @@ export async function updateProfile(
       preferences: { ...current.preferences, ...(partial.preferences ?? {}) },
     };
 
-    // The postgres driver's sql.json type bound is strict about index
-    // signatures; cast through unknown so our own branded shapes pass.
     const j = (v: unknown) => sql.json(v as Parameters<typeof sql.json>[0]);
-    await sql`
-      update perks_profiles
-         set spend_profile = ${j(merged.spend_profile)},
-             brands_used   = ${j(merged.brands_used)},
-             cards_held    = ${j(merged.cards_held)},
-             trips_planned = ${j(merged.trips_planned)},
-             preferences   = ${j(merged.preferences)},
-             updated_at    = now()
-       where user_id = ${user.id}
-    `;
+    const cardsHeldChanged = partial.cards_held !== undefined;
+    const useDual = dualWriteEnabled();
+
+    await sql.begin(async (tx) => {
+      if (useDual) {
+        // Update the JSONB-keyed legacy row first.
+        await tx`
+          update perks_profiles
+             set spend_profile = ${j(merged.spend_profile)},
+                 brands_used   = ${j(merged.brands_used)},
+                 cards_held    = ${j(merged.cards_held)},
+                 trips_planned = ${j(merged.trips_planned)},
+                 preferences   = ${j(merged.preferences)},
+                 updated_at    = now()
+           where user_id = ${user.id}
+        `;
+      } else {
+        // Skip cards_held in the JSONB write; everything else still goes there.
+        await tx`
+          update perks_profiles
+             set spend_profile = ${j(merged.spend_profile)},
+                 brands_used   = ${j(merged.brands_used)},
+                 trips_planned = ${j(merged.trips_planned)},
+                 preferences   = ${j(merged.preferences)},
+                 updated_at    = now()
+           where user_id = ${user.id}
+        `;
+      }
+
+      if (cardsHeldChanged) {
+        // Replace the user's held rows. Closed-status rows are untouched —
+        // those come from updateUserCard() and are not derivable from JSONB.
+        await tx`
+          delete from user_cards
+           where user_id = ${user.id} and status = 'held'
+        `;
+        for (const c of merged.cards_held) {
+          await tx`
+            insert into user_cards (user_id, card_id, status, opened_at, bonus_received)
+            values (${user.id}, ${c.card_id}, 'held', ${c.opened_at}, ${c.bonus_received})
+            on conflict (user_id, card_id) do update set
+              status = excluded.status,
+              opened_at = excluded.opened_at,
+              bonus_received = excluded.bonus_received,
+              updated_at = now()
+          `;
+        }
+      }
+    });
     return { ok: true };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
@@ -51,3 +100,43 @@ export async function updateProfile(
     return { ok: false, error: "update_failed" };
   }
 }
+
+// Granular update for a single user_cards row. Used by new UI flows
+// that record closed_in_past_year, closed_long_ago, or per-card edits.
+// Writes ONLY to user_cards — never to perks_profiles.cards_held.
+export interface UpdateUserCardInput {
+  card_id: string;
+  status: "held" | "closed_in_past_year" | "closed_long_ago";
+  opened_at?: string | null;
+  closed_at?: string | null;
+  bonus_received?: boolean;
+}
+
+export async function updateUserCard(input: UpdateUserCardInput): Promise<UpdateResult> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "not_authenticated" };
+  try {
+    await sql`
+      insert into user_cards (
+        user_id, card_id, status, opened_at, closed_at, bonus_received
+      ) values (
+        ${user.id}, ${input.card_id}, ${input.status},
+        ${input.opened_at ?? null}, ${input.closed_at ?? null},
+        ${input.bonus_received ?? false}
+      )
+      on conflict (user_id, card_id) do update set
+        status = excluded.status,
+        opened_at = excluded.opened_at,
+        closed_at = excluded.closed_at,
+        bonus_received = excluded.bonus_received,
+        updated_at = now()
+    `;
+    return { ok: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[profile:update_user_card] failed:", msg);
+    return { ok: false, error: "update_failed" };
+  }
+}
+
+export type { WalletCardHeld };

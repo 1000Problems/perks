@@ -58,8 +58,8 @@ export default function LandingPage() {
         it would actually save you, and which trips it unlocks.
       </p>
       <div style={{ marginTop: 32, display: "flex", gap: 12 }}>
-        <Link href="/signup" className="btn btn-primary">
-          Get started
+        <Link href="/login" className="btn btn-primary">
+          Sign in
         </Link>
         <Link href="/recommendations" className="btn">
           See a sample

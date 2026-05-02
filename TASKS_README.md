@@ -60,7 +60,7 @@ Run these in order. Each task may assume earlier tasks are complete.
 2. `TASK-02-engine-eligibility.md` — issuer rules engine (5/24, once-per-lifetime, etc.)
 3. `TASK-03-engine-scoring.md` — per-card net annual value with realistic credits + perk dedup
 4. `TASK-04-engine-ranking.md` — top-N selection, filter modes, "why" sentence generator
-5. `TASK-05-profile-persistence.md` — Postgres profile read/write hooks (Neon, not Supabase)
+5. `TASK-05-profile-persistence.md` — Neon Postgres profile read/write hooks
 6. `TASK-06-onboarding-spend.md` — sliders + live total + persist
 7. `TASK-07-onboarding-brands.md` — brand and trip chip selection
 8. `TASK-08-onboarding-cards.md` — search-and-add wallet builder, search powered by `db.cards`

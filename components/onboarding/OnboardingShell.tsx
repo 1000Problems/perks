@@ -4,11 +4,20 @@ import type { Route } from "next";
 interface Props {
   step: 1 | 2 | 3;
   title: string;
-  next: string;
+  next?: string;
   children: React.ReactNode;
+  // If true, the shell skips its own Continue link — the child renders
+  // the navigation itself (for forms that need to persist before moving on).
+  hideContinue?: boolean;
 }
 
-export function OnboardingShell({ step, title, next, children }: Props) {
+export function OnboardingShell({
+  step,
+  title,
+  next,
+  children,
+  hideContinue,
+}: Props) {
   return (
     <main
       style={{
@@ -33,11 +42,13 @@ export function OnboardingShell({ step, title, next, children }: Props) {
       </div>
       <h1 style={{ margin: 0, fontSize: 32, letterSpacing: "-0.02em", fontWeight: 600 }}>{title}</h1>
       <div style={{ marginTop: 24 }}>{children}</div>
-      <div style={{ marginTop: 48, display: "flex", gap: 8, justifyContent: "flex-end" }}>
-        <Link href={next as Route} className="btn btn-primary">
-          Continue
-        </Link>
-      </div>
+      {!hideContinue && next && (
+        <div style={{ marginTop: 48, display: "flex", gap: 8, justifyContent: "flex-end" }}>
+          <Link href={next as Route} className="btn btn-primary">
+            Continue
+          </Link>
+        </div>
+      )}
     </main>
   );
 }

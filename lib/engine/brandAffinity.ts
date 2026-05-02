@@ -134,7 +134,10 @@ export function getBrandFit(
         lineItem: {
           label: `Brand fit: regular ${entry.brand} customer`,
           value: entry.bonus,
-          kind: "perk",
+          // brand_fit is spend-conditional (only realises when the user
+          // actually shops at the brand). Distinct from "perk" so the
+          // hero pillars can bucket it under spend rather than perks.
+          kind: "brand_fit",
           note: entry.note,
         },
       };

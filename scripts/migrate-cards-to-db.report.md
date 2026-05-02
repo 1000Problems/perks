@@ -1,88 +1,29 @@
 # Cards migration report
 
-Run at: 2026-05-02T13:17:42.559Z
+Run at: 2026-05-02T14:10:18.513Z
 Dry run: no
 
 ## Totals
 
 - Issuers seeded: 59
 - Networks seeded: 22
-- Programs seeded: 108
-- Cards inserted: 60
-- Cards updated: 179
+- Programs seeded: 115
+- Cards inserted: 0
+- Cards updated: 239
 - Cards skipped: 0
 
-## Inserted (60)
+## Updated (239)
 
 - `aaa_daily_advantage_visa.md`
-- `aaa_travel_advantage_visa.md`
-- `allegiant_world_mastercard.md`
-- `alliant_cashback_visa.md`
-- `amex_business_gold.md`
-- `amex_business_platinum.md`
-- `amex_gold.md`
-- `amex_green.md`
-- `amex_platinum.md`
-- `best_western_premium.md`
-- `best_western_rewards_mastercard.md`
-- `bjs_one_plus.md`
-- `bloomingdales_amex.md`
-- `bread_cashback_amex.md`
-- `bread_rewards_amex.md`
-- `caesars_rewards_visa.md`
-- `capital_one_venture_x.md`
-- `capital_one_walmart.md`
-- `carnival_world_mastercard.md`
-- `celebrity_cruises_visa.md`
-- `chase_sapphire_preferred.md`
-- `chase_sapphire_reserve.md`
-- `doordash_rewards_mastercard.md`
-- `free_spirit_travel_more.md`
-- `frontier_world_mastercard.md`
-- `harley_davidson_visa.md`
-- `holland_america_visa.md`
-- `instacart_mastercard.md`
-- `jcpenney_mastercard.md`
-- `kohls_card.md`
-- `korean_air_skypass_visa.md`
-- `latam_visa.md`
-- `lowes_advantage.md`
-- `macys_amex.md`
-- `macys_credit.md`
-- `mission_lane_cash_back.md`
-- `morgan_stanley_credit_card.md`
-- `my_best_buy_visa.md`
-- `nfl_extra_points.md`
-- `nordy_club_visa.md`
-- `norwegian_cruise_world_mastercard.md`
-- `petal_2.md`
-- `princess_cruises_visa.md`
-- `rei_co_op_mastercard.md`
-- `royal_caribbean_visa.md`
-- `saks_fifth_avenue_wem.md`
-- `sams_club_credit.md`
-- `sams_club_mastercard.md`
-- `sofi_credit_card.md`
-- `sun_country_visa.md`
-- `target_redcard.md`
-- `tjx_rewards_mastercard.md`
-- `tomo_credit_card.md`
-- `ulta_rewards_mastercard.md`
-- `upgrade_cash_rewards.md`
-- `upgrade_triple_cash_rewards.md`
-- `usaa_cashback_rewards_plus_amex.md`
-- `usaa_preferred_cash_rewards.md`
-- `verizon_visa.md`
-- `wayfair_credit.md`
-
-## Updated (179)
-
 - `aaa_member_rewards_visa.md`
+- `aaa_travel_advantage_visa.md`
 - `aer_lingus_visa.md`
 - `aeromexico_rewards_premier.md`
 - `aeromexico_visa.md`
 - `aeroplan_card.md`
 - `alaska_airlines_visa.md`
+- `allegiant_world_mastercard.md`
+- `alliant_cashback_visa.md`
 - `alliant_visa_platinum.md`
 - `amazon_prime_visa.md`
 - `amazon_store_card.md`
@@ -90,7 +31,12 @@ Dry run: no
 - `amex_blue_business_plus.md`
 - `amex_blue_cash_everyday.md`
 - `amex_blue_cash_preferred.md`
+- `amex_business_gold.md`
+- `amex_business_platinum.md`
 - `amex_cash_magnet.md`
+- `amex_gold.md`
+- `amex_green.md`
+- `amex_platinum.md`
 - `amex_platinum_morgan_stanley.md`
 - `amex_platinum_schwab.md`
 - `amex_schwab_investor.md`
@@ -105,9 +51,13 @@ Dry run: no
 - `bankamericard_secured.md`
 - `barclays_aa_aviator_red.md`
 - `bass_pro_club.md`
+- `best_western_premium.md`
+- `best_western_rewards_mastercard.md`
 - `bilt_blue.md`
 - `bilt_obsidian.md`
 - `bilt_palladium.md`
+- `bjs_one_plus.md`
+- `bloomingdales_amex.md`
 - `boa_customized_cash.md`
 - `boa_customized_cash_students.md`
 - `boa_premium_rewards.md`
@@ -116,9 +66,12 @@ Dry run: no
 - `boa_travel_rewards_students.md`
 - `boa_unlimited_cash_rewards.md`
 - `boa_unlimited_cash_students.md`
+- `bread_cashback_amex.md`
+- `bread_rewards_amex.md`
 - `british_airways_visa.md`
 - `build_card_fortiva.md`
 - `cabelas_club.md`
+- `caesars_rewards_visa.md`
 - `capital_one_platinum.md`
 - `capital_one_platinum_secured.md`
 - `capital_one_quicksilver.md`
@@ -133,14 +86,20 @@ Dry run: no
 - `capital_one_spark_miles.md`
 - `capital_one_venture.md`
 - `capital_one_venture_one.md`
+- `capital_one_venture_x.md`
 - `capital_one_venture_x_business.md`
+- `capital_one_walmart.md`
+- `carnival_world_mastercard.md`
 - `cash_app_card.md`
+- `celebrity_cruises_visa.md`
 - `chase_freedom_flex.md`
 - `chase_freedom_rise.md`
 - `chase_freedom_unlimited.md`
 - `chase_ink_business_cash.md`
 - `chase_ink_business_preferred.md`
 - `chase_ink_business_unlimited.md`
+- `chase_sapphire_preferred.md`
+- `chase_sapphire_reserve.md`
 - `chase_slate_edge.md`
 - `chime_credit_builder.md`
 - `choice_privileges_select_mastercard.md`
@@ -171,30 +130,43 @@ Dry run: no
 - `discover_it_student_cash_back.md`
 - `disney_premier_visa.md`
 - `disney_visa.md`
+- `doordash_rewards_mastercard.md`
 - `fidelity_rewards_visa.md`
 - `first_latitude_platinum.md`
 - `first_progress_platinum_elite.md`
 - `first_progress_platinum_prestige.md`
 - `first_progress_platinum_select.md`
 - `fit_mastercard.md`
+- `free_spirit_travel_more.md`
+- `frontier_world_mastercard.md`
 - `gap_good_rewards.md`
 - `grow_credit_mastercard.md`
+- `harley_davidson_visa.md`
 - `hawaiian_boh_world_elite.md`
 - `hilton_honors.md`
 - `hilton_honors_aspire.md`
 - `hilton_honors_business.md`
 - `hilton_honors_surpass.md`
+- `holland_america_visa.md`
 - `home_depot_consumer.md`
 - `iberia_visa.md`
 - `ihg_premier.md`
 - `ihg_traveler.md`
 - `indigo_mastercard.md`
+- `instacart_mastercard.md`
+- `jcpenney_mastercard.md`
 - `jetblue_card.md`
 - `jetblue_plus.md`
 - `jetblue_premier.md`
 - `jpmorgan_reserve.md`
 - `kikoff_credit_account.md`
+- `kohls_card.md`
+- `korean_air_skypass_visa.md`
+- `latam_visa.md`
+- `lowes_advantage.md`
 - `lufthansa_miles_and_more.md`
+- `macys_amex.md`
+- `macys_credit.md`
 - `marriott_bonvoy_bevy.md`
 - `marriott_bonvoy_bold.md`
 - `marriott_bonvoy_boundless.md`
@@ -205,11 +177,17 @@ Dry run: no
 - `merrick_secured_visa.md`
 - `merrill_lynch_premium_rewards.md`
 - `milestone_mastercard.md`
+- `mission_lane_cash_back.md`
 - `mission_lane_visa.md`
+- `morgan_stanley_credit_card.md`
+- `my_best_buy_visa.md`
 - `nfcu_cashrewards.md`
 - `nfcu_flagship_rewards.md`
 - `nfcu_go_rewards.md`
 - `nfcu_more_rewards_amex.md`
+- `nfl_extra_points.md`
+- `nordy_club_visa.md`
+- `norwegian_cruise_world_mastercard.md`
 - `old_navy_navyist.md`
 - `opensky_secured_visa.md`
 - `paypal_cashback_mastercard.md`
@@ -218,33 +196,52 @@ Dry run: no
 - `penfed_power_cash_rewards.md`
 - `penfed_promise_visa.md`
 - `petal_1.md`
+- `petal_2.md`
 - `pottery_barn_key_rewards.md`
+- `princess_cruises_visa.md`
 - `reflex_mastercard.md`
+- `rei_co_op_mastercard.md`
 - `robinhood_gold_card.md`
 - `robinhood_platinum_card.md`
+- `royal_caribbean_visa.md`
+- `saks_fifth_avenue_wem.md`
+- `sams_club_credit.md`
+- `sams_club_mastercard.md`
 - `self_visa.md`
+- `sofi_credit_card.md`
 - `southwest_plus.md`
 - `southwest_premier.md`
 - `southwest_priority.md`
 - `step_visa.md`
+- `sun_country_visa.md`
 - `surge_mastercard.md`
 - `susan_g_komen_cash_rewards.md`
 - `tab_bank_credit_builder.md`
+- `target_redcard.md`
+- `tjx_rewards_mastercard.md`
+- `tomo_credit_card.md`
 - `total_visa.md`
+- `ulta_rewards_mastercard.md`
 - `united_club_infinite.md`
 - `united_explorer.md`
 - `united_gateway.md`
 - `united_quest.md`
+- `upgrade_cash_rewards.md`
+- `upgrade_triple_cash_rewards.md`
 - `us_bank_altitude_connect.md`
 - `us_bank_altitude_go.md`
 - `us_bank_altitude_reserve.md`
 - `us_bank_cash_plus.md`
 - `us_bank_shopper_cash_rewards.md`
 - `us_bank_smartly.md`
+- `usaa_cashback_rewards_plus_amex.md`
 - `usaa_eagle_navigator.md`
+- `usaa_preferred_cash_rewards.md`
 - `usaa_rewards_visa.md`
+- `verizon_visa.md`
 - `verve_mastercard.md`
 - `virgin_atlantic_world_elite.md`
+- `wayfair_credit.md`
 - `wells_fargo_active_cash.md`
 - `wells_fargo_attune.md`
 - `wells_fargo_autograph.md`

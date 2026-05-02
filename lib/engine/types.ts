@@ -53,8 +53,31 @@ export interface ScoringOptions {
 export interface ScoreLineItem {
   label: string;
   value: number;
-  kind: "earning" | "credit" | "fee" | "perk" | "sub" | "other";
+  kind: "earning" | "credit" | "fee" | "perk" | "sub" | "brand_fit" | "other";
   note?: string;
+}
+
+// The hero number split. The recommendation UI surfaces these as two
+// pillars instead of one combined +$X so users can tell what's earned
+// from spending (high confidence — happens automatically) from what's
+// upside if they actually claim a perk or credit.
+export interface CardScoreComponents {
+  // Spend "floor": value the user earns by spending normally with this
+  // card in their wallet. Sums earning-rule deltas across spend
+  // categories plus brand-fit cobrand bonuses (Costco, Amazon, etc.).
+  // Always >= 0.
+  spendOngoing: number;
+  // Perk "upside": value the user only realises if they claim it.
+  // Sums annual credits (haircut by ease in realistic mode) and
+  // ongoing perks (lounge access, insurance, status, etc.) that aren't
+  // already covered by another card in the wallet. Always >= 0.
+  perksOngoing: number;
+  // Annual fee, signed negative when present, 0 otherwise.
+  feeOngoing: number;
+  // Year-1 sign-up bonus, amortized per options.subAmortizeMonths.
+  // Surfaced separately so the year-1 view can render it as its own
+  // small pill rather than mixed into spend or perks.
+  subYear1: number;
 }
 
 export interface NewPerkOut {
@@ -66,6 +89,9 @@ export interface NewPerkOut {
 export interface CardScore {
   deltaOngoing: number;
   deltaYear1: number;
+  // Two-pillar split of the hero. Sum reconciles to deltaOngoing
+  // (spend + perks + fee) and deltaYear1 (+ subYear1).
+  components: CardScoreComponents;
   breakdown: ScoreLineItem[];
   spendImpact: Record<
     SpendCategoryId,

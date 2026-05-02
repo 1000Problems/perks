@@ -7,6 +7,7 @@ import { Eyebrow } from "@/components/perks/Eyebrow";
 import { HeatRow } from "@/components/perks/HeatRow";
 import { Money } from "@/components/perks/Money";
 import { Segmented } from "@/components/perks/Segmented";
+import { ValuePillars } from "@/components/perks/ValuePillars";
 import { SPEND_CATEGORIES } from "@/lib/categories";
 import type { Card } from "@/lib/data/loader";
 import { fromSerialized, type SerializedDb } from "@/lib/data/serialized";
@@ -454,16 +455,18 @@ export function RecPanelMobile({
             ) : (
               <ol style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
                 {ranked.visible.map((r) => {
-                  const delta = view === "ongoing" ? r.score.deltaOngoing : r.score.deltaYear1;
                   return (
                     <li
                       key={r.card.id}
                       onClick={() => pickCard(r.card.id)}
                       style={{
                         display: "grid",
-                        gridTemplateColumns: "64px 1fr auto",
+                        // Drop the why-sentence into its own row beneath
+                        // the card head — gives ValuePillars enough room
+                        // on narrow screens.
+                        gridTemplateColumns: "64px 1fr",
                         gap: 12,
-                        alignItems: "center",
+                        alignItems: "start",
                         padding: "14px",
                         borderRadius: 12,
                         border: "1px solid var(--rule)",
@@ -472,53 +475,47 @@ export function RecPanelMobile({
                       }}
                     >
                       <CardArt variant={variantForCard(r.card)} size="sm" issuer={r.card.issuer} network={r.card.network} />
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: "-0.01em" }}>
-                          {r.card.name}
-                        </div>
+                      <div style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 8 }}>
                         <div
                           style={{
-                            fontSize: 12,
-                            color: "var(--ink-3)",
-                            marginTop: 2,
                             display: "flex",
-                            gap: 8,
-                            alignItems: "center",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            gap: 10,
                           }}
                         >
-                          {r.card.issuer}
-                          <EligibilityChip status={r.eligibility.status} label={r.eligibility.note} />
-                        </div>
-                        <div style={{ fontSize: 12, color: "var(--ink-2)", marginTop: 4, lineHeight: 1.4 }}>
-                          {r.why}
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          textAlign: "right",
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "flex-end",
-                          gap: 6,
-                        }}
-                      >
-                        <div>
-                          <Money value={delta} sign size="sm" />
-                          <div
-                            style={{
-                              fontSize: 10,
-                              color: "var(--ink-3)",
-                              marginTop: 2,
-                              fontFamily: "var(--font-mono), ui-monospace, monospace",
-                            }}
-                          >
-                            {view === "ongoing" ? "/YR" : "Y1"}
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: "-0.01em" }}>
+                              {r.card.name}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: 12,
+                                color: "var(--ink-3)",
+                                marginTop: 2,
+                                display: "flex",
+                                gap: 8,
+                                alignItems: "center",
+                                flexWrap: "wrap",
+                              }}
+                            >
+                              {r.card.issuer}
+                              <EligibilityChip status={r.eligibility.status} label={r.eligibility.note} />
+                            </div>
                           </div>
+                          <ValuePillars
+                            components={r.score.components}
+                            view={view}
+                            variant="list-stacked"
+                          />
+                        </div>
+                        <div style={{ fontSize: 12, color: "var(--ink-2)", lineHeight: 1.4 }}>
+                          {r.why}
                         </div>
                         <button
                           type="button"
                           className="btn"
-                          style={{ fontSize: 11, padding: "3px 10px" }}
+                          style={{ fontSize: 11, padding: "3px 10px", alignSelf: "flex-end" }}
                           onClick={(e) => {
                             e.stopPropagation();
                             tryCard(r.card.id);

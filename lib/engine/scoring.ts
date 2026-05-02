@@ -312,19 +312,26 @@ export function scoreCard(
     });
   }
 
-  const deltaOngoing = Math.round(
-    earningsDelta + creditsValue + perksValue + brandFitValue - fee,
-  );
+  // Two-pillar split. Spend = earnings delta + brand-fit cobrand bonus
+  // (both spend-conditional). Perks = annual credits + ongoing perks
+  // (both claim-conditional). Fee is its own component, signed negative.
+  // Each component is rounded independently so deltaOngoing equals the
+  // sum of the rendered pillars exactly — no off-by-one between the
+  // hero and the breakdown view.
+  const spendOngoing = Math.round(earningsDelta + brandFitValue);
+  const perksOngoing = Math.round(creditsValue + perksValue);
+  const feeOngoing = fee > 0 ? -fee : 0;
+  const deltaOngoing = spendOngoing + perksOngoing + feeOngoing;
 
   // Year-1 SUB amortized.
   const sub = card.signup_bonus?.estimated_value_usd ?? 0;
-  const subY1 = sub > 0 ? Math.round((sub * 12) / options.subAmortizeMonths) : 0;
-  const deltaYear1 = deltaOngoing + subY1;
+  const subYear1 = sub > 0 ? Math.round((sub * 12) / options.subAmortizeMonths) : 0;
+  const deltaYear1 = deltaOngoing + subYear1;
 
-  if (subY1 > 0) {
+  if (subYear1 > 0) {
     breakdown.push({
       label: `Sign-up bonus, amortized over ${options.subAmortizeMonths} months`,
-      value: subY1,
+      value: subYear1,
       kind: "sub",
     });
   }
@@ -337,6 +344,12 @@ export function scoreCard(
   return {
     deltaOngoing,
     deltaYear1,
+    components: {
+      spendOngoing,
+      perksOngoing,
+      feeOngoing,
+      subYear1,
+    },
     breakdown,
     spendImpact,
     newPerks,

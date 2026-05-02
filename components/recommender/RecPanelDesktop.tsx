@@ -7,6 +7,7 @@ import { Eyebrow } from "@/components/perks/Eyebrow";
 import { HeatRow } from "@/components/perks/HeatRow";
 import { Money } from "@/components/perks/Money";
 import { Segmented } from "@/components/perks/Segmented";
+import { ValuePillars } from "@/components/perks/ValuePillars";
 import { SPEND_CATEGORIES } from "@/lib/categories";
 import type { Card } from "@/lib/data/loader";
 import { fromSerialized, type SerializedDb } from "@/lib/data/serialized";
@@ -554,7 +555,6 @@ export function RecPanelDesktop({
             >
               {ranked.visible.map((r) => {
                 const isSel = r.card.id === selected?.card.id;
-                const delta = view === "ongoing" ? r.score.deltaOngoing : r.score.deltaYear1;
                 const fee = r.card.annual_fee_usd ?? 0;
                 const subVal = r.card.signup_bonus?.estimated_value_usd ?? 0;
                 return (
@@ -624,22 +624,14 @@ export function RecPanelDesktop({
                         display: "flex",
                         flexDirection: "column",
                         alignItems: "flex-end",
-                        gap: 8,
+                        gap: 10,
                       }}
                     >
-                      <div>
-                        <Money value={delta} sign size="md" />
-                        <div
-                          style={{
-                            fontSize: 11,
-                            color: "var(--ink-3)",
-                            marginTop: 4,
-                            fontFamily: "var(--font-mono), ui-monospace, monospace",
-                          }}
-                        >
-                          {view === "ongoing" ? "NET / YEAR" : "NET, YEAR 1"}
-                        </div>
-                      </div>
+                      <ValuePillars
+                        components={r.score.components}
+                        view={view}
+                        variant="list"
+                      />
                       <button
                         type="button"
                         className="btn"

@@ -156,6 +156,91 @@ describe("scoreCard — brand-fit bonus", () => {
   });
 });
 
+describe("scoreCard — components reconcile to deltas", () => {
+  it("spendOngoing + perksOngoing + feeOngoing equals deltaOngoing", () => {
+    const result = scoreCard(
+      card("amex_platinum"),
+      heavyTravelProfile,
+      [],
+      db,
+      opts(),
+    );
+    const { spendOngoing, perksOngoing, feeOngoing, subYear1 } = result.components;
+    expect(spendOngoing + perksOngoing + feeOngoing).toBe(result.deltaOngoing);
+    expect(spendOngoing + perksOngoing + feeOngoing + subYear1).toBe(result.deltaYear1);
+  });
+
+  it("a no-AF cashback card has spend pillar dominating perks", () => {
+    // Cards in this class are spend-driven by design — small perks
+    // (cell-phone protection etc.) may exist but the split should make
+    // it visually obvious that the value is overwhelmingly from
+    // spending, not from claim-conditional benefits.
+    const result = scoreCard(
+      card("wells_fargo_active_cash"),
+      minimalProfile,
+      [],
+      db,
+      opts(),
+    );
+    expect(result.components.spendOngoing).toBeGreaterThan(0);
+    expect(result.components.spendOngoing).toBeGreaterThan(
+      result.components.perksOngoing,
+    );
+    expect(result.components.feeOngoing).toBe(0);
+  });
+
+  it("a premium credit-heavy card surfaces perks > spend on travel-light spend", () => {
+    // Amex Plat's value comes overwhelmingly from credits and lounge
+    // access on a profile with light direct travel spend. The split
+    // should make this obvious — perks pillar dominant, spend pillar
+    // small.
+    const lightSpend: UserProfile = {
+      spend_profile: { other: 3000 },
+      brands_used: [],
+      cards_held: [],
+      trips_planned: [],
+      preferences: {},
+    };
+    const result = scoreCard(
+      card("amex_platinum"),
+      lightSpend,
+      [],
+      db,
+      opts("face"),
+    );
+    expect(result.components.perksOngoing).toBeGreaterThan(
+      result.components.spendOngoing,
+    );
+    expect(result.components.feeOngoing).toBeLessThan(0);
+  });
+
+  it("brand-fit value lands in the spend pillar, not perks", () => {
+    const profile: UserProfile = {
+      ...minimalProfile,
+      brands_used: ["Costco"],
+    };
+    const without = scoreCard(
+      card("costco_anywhere_visa"),
+      minimalProfile,
+      [],
+      db,
+      opts(),
+    );
+    const withBrand = scoreCard(
+      card("costco_anywhere_visa"),
+      profile,
+      [],
+      db,
+      opts(),
+    );
+    // Spend pillar moves up; perks pillar does not.
+    expect(withBrand.components.spendOngoing).toBeGreaterThan(
+      without.components.spendOngoing,
+    );
+    expect(withBrand.components.perksOngoing).toBe(without.components.perksOngoing);
+  });
+});
+
 describe("scoreCard — spend caps", () => {
   it("respects cap_usd_per_year on category rules", () => {
     // Amex Gold: 4x on us_supermarkets capped at $25,000/yr

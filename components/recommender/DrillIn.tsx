@@ -5,6 +5,7 @@ import { CardArt } from "@/components/perks/CardArt";
 import { EligibilityChip } from "@/components/perks/EligibilityChip";
 import { Eyebrow } from "@/components/perks/Eyebrow";
 import { Money } from "@/components/perks/Money";
+import { ValuePillars } from "@/components/perks/ValuePillars";
 import { SPEND_CATEGORIES } from "@/lib/categories";
 import type { CardDatabase } from "@/lib/data/loader";
 import type { SpendCategory } from "@/lib/data/types";
@@ -79,20 +80,24 @@ export function DrillIn({
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em" }}>{card.name}</div>
           <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>{card.issuer}</div>
-          <div style={{ marginTop: 10 }}>
-            <Money value={delta} sign size="md" />
+          <div style={{ marginTop: 14 }}>
+            <ValuePillars components={score.components} view={view} variant="hero" />
             <div
               style={{
                 fontSize: 11,
                 color: "var(--ink-3)",
-                marginTop: 2,
+                marginTop: 10,
                 fontFamily: "var(--font-mono), ui-monospace, monospace",
+                display: "flex",
+                gap: 8,
+                alignItems: "baseline",
               }}
             >
-              {view === "ongoing" ? "NET / YEAR ONGOING" : "NET, FIRST YEAR"}
+              <span>{view === "ongoing" ? "NET / YEAR" : "NET, YEAR 1"}</span>
+              <Money value={delta} sign size="sm" />
             </div>
           </div>
-          <div style={{ marginTop: 10 }}>
+          <div style={{ marginTop: 12 }}>
             <EligibilityChip status={eligibility.status} label={eligibility.note} />
           </div>
         </div>

@@ -300,3 +300,11 @@ html, body {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* Header responsive show/hide. The mobile-only trigger appears under
+   768px; the desktop control group hides at the same breakpoint. */
+.rec-header-mobile-only { display: none; }
+@media (max-width: 767px) {
+  .rec-header-desktop { display: none !important; }
+  .rec-header-mobile-only { display: inline-flex !important; }
+}

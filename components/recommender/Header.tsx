@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Segmented } from "@/components/perks/Segmented";
 import { logoutAction } from "@/lib/auth/actions";
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function RecHeader({ view, setView, credits, setCredits }: Props) {
+  const [sheetOpen, setSheetOpen] = useState(false);
   return (
     <header
       style={{
@@ -63,24 +65,37 @@ export function RecHeader({ view, setView, credits, setCredits }: Props) {
         </nav>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <Segmented
-          value={view}
-          onChange={setView}
-          options={[
-            { value: "ongoing", label: "Ongoing year" },
-            { value: "year1", label: "Year 1 (with bonus)" },
-          ]}
-        />
-        <Segmented
-          value={credits}
-          onChange={setCredits}
-          options={[
-            { value: "realistic", label: "Realistic credits" },
-            { value: "face", label: "Face value" },
-          ]}
-        />
-        <button className="btn btn-ghost" style={{ fontSize: 12 }} type="button">
-          Edit profile
+        {/* Desktop controls — hidden on small screens. */}
+        <div className="rec-header-desktop" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <Segmented
+            value={view}
+            onChange={setView}
+            options={[
+              { value: "ongoing", label: "Ongoing year" },
+              { value: "year1", label: "Year 1 (with bonus)" },
+            ]}
+          />
+          <Segmented
+            value={credits}
+            onChange={setCredits}
+            options={[
+              { value: "realistic", label: "Realistic credits" },
+              { value: "face", label: "Face value" },
+            ]}
+          />
+          <button className="btn btn-ghost" style={{ fontSize: 12 }} type="button">
+            Edit profile
+          </button>
+        </div>
+        {/* Mobile filter trigger — only visible <768px. */}
+        <button
+          className="rec-header-mobile-only btn btn-ghost"
+          style={{ fontSize: 12 }}
+          type="button"
+          onClick={() => setSheetOpen(true)}
+          aria-label="Open filters"
+        >
+          ⚙ Filters
         </button>
         <form action={logoutAction}>
           <button
@@ -92,6 +107,60 @@ export function RecHeader({ view, setView, credits, setCredits }: Props) {
           </button>
         </form>
       </div>
+
+      {sheetOpen && (
+        <div
+          onClick={() => setSheetOpen(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.32)",
+            zIndex: 100,
+            display: "flex",
+            alignItems: "flex-end",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "var(--paper)",
+              width: "100%",
+              borderRadius: "16px 16px 0 0",
+              padding: "20px 20px 28px",
+              boxShadow: "0 -8px 24px rgba(0,0,0,0.16)",
+              display: "flex",
+              flexDirection: "column",
+              gap: 16,
+            }}
+          >
+            <div className="eyebrow">Display options</div>
+            <Segmented
+              value={view}
+              onChange={setView}
+              options={[
+                { value: "ongoing", label: "Ongoing year" },
+                { value: "year1", label: "Year 1 (with bonus)" },
+              ]}
+            />
+            <Segmented
+              value={credits}
+              onChange={setCredits}
+              options={[
+                { value: "realistic", label: "Realistic credits" },
+                { value: "face", label: "Face value" },
+              ]}
+            />
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => setSheetOpen(false)}
+              style={{ marginTop: 4, justifyContent: "center" }}
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

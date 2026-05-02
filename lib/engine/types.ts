@@ -67,7 +67,31 @@ export interface CardScore {
   deltaOngoing: number;
   deltaYear1: number;
   breakdown: ScoreLineItem[];
-  spendImpact: Record<SpendCategoryId, { current: number; new: number }>;
+  spendImpact: Record<
+    SpendCategoryId,
+    {
+      current: number;
+      new: number;
+      // Source card name for the current best earner. "—" if the user
+      // holds nothing in this category.
+      currentFrom: string;
+      // Source card name for the new best earner. May still be the
+      // current card if this candidate doesn't beat what's held.
+      newFrom: string;
+      // The user's annual spend in this category (dollars). Mirrored
+      // from the profile so the drill-in math is fully self-contained.
+      spend: number;
+      // Marginal dollars per year this category contributes to the
+      // candidate's score. Zero unless `new > current`.
+      delta: number;
+      // When the candidate wins this category and its earning rule has
+      // a per-year cap, this is the cap and the candidate's base rate
+      // (used for over-cap remainder math). null when there's no cap or
+      // the candidate isn't the winner.
+      newCap: number | null;
+      newBase: number | null;
+    }
+  >;
   newPerks: NewPerkOut[];
   duplicatedPerks: string[];
 }

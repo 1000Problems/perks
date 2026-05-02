@@ -207,31 +207,43 @@ export function scoreCard(
   const walletPlus = [...walletCards, card];
   const walletCardIds = walletCards.map((c) => c.id);
 
-  // Spend impact — best rate per category, before vs after.
-  const spendImpact = {} as Record<SpendCategoryId, { current: number; new: number }>;
+  // Spend impact — best rate per category, before vs after, with
+  // source-card attribution and cap info for the drill-in's per-row math.
+  const cardNorm = normalizeEarning(card, db);
+  const spendImpact = {} as CardScore["spendImpact"];
   for (const cat of ALL_CATS) {
-    const cur = bestRateForCategory(cat, walletCards, db).rate;
-    const nw = bestRateForCategory(cat, walletPlus, db).rate;
-    spendImpact[cat] = { current: cur, new: nw };
+    const curBest = bestRateForCategory(cat, walletCards, db);
+    const newBest = bestRateForCategory(cat, walletPlus, db);
+    const spend = userProfile.spend_profile[cat] ?? 0;
+    const candidateWins = newBest.from === card.name && newBest.rate > curBest.rate;
+    const candidateRule = candidateWins ? cardNorm.byCat.get(cat) : undefined;
+    spendImpact[cat] = {
+      current: curBest.rate,
+      new: newBest.rate,
+      currentFrom: curBest.from,
+      newFrom: newBest.from,
+      spend,
+      delta: 0, // populated below
+      newCap: candidateRule?.cap_usd_per_year ?? null,
+      newBase: candidateWins ? cardNorm.base : null,
+    };
   }
 
   // Earnings delta — only the marginal portion this card contributes.
-  const cardNorm = normalizeEarning(card, db);
   let earningsDelta = 0;
   for (const cat of ALL_CATS) {
-    const spend = userProfile.spend_profile[cat] ?? 0;
-    if (spend <= 0) continue;
-    const curRate = spendImpact[cat].current;
-    const newRate = spendImpact[cat].new;
-    if (newRate <= curRate) continue; // no improvement
+    const impact = spendImpact[cat];
+    if (impact.spend <= 0) continue;
+    if (impact.new <= impact.current) continue; // no improvement
     const cardRule = cardNorm.byCat.get(cat);
-    const cardEarnings = earningsOnCategory(spend, cardRule, cardNorm.base);
-    const currentEarnings = spend * curRate;
+    const cardEarnings = earningsOnCategory(impact.spend, cardRule, cardNorm.base);
+    const currentEarnings = impact.spend * impact.current;
     const delta = Math.max(cardEarnings - currentEarnings, 0);
     if (delta > 0) {
       earningsDelta += delta;
+      impact.delta = Math.round(delta);
       breakdown.push({
-        label: `${labelFor(cat)} $${Math.round(spend).toLocaleString()} × ${(newRate * 100).toFixed(1)}% (was ${(curRate * 100).toFixed(1)}%)`,
+        label: `${labelFor(cat)} $${Math.round(impact.spend).toLocaleString()} × ${(impact.new * 100).toFixed(1)}% (was ${(impact.current * 100).toFixed(1)}%)`,
         value: Math.round(delta),
         kind: "earning",
       });

@@ -76,52 +76,32 @@ export function DrillIn({
   return (
     <div>
       <Eyebrow>Card detail</Eyebrow>
-      {/* Compact header: art (md not lg), title + chip on one line,
-          issuer + NET takeaway beneath. */}
-      <div style={{ marginTop: 12, display: "flex", gap: 14, alignItems: "flex-start" }}>
-        <CardArt
-          variant={variantForCard(card)}
-          name={card.name}
-          issuer={card.issuer}
-          network={card.network}
-          size="md"
-        />
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 17, fontWeight: 600, letterSpacing: "-0.01em", lineHeight: 1.25 }}>
-              {card.name}
-            </span>
+      <div style={{ marginTop: 14, display: "flex", gap: 16, alignItems: "flex-start" }}>
+        <CardArt variant={variantForCard(card)} name={card.name} issuer={card.issuer} network={card.network} size="lg" />
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em" }}>{card.name}</div>
+          <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>{card.issuer}</div>
+          <div style={{ marginTop: 14 }}>
+            <ValuePillars components={score.components} view={view} variant="hero" />
+            <div
+              style={{
+                fontSize: 11,
+                color: "var(--ink-3)",
+                marginTop: 10,
+                fontFamily: "var(--font-mono), ui-monospace, monospace",
+                display: "flex",
+                gap: 8,
+                alignItems: "baseline",
+              }}
+            >
+              <span>{view === "ongoing" ? "NET / YEAR" : "NET, YEAR 1"}</span>
+              <Money value={delta} sign size="sm" />
+            </div>
+          </div>
+          <div style={{ marginTop: 12 }}>
             <EligibilityChip status={eligibility.status} label={eligibility.note} />
           </div>
-          <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>{card.issuer}</div>
-          <div
-            style={{
-              marginTop: 8,
-              display: "flex",
-              gap: 8,
-              alignItems: "baseline",
-              fontFamily: "var(--font-mono), ui-monospace, monospace",
-              fontSize: 11,
-              color: "var(--ink-3)",
-            }}
-          >
-            <span>{view === "ongoing" ? "NET / YEAR" : "NET, YEAR 1"}</span>
-            <Money value={delta} sign size="sm" />
-          </div>
         </div>
-      </div>
-
-      {/* Value band — same shape as the rec list, full panel width. */}
-      <div
-        style={{
-          marginTop: 14,
-          padding: "12px 14px",
-          background: "var(--paper-2)",
-          borderRadius: 10,
-          border: "1px solid var(--rule)",
-        }}
-      >
-        <ValuePillars components={score.components} view={view} variant="band" />
       </div>
 
       <Section num="1" title="Spend impact">

@@ -37,6 +37,13 @@ export function CardsForm({ initialProfile, serializedDb, editMode }: Props) {
     const ok = await flushNow();
     if (!ok) return; // stay on form so the user sees the error
     router.push(target as Route);
+    // Invalidate the App Router client-cache for the destination so
+    // server components re-execute with the just-saved profile.
+    // `force-dynamic` on the layout only governs the Full Route Cache;
+    // the Router Cache is separate and would otherwise serve a stale
+    // RSC payload until a hard refresh. (Bug: add card → settings → rec
+    // showed pre-save wallet.)
+    router.refresh();
   }
   // Initialize TODAY inside the component so it doesn't drift if the tab
   // stays open across midnight or month rollovers.
@@ -449,9 +456,9 @@ export function CardsForm({ initialProfile, serializedDb, editMode }: Props) {
           <button
             type="button"
             className="btn btn-primary"
-            onClick={() => go(editMode ? "/settings" : "/recommendations")}
+            onClick={() => go("/recommendations")}
           >
-            {editMode ? "Save & close" : "Continue →"}
+            {editMode ? "Save & view recs →" : "Continue →"}
           </button>
         </div>
       </div>

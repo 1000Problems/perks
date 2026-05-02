@@ -61,19 +61,7 @@ export default function LandingPage() {
         <Link href="/login" className="btn btn-primary">
           Sign in
         </Link>
-        <Link href="/recommendations" className="btn">
-          See a sample
-        </Link>
       </div>
-      <p
-        style={{
-          marginTop: 80,
-          fontSize: 12,
-          color: "var(--ink-3)",
-        }}
-      >
-        Scaffolding only. Recommendation engine and live data wired up in the next pass.
-      </p>
     </main>
   );
 }

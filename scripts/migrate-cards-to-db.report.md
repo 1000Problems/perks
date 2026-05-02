@@ -1,81 +1,81 @@
 # Cards migration report
 
-Run at: 2026-05-02T12:55:55.685Z
+Run at: 2026-05-02T13:17:42.559Z
 Dry run: no
 
 ## Totals
 
 - Issuers seeded: 59
 - Networks seeded: 22
-- Programs seeded: 44
-- Cards inserted: 179
-- Cards updated: 0
-- Cards skipped: 60
+- Programs seeded: 108
+- Cards inserted: 60
+- Cards updated: 179
+- Cards skipped: 0
 
-## Skipped (60)
+## Inserted (60)
 
-- `aaa_daily_advantage_visa.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `aaa_travel_advantage_visa.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `allegiant_world_mastercard.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `alliant_cashback_visa.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `amex_business_gold.md` — insert failed (insert or update on table "card_program_access" violates foreign key constraint "card_program_access_program_id_fkey")
-- `amex_business_platinum.md` — insert failed (insert or update on table "card_program_access" violates foreign key constraint "card_program_access_program_id_fkey")
-- `amex_gold.md` — insert failed (insert or update on table "card_program_access" violates foreign key constraint "card_program_access_program_id_fkey")
-- `amex_green.md` — insert failed (insert or update on table "card_program_access" violates foreign key constraint "card_program_access_program_id_fkey")
-- `amex_platinum.md` — insert failed (insert or update on table "card_program_access" violates foreign key constraint "card_program_access_program_id_fkey")
-- `best_western_premium.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `best_western_rewards_mastercard.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `bjs_one_plus.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `bloomingdales_amex.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `bread_cashback_amex.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `bread_rewards_amex.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `caesars_rewards_visa.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `capital_one_venture_x.md` — insert failed (insert or update on table "card_program_access" violates foreign key constraint "card_program_access_program_id_fkey")
-- `capital_one_walmart.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `carnival_world_mastercard.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `celebrity_cruises_visa.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `chase_sapphire_preferred.md` — insert failed (insert or update on table "card_program_access" violates foreign key constraint "card_program_access_program_id_fkey")
-- `chase_sapphire_reserve.md` — insert failed (insert or update on table "card_program_access" violates foreign key constraint "card_program_access_program_id_fkey")
-- `doordash_rewards_mastercard.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `free_spirit_travel_more.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `frontier_world_mastercard.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `harley_davidson_visa.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `holland_america_visa.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `instacart_mastercard.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `jcpenney_mastercard.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `kohls_card.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `korean_air_skypass_visa.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `latam_visa.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `lowes_advantage.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `macys_amex.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `macys_credit.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `mission_lane_cash_back.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `morgan_stanley_credit_card.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `my_best_buy_visa.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `nfl_extra_points.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `nordy_club_visa.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `norwegian_cruise_world_mastercard.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `petal_2.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `princess_cruises_visa.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `rei_co_op_mastercard.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `royal_caribbean_visa.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `saks_fifth_avenue_wem.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `sams_club_credit.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `sams_club_mastercard.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `sofi_credit_card.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `sun_country_visa.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `target_redcard.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `tjx_rewards_mastercard.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `tomo_credit_card.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `ulta_rewards_mastercard.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `upgrade_cash_rewards.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `upgrade_triple_cash_rewards.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `usaa_cashback_rewards_plus_amex.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `usaa_preferred_cash_rewards.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `verizon_visa.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
-- `wayfair_credit.md` — insert failed (insert or update on table "cards" violates foreign key constraint "cards_currency_earned_fkey")
+- `aaa_daily_advantage_visa.md`
+- `aaa_travel_advantage_visa.md`
+- `allegiant_world_mastercard.md`
+- `alliant_cashback_visa.md`
+- `amex_business_gold.md`
+- `amex_business_platinum.md`
+- `amex_gold.md`
+- `amex_green.md`
+- `amex_platinum.md`
+- `best_western_premium.md`
+- `best_western_rewards_mastercard.md`
+- `bjs_one_plus.md`
+- `bloomingdales_amex.md`
+- `bread_cashback_amex.md`
+- `bread_rewards_amex.md`
+- `caesars_rewards_visa.md`
+- `capital_one_venture_x.md`
+- `capital_one_walmart.md`
+- `carnival_world_mastercard.md`
+- `celebrity_cruises_visa.md`
+- `chase_sapphire_preferred.md`
+- `chase_sapphire_reserve.md`
+- `doordash_rewards_mastercard.md`
+- `free_spirit_travel_more.md`
+- `frontier_world_mastercard.md`
+- `harley_davidson_visa.md`
+- `holland_america_visa.md`
+- `instacart_mastercard.md`
+- `jcpenney_mastercard.md`
+- `kohls_card.md`
+- `korean_air_skypass_visa.md`
+- `latam_visa.md`
+- `lowes_advantage.md`
+- `macys_amex.md`
+- `macys_credit.md`
+- `mission_lane_cash_back.md`
+- `morgan_stanley_credit_card.md`
+- `my_best_buy_visa.md`
+- `nfl_extra_points.md`
+- `nordy_club_visa.md`
+- `norwegian_cruise_world_mastercard.md`
+- `petal_2.md`
+- `princess_cruises_visa.md`
+- `rei_co_op_mastercard.md`
+- `royal_caribbean_visa.md`
+- `saks_fifth_avenue_wem.md`
+- `sams_club_credit.md`
+- `sams_club_mastercard.md`
+- `sofi_credit_card.md`
+- `sun_country_visa.md`
+- `target_redcard.md`
+- `tjx_rewards_mastercard.md`
+- `tomo_credit_card.md`
+- `ulta_rewards_mastercard.md`
+- `upgrade_cash_rewards.md`
+- `upgrade_triple_cash_rewards.md`
+- `usaa_cashback_rewards_plus_amex.md`
+- `usaa_preferred_cash_rewards.md`
+- `verizon_visa.md`
+- `wayfair_credit.md`
 
-## Inserted (179)
+## Updated (179)
 
 - `aaa_member_rewards_visa.md`
 - `aer_lingus_visa.md`

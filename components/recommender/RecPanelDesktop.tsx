@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { UserProfile } from "@/lib/profile/types";
 import { CardArt } from "@/components/perks/CardArt";
 import { EligibilityChip } from "@/components/perks/EligibilityChip";
 import { Eyebrow } from "@/components/perks/Eyebrow";
@@ -33,7 +34,15 @@ const HELD_PERKS: [string, string][] = [
   ["Cell phone protection", "Everyday Rewards"],
 ];
 
-export function RecPanelDesktop() {
+export interface RecPanelDesktopProps {
+  profile?: UserProfile;
+}
+
+// TASK-09 will replace stub data with real engine output keyed on `profile`.
+// For TASK-05 we just thread the prop through so the server component can
+// pass it down without breaking the existing visual layout.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function RecPanelDesktop(_props: RecPanelDesktopProps = {}) {
   const [view, setView] = useState<ViewMode>("ongoing");
   const [credits, setCredits] = useState<CreditsMode>("realistic");
   const [filter, setFilter] = useState<FilterMode>("total");

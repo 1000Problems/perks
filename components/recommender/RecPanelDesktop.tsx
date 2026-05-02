@@ -538,40 +538,31 @@ export function RecPanelDesktop({
             your wallet, with credits valued at what you&apos;d actually use.
           </p>
 
-          <div style={{ marginTop: 22, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+          <div style={{ marginTop: 22, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
             <Segmented value={filter} onChange={setFilter} options={FILTER_OPTIONS} />
-            <label
+            <select
+              value={sortCategory}
+              onChange={(e) => setSortCategory(e.target.value as SpendCategoryId | "overall")}
+              aria-label="Sort by category"
+              title="Sort by category"
               style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
                 fontSize: 12,
-                color: "var(--ink-3)",
+                padding: "6px 10px",
+                borderRadius: 8,
+                border: "1px solid var(--rule)",
+                background: "white",
+                color: "var(--ink)",
+                fontFamily: "inherit",
+                cursor: "pointer",
               }}
             >
-              <span>Sort by</span>
-              <select
-                value={sortCategory}
-                onChange={(e) => setSortCategory(e.target.value as SpendCategoryId | "overall")}
-                style={{
-                  fontSize: 12,
-                  padding: "6px 8px",
-                  borderRadius: 8,
-                  border: "1px solid var(--rule)",
-                  background: "white",
-                  color: "var(--ink)",
-                  fontFamily: "inherit",
-                  cursor: "pointer",
-                }}
-              >
-                <option value="overall">Overall</option>
-                {categoryOptions.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+              <option value="overall">Overall</option>
+              {categoryOptions.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           {ranked.visible.length === 0 ? (

@@ -8,6 +8,7 @@ import { HeatRow } from "@/components/perks/HeatRow";
 import { Money } from "@/components/perks/Money";
 import { Segmented } from "@/components/perks/Segmented";
 import { ValuePillars } from "@/components/perks/ValuePillars";
+import { WalletRow } from "@/components/perks/WalletRow";
 import { SPEND_CATEGORIES } from "@/lib/categories";
 import type { Card } from "@/lib/data/loader";
 import { fromSerialized, type SerializedDb } from "@/lib/data/serialized";
@@ -18,6 +19,7 @@ import type {
   EligibilityResult,
   RankFilter,
   RankOptions,
+  ScoringOptions,
 } from "@/lib/engine/types";
 import { variantForCard } from "@/lib/cardArt";
 import { useProfile, profileErrorMessage } from "@/lib/profile/client";
@@ -147,8 +149,52 @@ export function RecPanelMobile({
     return total;
   }, [profile.spend_profile, walletBestRates]);
 
+  // Deduped perk value across the wallet (first-card-wins). Matches the
+  // engine's `alreadyCoveredPerks` so per-card marginal scores reconcile
+  // with the wallet net displayed in the header.
+  const walletPerksValue = useMemo(() => {
+    const seen = new Set<string>();
+    let total = 0;
+    for (const c of coverageCards) {
+      for (const p of c.ongoing_perks) {
+        const key = p.name.toLowerCase().trim();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        total += p.value_estimate_usd ?? 0;
+      }
+    }
+    return total;
+  }, [coverageCards]);
+
   const walletFees = coverageCards.reduce((acc, c) => acc + (c.annual_fee_usd ?? 0), 0);
-  const walletNet = Math.round(walletEarned - walletFees);
+  const walletNet = Math.round(walletEarned + walletPerksValue - walletFees);
+
+  // Held-only baseline — used as the trial "would total" reference. Same
+  // value for every trial row (each evaluated independently vs held).
+  const heldOnlyNet = useMemo(() => {
+    let earnings = 0;
+    for (const c of SPEND_CATEGORIES) {
+      const spend = profile.spend_profile[c.id] ?? 0;
+      earnings += spend * bestRateForCategory(c.id, walletCards, db).rate;
+    }
+    let perks = 0;
+    const seen = new Set<string>();
+    for (const c of walletCards) {
+      for (const p of c.ongoing_perks) {
+        const key = p.name.toLowerCase().trim();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        perks += p.value_estimate_usd ?? 0;
+      }
+    }
+    const fees = walletCards.reduce((acc, c) => acc + (c.annual_fee_usd ?? 0), 0);
+    return Math.round(earnings + perks - fees);
+  }, [walletCards, profile.spend_profile, db]);
+
+  const scoringOptions = useMemo<ScoringOptions>(
+    () => ({ creditsMode: credits, subAmortizeMonths: 24 }),
+    [credits],
+  );
 
   function pickCard(id: string) {
     setSelectedId(id);
@@ -277,43 +323,25 @@ export function RecPanelMobile({
                 </div>
                 <div style={{ marginTop: 24 }}>
                   <Eyebrow style={{ marginBottom: 10 }}>Wallet · {walletCards.length}</Eyebrow>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    {walletCards.map((c) => (
-                      <div
-                        key={c.id}
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "auto 1fr auto",
-                          alignItems: "center",
-                          gap: 10,
-                        }}
-                      >
-                        <CardArt variant={variantForCard(c)} size="sm" issuer={c.issuer} network={c.network} />
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 500 }}>{c.name}</div>
-                          <div style={{ fontSize: 11, color: "var(--ink-3)" }}>
-                            {c.issuer} · {(c.annual_fee_usd ?? 0) === 0 ? "No fee" : "$" + c.annual_fee_usd + "/yr"}
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeFromWallet(c.id)}
-                          aria-label={`Remove ${c.name}`}
-                          style={{
-                            background: "transparent",
-                            border: 0,
-                            color: "var(--ink-3)",
-                            fontSize: 16,
-                            cursor: "pointer",
-                            padding: "4px 8px",
-                            lineHeight: 1,
-                            fontFamily: "inherit",
-                          }}
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {walletCards.map((c) => {
+                      const baselineWallet = profile.cards_held.filter(
+                        (h) => h.card_id !== c.id,
+                      );
+                      return (
+                        <WalletRow
+                          key={c.id}
+                          card={c}
+                          mode="owned"
+                          baselineWallet={baselineWallet}
+                          currentWalletNet={walletNet}
+                          profile={profile}
+                          db={db}
+                          scoringOptions={scoringOptions}
+                          onRemove={() => removeFromWallet(c.id)}
+                        />
+                      );
+                    })}
                   </div>
                   {saveError && (
                     <div
@@ -344,71 +372,20 @@ export function RecPanelMobile({
                     >
                       Treated as if held — recs and coverage update live.
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {consideringCards.map((c) => (
-                        <div
+                        <WalletRow
                           key={c.id}
-                          style={{
-                            padding: "10px 12px",
-                            border: "1px dashed var(--rule-2)",
-                            borderRadius: 10,
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 8,
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: "grid",
-                              gridTemplateColumns: "auto 1fr",
-                              alignItems: "center",
-                              gap: 10,
-                            }}
-                          >
-                            <CardArt
-                              variant={variantForCard(c)}
-                              size="sm"
-                              issuer={c.issuer}
-                              network={c.network}
-                            />
-                            <div style={{ minWidth: 0 }}>
-                              <div style={{ fontSize: 13, fontWeight: 500 }}>{c.name}</div>
-                              <div style={{ fontSize: 11, color: "var(--ink-3)" }}>
-                                {c.issuer} ·{" "}
-                                {(c.annual_fee_usd ?? 0) === 0
-                                  ? "No fee"
-                                  : "$" + c.annual_fee_usd + "/yr"}
-                              </div>
-                            </div>
-                          </div>
-                          <div style={{ display: "flex", gap: 6 }}>
-                            <button
-                              type="button"
-                              className="btn"
-                              style={{ flex: 1, justifyContent: "center", fontSize: 12 }}
-                              onClick={() => promoteToWallet(c.id)}
-                            >
-                              I have this card
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => untryCard(c.id)}
-                              aria-label={`Stop considering ${c.name}`}
-                              style={{
-                                background: "transparent",
-                                border: "1px solid var(--rule)",
-                                borderRadius: 8,
-                                color: "var(--ink-3)",
-                                fontSize: 14,
-                                cursor: "pointer",
-                                padding: "0 12px",
-                                fontFamily: "inherit",
-                              }}
-                            >
-                              ×
-                            </button>
-                          </div>
-                        </div>
+                          card={c}
+                          mode="trial"
+                          baselineWallet={profile.cards_held}
+                          currentWalletNet={heldOnlyNet}
+                          profile={profile}
+                          db={db}
+                          scoringOptions={scoringOptions}
+                          onPromote={() => promoteToWallet(c.id)}
+                          onUntry={() => untryCard(c.id)}
+                        />
                       ))}
                     </div>
                   </div>

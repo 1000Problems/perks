@@ -5,6 +5,7 @@ import { CardArt } from "@/components/perks/CardArt";
 import { EligibilityChip } from "@/components/perks/EligibilityChip";
 import { Eyebrow } from "@/components/perks/Eyebrow";
 import { Money } from "@/components/perks/Money";
+import { Section } from "@/components/perks/Section";
 import { ValuePillars } from "@/components/perks/ValuePillars";
 import { SPEND_CATEGORIES } from "@/lib/categories";
 import type { CardDatabase } from "@/lib/data/loader";
@@ -325,34 +326,6 @@ function findPartnerInPhrases(partners: string[], phrases: string[]): string | n
     }
   }
   return null;
-}
-
-function Section({
-  num,
-  title,
-  children,
-}: {
-  num: string;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section style={{ marginTop: 28 }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 10 }}>
-        <span
-          style={{
-            fontSize: 11,
-            fontFamily: "var(--font-mono), ui-monospace, monospace",
-            color: "var(--ink-4)",
-          }}
-        >
-          0{num}
-        </span>
-        <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, letterSpacing: "-0.005em" }}>{title}</h3>
-      </div>
-      {children}
-    </section>
-  );
 }
 
 function MathRow({ label, v, neg, bold }: { label: string; v: string; neg?: boolean; bold?: boolean }) {

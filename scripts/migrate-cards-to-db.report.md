@@ -1,6 +1,6 @@
 # Cards migration report
 
-Run at: 2026-05-02T14:10:18.513Z
+Run at: 2026-05-02T14:26:08.658Z
 Dry run: no
 
 ## Totals

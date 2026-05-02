@@ -456,66 +456,70 @@ function SpendImpactRow({
           color: "inherit",
           textAlign: "left",
           display: "grid",
-          gridTemplateColumns: "110px 1fr 64px 14px",
+          gridTemplateColumns: "1fr auto 14px",
           alignItems: "center",
-          gap: 10,
+          columnGap: 10,
         }}
       >
-        <div
-          style={{
-            fontSize: 12,
-            color: "var(--ink-2)",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-          }}
-        >
-          <span style={{ color: "var(--ink-4)", fontSize: 11, width: 10, textAlign: "center" }}>
-            {category.icon}
-          </span>
-          {category.label}
-        </div>
-        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+        <div style={{ minWidth: 0 }}>
           <div
-            className="hm-cell"
             style={{
-              background: curBg,
-              color: txt,
-              height: 22,
-              flex: 1,
-              opacity: winning ? 0.55 : 1,
+              fontSize: 12,
+              color: "var(--ink-2)",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
             }}
           >
-            {fmt.pct(cur)}
+            <span style={{ color: "var(--ink-4)", fontSize: 11, width: 10, textAlign: "center" }}>
+              {category.icon}
+            </span>
+            {category.label}
           </div>
-          <span
-            style={{
-              color: "var(--ink-4)",
-              fontSize: 10,
-              fontFamily: "var(--font-mono), ui-monospace, monospace",
-            }}
-          >
-            →
-          </span>
-          <div
-            className="hm-cell"
-            style={{
-              background: newBg,
-              color: txt,
-              height: 22,
-              flex: 1,
-              outline: winning ? "1.5px solid var(--pos)" : "none",
-              outlineOffset: -1.5,
-              fontWeight: winning ? 600 : 500,
-            }}
-          >
-            {fmt.pct(nw)}
+          <div style={{ display: "flex", gap: 4, alignItems: "center", marginTop: 4 }}>
+            <div
+              className="hm-cell"
+              style={{
+                background: curBg,
+                color: txt,
+                height: 18,
+                width: 44,
+                opacity: winning ? 0.55 : 1,
+                fontSize: 10.5,
+              }}
+            >
+              {fmt.pct(cur)}
+            </div>
+            <span
+              style={{
+                color: "var(--ink-4)",
+                fontSize: 10,
+                fontFamily: "var(--font-mono), ui-monospace, monospace",
+              }}
+            >
+              →
+            </span>
+            <div
+              className="hm-cell"
+              style={{
+                background: newBg,
+                color: txt,
+                height: 18,
+                width: 44,
+                outline: winning ? "1.5px solid var(--pos)" : "none",
+                outlineOffset: -1.5,
+                fontWeight: winning ? 600 : 500,
+                fontSize: 10.5,
+              }}
+            >
+              {fmt.pct(nw)}
+            </div>
           </div>
         </div>
         <div
           className="mono"
           style={{
-            fontSize: 11.5,
+            fontSize: 14,
             textAlign: "right",
             whiteSpace: "nowrap",
             color: impact.delta > 0 ? "var(--pos)" : "var(--ink-4)",

@@ -393,74 +393,76 @@ function SpendImpactMini({
             key={row.category.id}
             style={{
               display: "grid",
-              gridTemplateColumns: "100px 1fr 56px",
+              gridTemplateColumns: "1fr auto",
               alignItems: "center",
-              gap: 10,
-              padding: "5px 0",
+              columnGap: 10,
+              padding: "6px 0",
               borderBottom: "1px solid var(--rule)",
             }}
           >
-            <div
-              style={{
-                fontSize: 11.5,
-                color: "var(--ink-2)",
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-              }}
-            >
-              <span style={{ color: "var(--ink-4)", fontSize: 11, width: 10, textAlign: "center" }}>
-                {row.category.icon}
-              </span>
-              {row.category.label}
-            </div>
-            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+            <div style={{ minWidth: 0 }}>
               <div
-                className="hm-cell"
                 style={{
-                  background: bg,
-                  color: txt,
-                  height: 20,
-                  flex: 1,
-                  opacity: showDelta ? 0.55 : 1,
-                  fontSize: 11,
+                  fontSize: 11.5,
+                  color: "var(--ink-2)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
                 }}
               >
-                {fmt.pct(display)}
+                <span style={{ color: "var(--ink-4)", fontSize: 11, width: 10, textAlign: "center" }}>
+                  {row.category.icon}
+                </span>
+                {row.category.label}
               </div>
-              {showDelta && target !== null && (
-                <>
-                  <span
-                    style={{
-                      color: "var(--ink-4)",
-                      fontSize: 10,
-                      fontFamily: "var(--font-mono), ui-monospace, monospace",
-                    }}
-                  >
-                    →
-                  </span>
-                  <div
-                    className="hm-cell"
-                    style={{
-                      background: heatColor(target),
-                      color: txt,
-                      height: 20,
-                      flex: 1,
-                      outline: winning ? "1.5px solid var(--pos)" : "none",
-                      outlineOffset: -1.5,
-                      fontWeight: winning ? 600 : 500,
-                      fontSize: 11,
-                    }}
-                  >
-                    {fmt.pct(target)}
-                  </div>
-                </>
-              )}
+              <div style={{ display: "flex", gap: 4, alignItems: "center", marginTop: 3 }}>
+                <div
+                  className="hm-cell"
+                  style={{
+                    background: bg,
+                    color: txt,
+                    height: 16,
+                    width: 40,
+                    opacity: showDelta ? 0.55 : 1,
+                    fontSize: 10,
+                  }}
+                >
+                  {fmt.pct(display)}
+                </div>
+                {showDelta && target !== null && (
+                  <>
+                    <span
+                      style={{
+                        color: "var(--ink-4)",
+                        fontSize: 10,
+                        fontFamily: "var(--font-mono), ui-monospace, monospace",
+                      }}
+                    >
+                      →
+                    </span>
+                    <div
+                      className="hm-cell"
+                      style={{
+                        background: heatColor(target),
+                        color: txt,
+                        height: 16,
+                        width: 40,
+                        outline: winning ? "1.5px solid var(--pos)" : "none",
+                        outlineOffset: -1.5,
+                        fontWeight: winning ? 600 : 500,
+                        fontSize: 10,
+                      }}
+                    >
+                      {fmt.pct(target)}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
             <div
               className="mono"
               style={{
-                fontSize: 11,
+                fontSize: 13,
                 textAlign: "right",
                 whiteSpace: "nowrap",
                 color: row.impact.delta > 0 ? "var(--pos)" : "var(--ink-4)",

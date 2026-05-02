@@ -118,7 +118,7 @@ function amexEligibility(
   // 5-credit-card cap (charge cards exempt — tag heuristic).
   const amexCredit = expanded.filter(({ card }) => {
     if (!card || card.issuer !== "Amex") return false;
-    return card.card_type === "personal" && card.annual_fee_usd < 695; // proxy: charge cards usually $695+
+    return card.card_type === "personal" && (card.annual_fee_usd ?? 0) < 695; // proxy: charge cards usually $695+
   });
   if (amexCredit.length >= 5) {
     return { status: "yellow", note: "5-credit-card Amex cap — verify" };

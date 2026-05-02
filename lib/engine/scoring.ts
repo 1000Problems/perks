@@ -1,0 +1,300 @@
+// Scoring engine. Pure function. Given a candidate card, the user's
+// profile, and the loaded card database, compute the marginal annual
+// value of adding this card to their wallet — broken into auditable
+// line items the drill-in panel can render.
+//
+// The engine treats card-database categories as free-form labels and
+// maps them onto the user's SpendCategoryId taxonomy via SPEND_MATCHERS
+// below. Add patterns as new card categories appear; the function
+// degrades gracefully when nothing matches (the everything_else rate
+// catches anything we missed).
+
+import type { Card, CardDatabase } from "@/lib/data/loader";
+import type { SpendCategoryId } from "@/lib/data/types";
+import type {
+  CardScore,
+  NewPerkOut,
+  ScoreLineItem,
+  ScoringOptions,
+  UserProfile,
+  WalletCardHeld,
+} from "./types";
+
+const ALL_CATS: SpendCategoryId[] = [
+  "groceries",
+  "dining",
+  "gas",
+  "airfare",
+  "hotels",
+  "streaming",
+  "shopping",
+  "drugstore",
+  "transit",
+  "utilities",
+  "home",
+  "other",
+];
+
+// Card-database earning labels to SpendCategoryId. Substring match on the
+// lowercased label. First match wins; specific labels precede generic.
+const SPEND_MATCHERS: { test: RegExp; cat: SpendCategoryId }[] = [
+  { test: /grocer|supermarket|wholesale_club|costco|whole_food/, cat: "groceries" },
+  { test: /restaurant|dining|takeout|food_delivery|doordash|grubhub|uber_eats/, cat: "dining" },
+  { test: /\bgas\b|gas_station|fuel|ev_charg/, cat: "gas" },
+  { test: /flight|airfare|airline|airways/, cat: "airfare" },
+  { test: /hotel|lodging|resort|marriott|hyatt|hilton|ihg|wyndham/, cat: "hotels" },
+  { test: /streaming|netflix|spotify|disney|hulu|peacock|paramount/, cat: "streaming" },
+  { test: /amazon|online_purchas|online_shop|wayfair|select_online_retail/, cat: "shopping" },
+  { test: /drugstore|pharmacy|cvs|walgreens/, cat: "drugstore" },
+  { test: /transit|rideshare|uber\b|lyft|public_transport|commut|parking|toll/, cat: "transit" },
+  { test: /utilit|phone|cable|internet|cellular|wireless/, cat: "utilities" },
+  { test: /home_improvement|home_depot|lowes|hardware/, cat: "home" },
+  // Travel portals — for v1, route to airfare (the dominant assumption).
+  { test: /chase_travel|amex_travel|capital_one_travel|portal|travel\b/, cat: "airfare" },
+  { test: /everything_else|all_other_purchas|other_purchas|^other$|base_rate/, cat: "other" },
+];
+
+export function categorizeEarningLabel(label: string): SpendCategoryId | null {
+  const l = label.toLowerCase();
+  for (const m of SPEND_MATCHERS) {
+    if (m.test.test(l)) return m.cat;
+  }
+  return null;
+}
+
+interface NormalizedRule {
+  category: SpendCategoryId;
+  rate: number; // multiplier on spend (0.05 = 5%)
+  cap_usd_per_year: number | null;
+}
+
+// Convert a card's earning rules into a normalized shape keyed by
+// SpendCategoryId. Multiple labels may map to the same category — keep
+// the highest rate. Fall back to the card's "other" rate if no specific
+// rule matches a category at scoring time.
+function normalizeEarning(card: Card): {
+  byCat: Map<SpendCategoryId, NormalizedRule>;
+  base: number;
+} {
+  const byCat = new Map<SpendCategoryId, NormalizedRule>();
+  let base = 0.01; // default 1% baseline if not specified
+
+  for (const rule of card.earning) {
+    const cat = categorizeEarningLabel(rule.category);
+    if (cat == null) continue;
+    const rate = (rule.rate_pts_per_dollar ?? 0) / 100; // pts→% (assumes 1cpp)
+    if (cat === "other") {
+      if (rate > base) base = rate;
+      continue;
+    }
+    const existing = byCat.get(cat);
+    if (!existing || existing.rate < rate) {
+      byCat.set(cat, {
+        category: cat,
+        rate,
+        cap_usd_per_year: rule.cap_usd_per_year ?? null,
+      });
+    }
+  }
+
+  return { byCat, base };
+}
+
+// Best earning rate the user gets in a category given a list of cards.
+// Returns the rate and the source card name (for "from" labels).
+function bestRateForCategory(
+  category: SpendCategoryId,
+  cards: Card[],
+): { rate: number; from: string } {
+  let best = { rate: 0, from: "—" };
+  for (const c of cards) {
+    const norm = normalizeEarning(c);
+    const r = norm.byCat.get(category)?.rate ?? norm.base;
+    if (r > best.rate) {
+      best = { rate: r, from: c.name };
+    }
+  }
+  return best;
+}
+
+// Compute earnings on $S of spend at a given normalized rule (with cap).
+// If spend exceeds cap, the cap'd portion earns at `rule.rate` and the
+// remainder falls back to `baseRate`.
+function earningsOnCategory(
+  spend: number,
+  rule: NormalizedRule | undefined,
+  baseRate: number,
+): number {
+  if (!rule) return spend * baseRate;
+  if (rule.cap_usd_per_year == null) return spend * rule.rate;
+  const inCap = Math.min(spend, rule.cap_usd_per_year);
+  const overCap = Math.max(spend - rule.cap_usd_per_year, 0);
+  return inCap * rule.rate + overCap * baseRate;
+}
+
+const EASE_MULT: Record<string, number> = {
+  easy: 1.0,
+  medium: 0.75,
+  hard: 0.4,
+  coupon_book: 0.2,
+};
+
+// Sum of dedup-trumped perk names already covered by the user's wallet.
+function alreadyCoveredPerks(
+  walletCardIds: string[],
+  db: CardDatabase,
+): Set<string> {
+  const covered = new Set<string>();
+  for (const entry of db.perksDedup) {
+    const intersects = entry.card_ids.some((id) => walletCardIds.includes(id));
+    if (intersects) covered.add(entry.perk.toLowerCase());
+  }
+  return covered;
+}
+
+export function scoreCard(
+  card: Card,
+  userProfile: UserProfile,
+  wallet: WalletCardHeld[],
+  db: CardDatabase,
+  options: ScoringOptions,
+): CardScore {
+  const breakdown: ScoreLineItem[] = [];
+  const walletCards = wallet
+    .map((h) => db.cardById.get(h.card_id))
+    .filter((c): c is Card => Boolean(c));
+  const walletPlus = [...walletCards, card];
+  const walletCardIds = walletCards.map((c) => c.id);
+
+  // Spend impact — best rate per category, before vs after.
+  const spendImpact = {} as Record<SpendCategoryId, { current: number; new: number }>;
+  for (const cat of ALL_CATS) {
+    const cur = bestRateForCategory(cat, walletCards).rate;
+    const nw = bestRateForCategory(cat, walletPlus).rate;
+    spendImpact[cat] = { current: cur, new: nw };
+  }
+
+  // Earnings delta — only the marginal portion this card contributes.
+  const cardNorm = normalizeEarning(card);
+  let earningsDelta = 0;
+  for (const cat of ALL_CATS) {
+    const spend = userProfile.spend_profile[cat] ?? 0;
+    if (spend <= 0) continue;
+    const curRate = spendImpact[cat].current;
+    const newRate = spendImpact[cat].new;
+    if (newRate <= curRate) continue; // no improvement
+    const cardRule = cardNorm.byCat.get(cat);
+    const cardEarnings = earningsOnCategory(spend, cardRule, cardNorm.base);
+    const currentEarnings = spend * curRate;
+    const delta = Math.max(cardEarnings - currentEarnings, 0);
+    if (delta > 0) {
+      earningsDelta += delta;
+      breakdown.push({
+        label: `${labelFor(cat)} $${Math.round(spend).toLocaleString()} × ${(newRate * 100).toFixed(1)}% (was ${(curRate * 100).toFixed(1)}%)`,
+        value: Math.round(delta),
+        kind: "earning",
+      });
+    }
+  }
+
+  // Annual credits — apply ease multiplier in realistic mode.
+  let creditsValue = 0;
+  for (const cr of card.annual_credits) {
+    const face = cr.value_usd ?? 0;
+    if (face <= 0) continue;
+    const mult = options.creditsMode === "realistic" ? (EASE_MULT[cr.ease_of_use] ?? 0.75) : 1;
+    const captured = face * mult;
+    if (captured > 0) {
+      creditsValue += captured;
+      breakdown.push({
+        label: `${cr.name} (${options.creditsMode === "realistic" ? cr.ease_of_use : "face"})`,
+        value: Math.round(captured),
+        kind: "credit",
+      });
+    }
+  }
+
+  // Perks — split into newPerks and duplicatedPerks.
+  const covered = alreadyCoveredPerks(walletCardIds, db);
+  const newPerks: NewPerkOut[] = [];
+  const duplicatedPerks: string[] = [];
+  let perksValue = 0;
+  for (const p of card.ongoing_perks) {
+    const key = p.name.toLowerCase();
+    const isCovered = covered.has(key);
+    const value = p.value_estimate_usd ?? 0;
+    if (isCovered) {
+      duplicatedPerks.push(p.name);
+    } else if (value > 0) {
+      newPerks.push({ name: p.name, value: Math.round(value), note: p.notes ?? undefined });
+      perksValue += value;
+      breakdown.push({
+        label: p.name,
+        value: Math.round(value),
+        kind: "perk",
+      });
+    } else {
+      newPerks.push({ name: p.name, value: "unlocks", note: p.notes ?? undefined });
+    }
+  }
+
+  // Annual fee.
+  const fee = card.annual_fee_usd ?? 0;
+  if (fee > 0) {
+    breakdown.push({
+      label: `Annual fee`,
+      value: -fee,
+      kind: "fee",
+    });
+  }
+
+  const deltaOngoing = Math.round(earningsDelta + creditsValue + perksValue - fee);
+
+  // Year-1 SUB amortized.
+  const sub = card.signup_bonus?.estimated_value_usd ?? 0;
+  const subY1 = sub > 0 ? Math.round((sub * 12) / options.subAmortizeMonths) : 0;
+  const deltaYear1 = deltaOngoing + subY1;
+
+  if (subY1 > 0) {
+    breakdown.push({
+      label: `Sign-up bonus, amortized over ${options.subAmortizeMonths} months`,
+      value: subY1,
+      kind: "sub",
+    });
+  }
+
+  // If we computed nothing meaningful, surface a single placeholder line.
+  if (breakdown.length === 0) {
+    breakdown.push({ label: "Insufficient data", value: 0, kind: "other" });
+  }
+
+  return {
+    deltaOngoing,
+    deltaYear1,
+    breakdown,
+    spendImpact,
+    newPerks,
+    duplicatedPerks,
+  };
+}
+
+function labelFor(cat: SpendCategoryId): string {
+  const map: Record<SpendCategoryId, string> = {
+    groceries: "Groceries",
+    dining: "Dining",
+    gas: "Gas",
+    airfare: "Airfare",
+    hotels: "Hotels",
+    streaming: "Streaming",
+    shopping: "Online shopping",
+    drugstore: "Drugstore",
+    transit: "Transit / rideshare",
+    utilities: "Utilities",
+    home: "Home improvement",
+    other: "Everything else",
+  };
+  return map[cat];
+}
+
+// Re-exported helpers used by the rec panel for the wallet's left column.
+export { bestRateForCategory };

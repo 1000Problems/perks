@@ -7,7 +7,6 @@ import Link from "next/link";
 import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/profile/server";
-import { SPEND_CATEGORIES } from "@/lib/categories";
 import { fmt } from "@/lib/utils/format";
 import type { CreditScoreBand, UserProfile } from "@/lib/profile/types";
 

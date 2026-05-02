@@ -4,7 +4,6 @@
 import postgres, { type Sql } from "postgres";
 
 declare global {
-  // eslint-disable-next-line no-var
   var __perksDb: Sql | undefined;
 }
 

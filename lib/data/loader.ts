@@ -15,11 +15,6 @@ import {
   IssuerRulesSchema,
   PerksDedupEntrySchema,
   DestinationPerkSchema,
-  type Card,
-  type Program,
-  type IssuerRules,
-  type PerksDedupEntry,
-  type DestinationPerk,
 } from "../../scripts/lib/schemas";
 
 const DATA_DIR = join(process.cwd(), "data");

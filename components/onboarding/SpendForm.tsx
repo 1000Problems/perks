@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
 import { SPEND_CATEGORIES } from "@/lib/categories";
-import { useProfile } from "@/lib/profile/client";
+import { useProfile, profileErrorMessage } from "@/lib/profile/client";
 import type { SpendCategoryId, UserProfile } from "@/lib/profile/types";
 import { fmt } from "@/lib/utils/format";
 
@@ -88,7 +88,7 @@ export function SpendForm({ initialProfile, editMode }: Props) {
           </div>
         </div>
         <div style={{ fontSize: 12, color: error ? "var(--neg)" : "var(--ink-3)" }}>
-          {error ? "Couldn’t save — try again" : saving ? "Saving…" : ""}
+          {error ? profileErrorMessage(error) : saving ? "Saving…" : ""}
         </div>
       </div>
 

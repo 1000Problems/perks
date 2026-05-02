@@ -12,6 +12,7 @@ const SIZE_WIDTH: Record<Size, number> = {
 
 interface Props {
   variant?: CardArtVariant;
+  /** @deprecated Card name is no longer rendered on the card face — surrounding UI labels the card. Prop kept for API compat. */
   name?: string;
   issuer?: string;
   size?: Size;
@@ -21,13 +22,14 @@ interface Props {
 
 export function CardArt({
   variant = "art-navy",
-  name,
   issuer,
   size = "md",
   className = "",
   style = {},
 }: Props) {
-  const showLabel = size !== "xs" && size !== "sm";
+  // Hide the wordmark at xs (44px) — there's no room. Everywhere else
+  // the issuer abbreviation reads as a real card's brand mark.
+  const showLabel = size !== "xs" && !!issuer;
   return (
     <div
       className={`card-art ${variant} ${className}`}
@@ -36,7 +38,6 @@ export function CardArt({
       <div className="chip" />
       {showLabel && (
         <div className="label">
-          <span className="name">{name}</span>
           <span>{issuer?.toUpperCase()}</span>
         </div>
       )}

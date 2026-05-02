@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
 import { CardArt } from "@/components/perks/CardArt";
-import { useProfile } from "@/lib/profile/client";
+import { useProfile, profileErrorMessage } from "@/lib/profile/client";
 import { evaluateEligibility } from "@/lib/engine/eligibility";
 import { variantForCard } from "@/lib/cardArt";
 import type { UserProfile, WalletCardHeld } from "@/lib/profile/types";
@@ -26,7 +26,7 @@ const ANCHOR_CARDS_FOR_PRE_CHECK = [
 
 export function CardsForm({ initialProfile, serializedDb, editMode }: Props) {
   const router = useRouter();
-  const { profile, update, flushNow, error } = useProfile(initialProfile);
+  const { profile, update, flushNow, error, errorDetail } = useProfile(initialProfile);
 
   async function go(
     target:
@@ -63,11 +63,34 @@ export function CardsForm({ initialProfile, serializedDb, editMode }: Props) {
 
   const db = useMemo(() => fromSerialized(serializedDb), [serializedDb]);
 
+  // True when the currently-open panel is editing an existing held
+  // card rather than adding a new one. Drives the panel's title +
+  // confirm-button label.
+  const isEditing = openCardId != null && heldIds.has(openCardId);
+
   function addCard(card: Card) {
+    // Defensive: search already filters held cards out of matches, but
+    // if a held card somehow reaches this path, route to edit instead.
+    const existing = profile.cards_held.find((h) => h.card_id === card.id);
+    if (existing) {
+      editHeld(existing);
+      return;
+    }
     setOpenCardId(card.id);
     setOpenMonth(today.getMonth() + 1);
     setOpenYear(today.getFullYear());
     setOpenBonus(true);
+  }
+
+  function editHeld(held: WalletCardHeld) {
+    setOpenCardId(held.card_id);
+    // opened_at is "YYYY-MM-DD" — pull month + year, default to today
+    // if parsing fails so the form is always interactable.
+    const [y, m] = (held.opened_at ?? "").split("-").map(Number);
+    setOpenYear(Number.isFinite(y) && y > 0 ? y : today.getFullYear());
+    setOpenMonth(Number.isFinite(m) && m >= 1 && m <= 12 ? m : today.getMonth() + 1);
+    setOpenBonus(Boolean(held.bonus_received));
+    setQuery("");
   }
 
   function confirmAdd() {
@@ -78,6 +101,8 @@ export function CardsForm({ initialProfile, serializedDb, editMode }: Props) {
       opened_at: opened,
       bonus_received: openBonus,
     };
+    // Filter then append — works for both add and edit because the
+    // filter removes any prior entry for this card_id either way.
     update((prev) => ({
       cards_held: [
         ...prev.cards_held.filter((h) => h.card_id !== openCardId),
@@ -92,6 +117,7 @@ export function CardsForm({ initialProfile, serializedDb, editMode }: Props) {
     update((prev) => ({
       cards_held: prev.cards_held.filter((h) => h.card_id !== cardId),
     }));
+    if (openCardId === cardId) setOpenCardId(null);
   }
 
   return (
@@ -241,9 +267,34 @@ export function CardsForm({ initialProfile, serializedDb, editMode }: Props) {
               </Field>
             </div>
 
-            <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }}>
+            <div
+              style={{
+                marginTop: 16,
+                display: "flex",
+                justifyContent: isEditing ? "space-between" : "flex-end",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              {isEditing && (
+                <button
+                  type="button"
+                  onClick={() => removeHeld(card.id)}
+                  style={{
+                    background: "transparent",
+                    border: 0,
+                    color: "var(--neg)",
+                    fontSize: 12,
+                    cursor: "pointer",
+                    padding: "4px 8px",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  Remove from wallet
+                </button>
+              )}
               <button type="button" className="btn btn-primary" onClick={confirmAdd}>
-                Add to wallet
+                {isEditing ? "Save changes" : "Add to wallet"}
               </button>
             </div>
           </div>
@@ -259,6 +310,7 @@ export function CardsForm({ initialProfile, serializedDb, editMode }: Props) {
             {profile.cards_held.map((h) => {
               const c = cards.find((x) => x.id === h.card_id);
               if (!c) return null;
+              const isOpen = openCardId === h.card_id;
               return (
                 <div
                   key={h.card_id}
@@ -268,34 +320,66 @@ export function CardsForm({ initialProfile, serializedDb, editMode }: Props) {
                     gap: 12,
                     alignItems: "center",
                     padding: "10px 14px",
-                    border: "1px solid var(--rule)",
+                    border: `1px solid ${isOpen ? "var(--ink)" : "var(--rule)"}`,
                     borderRadius: 10,
                     background: "var(--paper)",
                   }}
                 >
                   <CardArt variant={variantForCard(c)} size="sm" />
-                  <div style={{ minWidth: 0 }}>
+                  <button
+                    type="button"
+                    onClick={() => editHeld(h)}
+                    aria-label={`Edit ${c.name}`}
+                    style={{
+                      minWidth: 0,
+                      textAlign: "left",
+                      background: "transparent",
+                      border: 0,
+                      padding: 0,
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      color: "inherit",
+                    }}
+                  >
                     <div style={{ fontSize: 14, fontWeight: 500 }}>{c.name}</div>
                     <div style={{ fontSize: 11.5, color: "var(--ink-3)" }}>
                       {c.issuer} · opened {humanDate(h.opened_at)}
                       {" · "}
                       {h.bonus_received ? "bonus received" : "no bonus yet"}
                     </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeHeld(h.card_id)}
-                    style={{
-                      background: "transparent",
-                      border: 0,
-                      color: "var(--ink-3)",
-                      fontSize: 12,
-                      cursor: "pointer",
-                      padding: "4px 8px",
-                    }}
-                  >
-                    Remove
                   </button>
+                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    <button
+                      type="button"
+                      onClick={() => editHeld(h)}
+                      style={{
+                        background: "transparent",
+                        border: 0,
+                        color: "var(--ink-2)",
+                        fontSize: 12,
+                        cursor: "pointer",
+                        padding: "4px 8px",
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeHeld(h.card_id)}
+                      style={{
+                        background: "transparent",
+                        border: 0,
+                        color: "var(--ink-3)",
+                        fontSize: 12,
+                        cursor: "pointer",
+                        padding: "4px 8px",
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -330,9 +414,27 @@ export function CardsForm({ initialProfile, serializedDb, editMode }: Props) {
         </button>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {error && (
-            <span style={{ fontSize: 12, color: "var(--neg)" }}>
-              Couldn’t save — try again
-            </span>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+              <span style={{ fontSize: 12, color: "var(--neg)" }}>
+                {profileErrorMessage(error)}
+              </span>
+              {errorDetail && (
+                <span
+                  style={{
+                    fontSize: 10.5,
+                    color: "var(--ink-3)",
+                    fontFamily: "var(--font-mono), ui-monospace, monospace",
+                    marginTop: 2,
+                    maxWidth: 420,
+                    textAlign: "right",
+                    overflowWrap: "anywhere",
+                  }}
+                  title={errorDetail}
+                >
+                  {errorDetail}
+                </span>
+              )}
+            </div>
           )}
           {!editMode && (
             <button

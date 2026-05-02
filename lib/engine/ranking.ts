@@ -271,9 +271,6 @@ export function rankCards(
   // Apply filter mode.
   let filtered = visibleRaw;
   switch (options.filter) {
-    case "payself":
-      filtered = visibleRaw.filter((r) => r.score.deltaOngoing > 0);
-      break;
     case "nofee":
       filtered = visibleRaw.filter((r) => (r.card.annual_fee_usd ?? 0) === 0);
       break;

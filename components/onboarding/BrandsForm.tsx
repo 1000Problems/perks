@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
-import { useProfile } from "@/lib/profile/client";
+import { useProfile, profileErrorMessage } from "@/lib/profile/client";
 import type { UserProfile } from "@/lib/profile/types";
 
 interface Props {
@@ -195,7 +195,7 @@ export function BrandsForm({ initialProfile, editMode }: Props) {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {error && (
             <span style={{ fontSize: 12, color: "var(--neg)" }}>
-              Couldn’t save — try again
+              {profileErrorMessage(error)}
             </span>
           )}
           {!editMode && (

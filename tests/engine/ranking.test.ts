@@ -50,13 +50,6 @@ describe("rankCards — filter modes", () => {
       expect(v.card.annual_fee_usd ?? 0).toBeGreaterThanOrEqual(395);
     }
   });
-
-  it("payself: every visible card has deltaOngoing > 0", () => {
-    const r = rankCards(profile(), [], db, baseOptions({ filter: "payself" }));
-    for (const v of r.visible) {
-      expect(v.score.deltaOngoing).toBeGreaterThan(0);
-    }
-  });
 });
 
 describe("rankCards — deny list", () => {

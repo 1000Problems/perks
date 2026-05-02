@@ -18,8 +18,63 @@
 // The app code (lib/db.ts) keeps using the pooled URL.
 
 import postgres, { type Sql } from "postgres";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 let cached: Sql | undefined;
+
+// ── inline dotenv loader ──────────────────────────────────────────────
+//
+// tsx (and bare node) don't auto-load .env files. Next.js does for
+// `next dev` / `next build`, but our migration CLIs run outside Next.
+// To avoid a hard dep on dotenv, we parse .env.local and .env ourselves
+// at module-load time. Existing process.env values always win — we only
+// fill in keys that aren't already set, so explicit `export FOO=...` in
+// the shell still takes priority.
+//
+// .env.local is read first (highest priority among files), then .env.
+// This matches the precedence Next.js uses for client-side rendering.
+
+function parseDotenv(text: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const rawLine of text.split("\n")) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) continue;
+    const eq = line.indexOf("=");
+    if (eq < 0) continue;
+    const key = line.slice(0, eq).trim();
+    let value = line.slice(eq + 1).trim();
+    // Strip surrounding quotes if matched.
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    if (!key) continue;
+    out[key] = value;
+  }
+  return out;
+}
+
+function loadDotenvFiles(): void {
+  const cwd = process.cwd();
+  for (const filename of [".env.local", ".env"]) {
+    const path = resolve(cwd, filename);
+    if (!existsSync(path)) continue;
+    let parsed: Record<string, string>;
+    try {
+      parsed = parseDotenv(readFileSync(path, "utf8"));
+    } catch {
+      continue;
+    }
+    for (const [k, v] of Object.entries(parsed)) {
+      if (!(k in process.env)) process.env[k] = v;
+    }
+  }
+}
+
+loadDotenvFiles();
 
 export function getMigrationDb(): Sql {
   if (cached) return cached;

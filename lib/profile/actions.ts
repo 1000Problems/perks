@@ -29,7 +29,62 @@ const VALID_CREDIT_BANDS: ReadonlyArray<CreditScoreBand> = [
 
 export interface UpdateResult {
   ok: boolean;
-  error?: string;
+  // Stable machine-readable code the client maps to user-facing copy.
+  error?:
+    | "not_authenticated"
+    | "invalid_band"
+    | "card_not_in_catalog"
+    | "duplicate_card"
+    | "missing_table"
+    | "update_failed";
+  // Optional human-readable detail for log/debug. The form shouldn't
+  // display this raw — map `error` to friendly copy instead.
+  detail?: string;
+}
+
+// Walk an error and any chained `cause`/`error_unwrap` properties looking
+// for a Postgres SQLSTATE code. postgres-js sometimes wraps the original
+// PG error inside a transaction failure, which would otherwise hide the
+// code we want to classify on.
+function findPgCode(e: unknown, depth = 0): string | undefined {
+  if (depth > 5 || !e || typeof e !== "object") return undefined;
+  const obj = e as Record<string, unknown>;
+  if (typeof obj.code === "string" && /^[0-9A-Z]{5}$/.test(obj.code)) {
+    return obj.code;
+  }
+  return findPgCode(obj.cause, depth + 1);
+}
+
+function findPgMessage(e: unknown): string {
+  if (!e) return "";
+  if (e instanceof Error) {
+    const detail = (e as Error & { detail?: string }).detail;
+    return detail ? `${e.message} — ${detail}` : e.message;
+  }
+  return String(e);
+}
+
+// Translate Postgres SQLSTATE codes to our stable error union. Anything
+// unknown falls back to generic update_failed.
+function classifyDbError(e: unknown): UpdateResult["error"] {
+  const code = findPgCode(e);
+  if (!code) {
+    // Common case: error message contains the SQLSTATE info but not as
+    // a discrete property. Pattern-match a couple of high-value cases.
+    const msg = findPgMessage(e).toLowerCase();
+    if (/violates foreign key|is not present in table "cards"/i.test(msg)) {
+      return "card_not_in_catalog";
+    }
+    if (/duplicate key value/i.test(msg) || /violates unique constraint/i.test(msg)) {
+      return "duplicate_card";
+    }
+    if (/relation .* does not exist/i.test(msg)) return "missing_table";
+    return "update_failed";
+  }
+  if (code === "23503") return "card_not_in_catalog";
+  if (code === "23505") return "duplicate_card";
+  if (code === "42P01") return "missing_table";
+  return "update_failed";
 }
 
 function dualWriteEnabled(): boolean {
@@ -106,7 +161,7 @@ export async function updateProfile(
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[profile:update] failed:", msg);
-    return { ok: false, error: "update_failed" };
+    return { ok: false, error: classifyDbError(e), detail: msg };
   }
 }
 
@@ -144,7 +199,7 @@ export async function updateUserCard(input: UpdateUserCardInput): Promise<Update
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[profile:update_user_card] failed:", msg);
-    return { ok: false, error: "update_failed" };
+    return { ok: false, error: classifyDbError(e), detail: msg };
   }
 }
 
@@ -179,7 +234,7 @@ export async function updateCreditBand(band: CreditScoreBand): Promise<UpdateRes
     }
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[profile:update_credit_band] failed:", msg);
-    return { ok: false, error: "update_failed" };
+    return { ok: false, error: classifyDbError(e), detail: msg };
   }
 }
 

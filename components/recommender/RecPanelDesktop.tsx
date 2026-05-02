@@ -26,7 +26,6 @@ import { RecHeader, type CreditsMode, type ViewMode } from "./Header";
 
 const FILTER_OPTIONS: { value: RankFilter; label: string }[] = [
   { value: "total", label: "Best total value" },
-  { value: "payself", label: "Pays for itself" },
   { value: "nofee", label: "No annual fee" },
   { value: "premium", label: "Premium tier" },
 ];

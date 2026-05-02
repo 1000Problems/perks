@@ -79,7 +79,7 @@ export interface EligibilityResult {
   note: string;
 }
 
-export type RankFilter = "total" | "payself" | "nofee" | "premium";
+export type RankFilter = "total" | "nofee" | "premium";
 
 export interface RankOptions {
   filter: RankFilter;

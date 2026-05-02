@@ -221,7 +221,139 @@ function collectSeeds(parsed: ParsedFile[]): SeedSets {
       }
     }
   }
+
+  synthesizeStubPrograms(seeds, parsed);
   return seeds;
+}
+
+// ── stub-program synthesis ─────────────────────────────────────────────
+//
+// Two situations create program FK violations on insert:
+//
+//   1. cards_currency_earned_fkey — A card claims `currency_earned: "X"`
+//      but no card markdown anchors program "X" with a programs.json
+//      block. (Common for store cards / cashback cobrand currencies.)
+//
+//   2. card_program_access_program_id_fkey — A card_soul.program_access
+//      entry references a known program id (centurion_lounge_network,
+//      priority_pass_select, fhr, chase_the_edit, etc.) that's not a
+//      currency anyone anchors.
+//
+// Both classes failed silently with the "validate everything as a
+// programs.json anchor" approach. Synthesize stub program rows for any
+// referenced id that isn't already seeded. The schema's program_type
+// enum is wide enough — we map known ids to their natural type and
+// fall back to 'fixed_value' for unknowns.
+
+const SOUL_PROGRAM_TYPE_HINTS: Record<string, string> = {
+  // Lounge networks
+  centurion_lounge_network: "lounge_network",
+  priority_pass_select: "lounge_network",
+  chase_sapphire_lounge_network: "lounge_network",
+  capital_one_lounge_network: "lounge_network",
+  delta_skyclub: "lounge_network",
+  escape_lounges: "lounge_network",
+  airspace_lounges: "lounge_network",
+  plaza_premium_lounges: "lounge_network",
+  // Luxury hotel programs
+  fhr: "luxury_hotel",
+  amex_hotel_collection: "luxury_hotel",
+  chase_the_edit: "luxury_hotel",
+  capital_one_premier_collection: "luxury_hotel",
+  capital_one_lifestyle_collection: "luxury_hotel",
+  citi_hotel_collection: "luxury_hotel",
+  visa_infinite_lhc: "luxury_hotel",
+  visa_signature_lhc: "luxury_hotel",
+  mastercard_luxury_hotels: "luxury_hotel",
+  // Dining programs
+  amex_global_dining_access: "dining",
+  platinum_nights_resy: "dining",
+  capital_one_dining: "dining",
+  // Entertainment / experiences / advisor
+  amex_presale: "entertainment",
+  amex_experiences: "entertainment",
+  capital_one_entertainment: "entertainment",
+  citi_entertainment: "entertainment",
+  mastercard_priceless_cities: "entertainment",
+  // Redemption mechanics (treat as advisor / portal feature)
+  points_boost_redemption: "advisor",
+};
+
+const SOUL_PROGRAM_DISPLAY_NAMES: Record<string, string> = {
+  centurion_lounge_network: "The Centurion Lounge",
+  priority_pass_select: "Priority Pass Select",
+  chase_sapphire_lounge_network: "Chase Sapphire Lounge by The Club",
+  capital_one_lounge_network: "Capital One Lounge",
+  delta_skyclub: "Delta Sky Club",
+  escape_lounges: "Escape Lounges",
+  airspace_lounges: "Airspace Lounges",
+  plaza_premium_lounges: "Plaza Premium Lounges",
+  fhr: "Fine Hotels + Resorts",
+  amex_hotel_collection: "The Hotel Collection",
+  chase_the_edit: "The Edit by Chase Travel",
+  capital_one_premier_collection: "Capital One Premier Collection",
+  capital_one_lifestyle_collection: "Capital One Lifestyle Collection",
+  citi_hotel_collection: "Citi Hotel Collection",
+  visa_infinite_lhc: "Visa Infinite Luxury Hotel Collection",
+  visa_signature_lhc: "Visa Signature Hotel Collection",
+  mastercard_luxury_hotels: "Mastercard Luxury Hotels & Resorts",
+  amex_global_dining_access: "Amex Global Dining Access by Resy",
+  platinum_nights_resy: "Platinum Nights by Resy",
+  capital_one_dining: "Capital One Dining",
+  amex_presale: "Amex Presale Tickets",
+  amex_experiences: "Amex Experiences",
+  capital_one_entertainment: "Capital One Entertainment",
+  citi_entertainment: "Citi Entertainment",
+  mastercard_priceless_cities: "Mastercard Priceless Cities",
+  points_boost_redemption: "Chase Travel Points Boost",
+};
+
+function programTypeFor(id: string): string {
+  return SOUL_PROGRAM_TYPE_HINTS[id] ?? "fixed_value";
+}
+
+function programDisplayNameFor(id: string): string {
+  if (SOUL_PROGRAM_DISPLAY_NAMES[id]) return SOUL_PROGRAM_DISPLAY_NAMES[id];
+  // humanize: "target_circle_rewards" -> "Target Circle Rewards"
+  return id
+    .split("_")
+    .map((s) => (s.length === 0 ? s : s[0].toUpperCase() + s.slice(1)))
+    .join(" ");
+}
+
+function synthesizeStubPrograms(seeds: SeedSets, parsed: ParsedFile[]): void {
+  const referenced = new Set<string>();
+  for (const p of parsed) {
+    if (!p.card) continue;
+    if (p.card.currency_earned) referenced.add(p.card.currency_earned);
+    if (p.soul?.program_access) {
+      for (const pa of p.soul.program_access) referenced.add(pa.program_id);
+    }
+  }
+
+  let stubsCreated = 0;
+  for (const id of referenced) {
+    if (seeds.programs.has(id)) continue;
+    seeds.programs.set(id, {
+      id,
+      name: programDisplayNameFor(id),
+      // ProgramSchema.type is a free-form string; the DB enum will reject
+      // anything outside the program_type enum, so we constrain here.
+      type: programTypeFor(id),
+      issuer: "",
+      earning_cards: [],
+      transfer_partners: [],
+      sweet_spots: [],
+      sources: [],
+    } as Program);
+    seeds.programAnchors.set(id, "<synthesized stub>");
+    stubsCreated++;
+  }
+  if (stubsCreated > 0) {
+    console.log(
+      `  + synthesized ${stubsCreated} stub programs (no programs.json anchor; auto-created from card.currency_earned and card_soul.program_access references)`,
+    );
+  }
 }
 
 // ── upsert helpers (postgres-js) ───────────────────────────────────────
@@ -252,10 +384,11 @@ async function upsertNetworks(seeds: SeedSets): Promise<void> {
 
 async function upsertPrograms(seeds: SeedSets): Promise<void> {
   for (const p of seeds.programs.values()) {
-    const issuerSlug = slugify(p.issuer);
-    // Make sure issuer exists for FK; programs may have an issuer not yet
-    // present if the issuer slug is unusual (e.g., "Chase (for Amazon)").
-    if (!seeds.issuers.has(issuerSlug)) {
+    // Synthesized stub programs (lounge networks, hotel collections,
+    // etc.) carry an empty issuer string. issuer_id is nullable in the
+    // schema, so we just leave it null instead of inventing an issuer.
+    const issuerSlug = p.issuer ? slugify(p.issuer) : null;
+    if (issuerSlug && !seeds.issuers.has(issuerSlug)) {
       await sql`
         insert into issuers (id, display_name)
         values (${issuerSlug}, ${p.issuer})

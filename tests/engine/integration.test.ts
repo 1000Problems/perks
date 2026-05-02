@@ -29,11 +29,11 @@ describe("integration — full engine against real card database", () => {
   });
 
   it("each filter mode returns sensible results", () => {
-    for (const filter of ["total", "payself", "nofee", "premium"] as const) {
+    for (const filter of ["total", "nofee", "premium"] as const) {
       const r = rankCards(fixture, fixture.cards_held, db, opts({ filter }));
-      // Visible list is non-empty for total / payself / nofee. Premium
-      // may be empty depending on what cards are in the data, so we
-      // just assert it's an array.
+      // Visible list is non-empty for total / nofee. Premium may be
+      // empty depending on what cards are in the data, so we just
+      // assert it's an array.
       expect(Array.isArray(r.visible)).toBe(true);
       // Sort invariant: among non-brand-matched cards (the "rest"
       // bucket below pinned cobrand cards), deltaOngoing is monotonically

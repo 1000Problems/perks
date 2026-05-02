@@ -28,7 +28,6 @@ type Tab = "wallet" | "top" | "detail";
 
 const FILTER_OPTIONS: { value: RankFilter; label: string }[] = [
   { value: "total", label: "Total" },
-  { value: "payself", label: "Pay-self" },
   { value: "nofee", label: "No fee" },
   { value: "premium", label: "Premium" },
 ];

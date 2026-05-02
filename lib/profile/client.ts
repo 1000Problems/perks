@@ -7,11 +7,34 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { UserProfile } from "./types";
-import { updateProfile } from "./actions";
+import { updateProfile, type UpdateResult } from "./actions";
 
 const DEBOUNCE_MS = 500;
 
 type Updater = Partial<UserProfile> | ((prev: UserProfile) => Partial<UserProfile>);
+
+export type ProfileErrorCode = NonNullable<UpdateResult["error"]>;
+
+// Map stable error codes to user-facing copy. Forms render this string
+// directly; the underlying SQL message is logged server-side only.
+export function profileErrorMessage(code: ProfileErrorCode | null): string | null {
+  if (!code) return null;
+  switch (code) {
+    case "card_not_in_catalog":
+      return "That card isn't in our catalog yet — try another, or let us know.";
+    case "duplicate_card":
+      return "That card is already in your wallet.";
+    case "missing_table":
+      return "Database isn't fully set up yet — contact support.";
+    case "not_authenticated":
+      return "You're signed out. Refresh and sign in again.";
+    case "invalid_band":
+      return "Pick a valid credit band.";
+    case "update_failed":
+    default:
+      return "Couldn't save — try again.";
+  }
+}
 
 export interface UseProfileApi {
   profile: UserProfile;
@@ -21,13 +44,18 @@ export interface UseProfileApi {
   // form so the next page reads the freshest profile.
   flushNow: () => Promise<void>;
   saving: boolean;
-  error: string | null;
+  error: ProfileErrorCode | null;
+  // Raw SQL message when the server couldn't classify the error. Useful
+  // for triage; the form should keep `error` as the primary signal and
+  // surface this only as supplemental detail.
+  errorDetail: string | null;
 }
 
 export function useProfile(initial: UserProfile): UseProfileApi {
   const [profile, setProfile] = useState<UserProfile>(initial);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ProfileErrorCode | null>(null);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const pendingRef = useRef<Partial<UserProfile> | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -37,9 +65,13 @@ export function useProfile(initial: UserProfile): UseProfileApi {
     if (!payload) return;
     setSaving(true);
     setError(null);
+    setErrorDetail(null);
     const result = await updateProfile(payload);
     setSaving(false);
-    if (!result.ok) setError(result.error ?? "update_failed");
+    if (!result.ok) {
+      setError(result.error ?? "update_failed");
+      setErrorDetail(result.detail ?? null);
+    }
   }, []);
 
   const update = useCallback(
@@ -93,5 +125,5 @@ export function useProfile(initial: UserProfile): UseProfileApi {
     };
   }, [flush]);
 
-  return { profile, update, flushNow, saving, error };
+  return { profile, update, flushNow, saving, error, errorDetail };
 }

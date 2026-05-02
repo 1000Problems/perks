@@ -320,13 +320,71 @@ export function rankCards(
 
   // Sort axis. `total` ranks by overall deltaOngoing (legacy default).
   // `category` ranks by the candidate's marginal delta in a single
-  // spend category. The credit-band haircut applies the same way in
-  // either mode.
+  // spend category. `specialization` filters by program kind/type and
+  // projects the score onto a lens-specific summary number. The credit-
+  // band haircut applies the same way in every mode.
   const sortBy = options.sortBy ?? { kind: "total" };
-  const valueOf = (r: Row): number =>
-    sortBy.kind === "category"
-      ? r.score.spendImpact[sortBy.category]?.delta ?? 0
-      : r.score.deltaOngoing;
+
+  // Specialization filter pass. Applied AFTER the orthogonal `filter`
+  // axis (No annual fee / Premium tier) so the segmented control still
+  // works inside a lens — e.g. "cash specialists with no annual fee".
+  // Cards with `currency_earned: null` (no-rewards builders, secured
+  // cards) are excluded from cash and points lenses; they aren't
+  // specialists in either currency.
+  //
+  // Classification uses BOTH program kind and card category. The
+  // category signal is what catches Citi Double Cash and Citi Custom
+  // Cash — they earn into citi_thankyou (a transferable program) but
+  // are designed and used as cashback cards. We only treat structural
+  // cashback tags as a signal, not the marketing tag `no_af_cashback`
+  // which is also applied to many cobrand cards (e.g. hilton_honors,
+  // marriott_bonvoy_bold) to mean "no fee, gives some rewards."
+  if (sortBy.kind === "specialization" && sortBy.lens !== "perks") {
+    const lens = sortBy.lens;
+    const isCashCategory = (card: Card): boolean =>
+      card.category.some(
+        (c) =>
+          c === "flat_rate_cashback" ||
+          c === "tiered_cashback" ||
+          c === "rotating_5_cashback",
+      );
+    filtered = filtered.filter((r) => {
+      const programId = r.card.currency_earned;
+      if (!programId) return false;
+      const prog = db.programById.get(programId);
+      if (!prog) return false;
+      if (lens === "cash") {
+        // Cash lens: pure cashback programs OR cards explicitly tagged
+        // as cashback in the category array (covers Double Cash etc.).
+        return prog.kind === "cash" || isCashCategory(r.card);
+      }
+      // Points lens: transferable currency, AND not a cashback-tagged
+      // card. Excludes cobrand airline/hotel (not transferable) and
+      // excludes Double-Cash-style cards that happen to earn TY but
+      // belong in the Cash lens.
+      return (
+        prog.kind === "loyalty" &&
+        prog.type === "transferable" &&
+        !isCashCategory(r.card)
+      );
+    });
+  }
+
+  const valueOf = (r: Row): number => {
+    if (sortBy.kind === "category") {
+      return r.score.spendImpact[sortBy.category]?.delta ?? 0;
+    }
+    if (sortBy.kind === "specialization" && sortBy.lens === "perks") {
+      // Net perks: gross perks-and-credits value minus annual fee.
+      // feeOngoing is signed negative, so this is addition. Cards
+      // where the fee exceeds capturable perks rank below no-fee
+      // perk-light cards, which is what we want — Reserve/Platinum
+      // only deserve the top under this lens when their perks justify
+      // the fee for this user's claim profile.
+      return r.score.components.perksOngoing + r.score.components.feeOngoing;
+    }
+    return r.score.deltaOngoing;
+  };
 
   // Sort by a credit-band-adjusted delta — a 670 user gets a Sapphire
   // Reserve down-ranked, but it's still visible. The displayed
@@ -353,11 +411,12 @@ export function rankCards(
   // contain a single card each, so this preserves today's retail
   // behavior exactly.
   //
-  // Skipped under category sort — the user has explicitly chosen a
-  // single category as their ranking axis, which is a stronger signal
-  // than their cobrand affinity.
+  // Skipped under category sort and specialization sort — the user
+  // has explicitly chosen a single ranking axis (a category, or a
+  // cash/points/perks lens), which is a stronger signal than their
+  // cobrand affinity.
   let combined: Row[];
-  if (sortBy.kind === "category") {
+  if (sortBy.kind === "category" || sortBy.kind === "specialization") {
     combined = filtered;
   } else {
     const familyBest = new Map<string, Row>();

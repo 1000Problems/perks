@@ -196,6 +196,183 @@ describe("rankCards — family-best pin", () => {
   });
 });
 
+describe("rankCards — specialization lenses", () => {
+  // High and well-distributed spend so every lens has room to rank
+  // candidates by their normal scoring (otherwise ties dominate and
+  // the comparator becomes ID-order, masking the filter behavior).
+  const richProfile = profile({
+    spend_profile: {
+      groceries: 8000,
+      dining: 6000,
+      gas: 2400,
+      airfare: 3000,
+      hotels: 3000,
+      shopping: 4000,
+      other: 12000,
+    },
+  });
+
+  it("cash lens excludes pure transferable-points cards", () => {
+    const r = rankCards(
+      richProfile,
+      [],
+      db,
+      baseOptions({
+        limit: 200,
+        sortBy: { kind: "specialization", lens: "cash" },
+      }),
+    );
+    const ids = r.visible.map((v) => v.card.id);
+    // Sapphire Preferred / Reserve, Amex Gold / Platinum, Venture X,
+    // Strata Premier — all earn transferable currencies and have no
+    // cashback category tag. Should not appear in the Cash lens.
+    expect(ids).not.toContain("chase_sapphire_preferred");
+    expect(ids).not.toContain("chase_sapphire_reserve");
+    expect(ids).not.toContain("amex_gold");
+    expect(ids).not.toContain("amex_platinum");
+    expect(ids).not.toContain("capital_one_venture_x");
+    expect(ids).not.toContain("citi_strata_premier");
+    // Cobrand cards (airline/hotel currencies) also excluded.
+    expect(ids).not.toContain("hilton_honors_aspire");
+    expect(ids).not.toContain("united_explorer");
+    expect(ids).not.toContain("delta_skymiles_gold");
+  });
+
+  it("cash lens includes cashback-tagged cards even when they earn transferable points", () => {
+    const r = rankCards(
+      richProfile,
+      [],
+      db,
+      baseOptions({
+        limit: 200,
+        sortBy: { kind: "specialization", lens: "cash" },
+      }),
+    );
+    const ids = r.visible.map((v) => v.card.id);
+    // Citi Double Cash earns into citi_thankyou (transferable) but is
+    // marketed and used as a cashback card. Its category array has
+    // "flat_rate_cashback" — that's the signal that pulls it into Cash.
+    expect(ids).toContain("citi_double_cash");
+    // Pure cashback programs (no transfer partners) are also in.
+    expect(ids).toContain("wells_fargo_active_cash");
+    expect(ids).toContain("citi_custom_cash");
+  });
+
+  it("points lens excludes cobrand airline/hotel cards", () => {
+    const r = rankCards(
+      richProfile,
+      [],
+      db,
+      baseOptions({
+        limit: 200,
+        sortBy: { kind: "specialization", lens: "points" },
+      }),
+    );
+    const ids = r.visible.map((v) => v.card.id);
+    // Cobrand cards earn loyalty currency but it's not transferable.
+    expect(ids).not.toContain("hilton_honors_aspire");
+    expect(ids).not.toContain("hilton_honors_surpass");
+    expect(ids).not.toContain("marriott_bonvoy_brilliant");
+    expect(ids).not.toContain("united_explorer");
+    expect(ids).not.toContain("delta_skymiles_gold");
+    expect(ids).not.toContain("delta_skymiles_reserve");
+    // Cashback cards excluded too — Double Cash earns TY but is in Cash.
+    expect(ids).not.toContain("citi_double_cash");
+    expect(ids).not.toContain("citi_custom_cash");
+    expect(ids).not.toContain("wells_fargo_active_cash");
+    // Pure no-rewards / secured cards excluded (currency_earned: null).
+    expect(ids).not.toContain("citi_simplicity");
+  });
+
+  it("points lens includes transferable-points cards", () => {
+    const r = rankCards(
+      richProfile,
+      [],
+      db,
+      baseOptions({
+        limit: 200,
+        sortBy: { kind: "specialization", lens: "points" },
+      }),
+    );
+    const ids = r.visible.map((v) => v.card.id);
+    expect(ids).toContain("chase_sapphire_preferred");
+    expect(ids).toContain("amex_gold");
+    expect(ids).toContain("capital_one_venture_x");
+  });
+
+  it("perks lens sorts by net perks (perksOngoing + feeOngoing)", () => {
+    const r = rankCards(
+      richProfile,
+      [],
+      db,
+      baseOptions({
+        limit: 50,
+        sortBy: { kind: "specialization", lens: "perks" },
+      }),
+    );
+    expect(r.visible.length).toBeGreaterThan(0);
+    // Order is strictly by net-perks descending. Compute the same
+    // projection and verify monotonic ordering.
+    for (let i = 1; i < r.visible.length; i++) {
+      const prev =
+        r.visible[i - 1].score.components.perksOngoing +
+        r.visible[i - 1].score.components.feeOngoing;
+      const curr =
+        r.visible[i].score.components.perksOngoing +
+        r.visible[i].score.components.feeOngoing;
+      // Account for the credit-band haircut, which is a no-op when
+      // userBand is undefined (default profile). Use a tolerant
+      // comparison to absorb floating-point drift.
+      expect(prev + 1e-6).toBeGreaterThanOrEqual(curr);
+    }
+  });
+
+  it("specialization sort releases the brand-affinity pin", () => {
+    // Hilton brand pin would normally pin a Hilton card to position #1
+    // under total sort. Under cash/points/perks, the lens choice is the
+    // ranking axis — pin must release.
+    const p = profile({
+      brands_used: ["Hilton"],
+      spend_profile: { hotels: 4000, dining: 3000, other: 30000 },
+    });
+    // Cash lens excludes Hilton cards entirely (they earn loyalty
+    // hotel currency, not cash) — perfect proof that the filter ran.
+    const cashR = rankCards(
+      p,
+      [],
+      db,
+      baseOptions({
+        limit: 50,
+        sortBy: { kind: "specialization", lens: "cash" },
+      }),
+    );
+    const cashIds = cashR.visible.map((v) => v.card.id);
+    expect(cashIds.find((id) => id.startsWith("hilton_"))).toBeUndefined();
+    // Perks lens has no program filter, so Hilton cards are eligible
+    // — but they should NOT be pinned to #1 just because the user
+    // listed Hilton. The top card is whichever has the highest net
+    // perks value.
+    const perksR = rankCards(
+      p,
+      [],
+      db,
+      baseOptions({
+        limit: 50,
+        sortBy: { kind: "specialization", lens: "perks" },
+      }),
+    );
+    const topNetPerks =
+      perksR.visible[0].score.components.perksOngoing +
+      perksR.visible[0].score.components.feeOngoing;
+    const maxNetPerks = Math.max(
+      ...perksR.visible.map(
+        (v) => v.score.components.perksOngoing + v.score.components.feeOngoing,
+      ),
+    );
+    expect(topNetPerks).toBeCloseTo(maxNetPerks, 6);
+  });
+});
+
 describe("rankCards — sortBy", () => {
   it("omitted sortBy matches { kind: total } order exactly", () => {
     const a = rankCards(profile(), [], db, baseOptions());

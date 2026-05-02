@@ -212,9 +212,34 @@ export type RankFilter = "total" | "nofee" | "premium";
 // candidate's marginal value in a single spend category, sourced from
 // the precomputed `spendImpact[category].delta`. Used by the rec panel
 // when the user picks a category from the Sort-by listbox.
+//
+// `specialization` is a discovery lens layered on top of the engine —
+// not a new scoring algorithm. The lens both filters the candidate set
+// and projects the score onto a different summary number:
+//   - cash:   filter to programs where kind === "cash" OR cards whose
+//             category array includes a structural cashback tag —
+//             flat_rate_cashback, tiered_cashback, rotating_5_cashback
+//             (catches Double Cash / Custom Cash — they earn
+//             transferable ThankYou points but are marketed and used
+//             as cashback). The marketing tag `no_af_cashback` is
+//             explicitly NOT used as a signal because it's applied to
+//             many cobrand cards too;
+//             sort by deltaOngoing.
+//   - points: filter to programs where kind === "loyalty" &&
+//             type === "transferable" AND the card is not cashback-
+//             tagged (cobrand airline/hotel cards excluded by design —
+//             they have their own categories);
+//             sort by deltaOngoing.
+//   - perks:  no program filter; sort by perksOngoing + feeOngoing
+//             (gross perks minus annual fee — feeOngoing is signed
+//             negative, so this is net perks).
+// The brand-pin pass in rankCards is skipped under specialization for
+// the same reason as category sort: an explicit lens choice is a
+// stronger signal than cobrand affinity.
 export type RankSortBy =
   | { kind: "total" }
-  | { kind: "category"; category: SpendCategoryId };
+  | { kind: "category"; category: SpendCategoryId }
+  | { kind: "specialization"; lens: "cash" | "points" | "perks" };
 
 export interface RankOptions {
   filter: RankFilter;

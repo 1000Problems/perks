@@ -46,6 +46,39 @@ function isRankFilter(s: string | null): s is RankFilter {
   return s === "total" || s === "nofee" || s === "premium";
 }
 
+// Sort axis for the rec panel dropdown. Three groups in display order:
+//   "overall"                 → engine `total`
+//   "cash" | "points" | "perks" → engine `specialization` lens
+//   SpendCategoryId           → engine `category`
+type SortValue =
+  | "overall"
+  | "cash"
+  | "points"
+  | "perks"
+  | SpendCategoryId;
+
+type SpecializationLens = "cash" | "points" | "perks";
+
+function isSpecializationLens(s: SortValue): s is SpecializationLens {
+  return s === "cash" || s === "points" || s === "perks";
+}
+
+function isCategorySort(s: SortValue): s is SpendCategoryId {
+  return s !== "overall" && !isSpecializationLens(s);
+}
+
+const SPECIALIZATION_EYEBROW: Record<SpecializationLens, string> = {
+  cash: "cash specialists",
+  points: "points specialists",
+  perks: "perks specialists",
+};
+
+const SPECIALIZATION_EMPTY: Record<SpecializationLens, string> = {
+  cash: "No cash-back specialists match this filter.",
+  points: "No transferable-points cards match this filter.",
+  perks: "No perks specialists match this filter.",
+};
+
 export interface RecPanelDesktopProps {
   profile: UserProfile;
   serializedDb: SerializedDb;
@@ -134,13 +167,10 @@ export function RecPanelDesktop({
     }, 150);
     return () => clearTimeout(t);
   }, [query, filter, pathname, router]);
-  // Category sort — session-only. "overall" maps to the engine's
-  // default { kind: "total" }; otherwise we pass a category sort to
-  // rankCards and swap the per-row headline number for that category's
-  // marginal delta.
-  const [sortCategory, setSortCategory] = useState<SpendCategoryId | "overall">(
-    "overall",
-  );
+  // Sort axis — session-only. "overall" maps to the engine's
+  // default { kind: "total" }. cash/points/perks map to the
+  // specialization lens. SpendCategoryId maps to category sort.
+  const [sortCategory, setSortCategory] = useState<SortValue>("overall");
 
   // Wallet writes go through useProfile so the rec page can mutate the
   // user's held set inline (× on a wallet card, "I have this card" on a
@@ -200,7 +230,9 @@ export function RecPanelDesktop({
       sortBy:
         sortCategory === "overall"
           ? { kind: "total" }
-          : { kind: "category", category: sortCategory },
+          : isSpecializationLens(sortCategory)
+            ? { kind: "specialization", lens: sortCategory }
+            : { kind: "category", category: sortCategory },
     }),
     [
       filter,
@@ -655,7 +687,9 @@ export function RecPanelDesktop({
             <Eyebrow>
               {isSearching
                 ? `${display.length} ${display.length === 1 ? "match" : "matches"} for "${query.trim()}"`
-                : `Top ${display.length} cards to add next`}
+                : isSpecializationLens(sortCategory)
+                  ? `Top ${display.length} ${SPECIALIZATION_EYEBROW[sortCategory]}`
+                  : `Top ${display.length} cards to add next`}
             </Eyebrow>
             <h1
               style={{
@@ -687,9 +721,9 @@ export function RecPanelDesktop({
             <Segmented value={filter} onChange={setFilter} options={FILTER_OPTIONS} />
             <select
               value={sortCategory}
-              onChange={(e) => setSortCategory(e.target.value as SpendCategoryId | "overall")}
-              aria-label="Sort by category"
-              title="Sort by category"
+              onChange={(e) => setSortCategory(e.target.value as SortValue)}
+              aria-label="Sort by"
+              title="Sort by"
               style={{
                 fontSize: 12,
                 padding: "6px 10px",
@@ -702,11 +736,18 @@ export function RecPanelDesktop({
               }}
             >
               <option value="overall">Overall</option>
-              {categoryOptions.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label}
-                </option>
-              ))}
+              <optgroup label="Optimize for">
+                <option value="cash">Cash</option>
+                <option value="points">Points</option>
+                <option value="perks">Perks</option>
+              </optgroup>
+              <optgroup label="Best card for">
+                {categoryOptions.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.label}
+                  </option>
+                ))}
+              </optgroup>
             </select>
           </div>
 
@@ -743,6 +784,8 @@ export function RecPanelDesktop({
                 </>
               ) : sortCategory === "overall" ? (
                 "No cards match this filter. Try another."
+              ) : isSpecializationLens(sortCategory) ? (
+                SPECIALIZATION_EMPTY[sortCategory]
               ) : (
                 (() => {
                   const cat = SPEND_CATEGORIES.find((c) => c.id === sortCategory);
@@ -853,7 +896,7 @@ export function RecPanelDesktop({
                         >
                           {r.why}
                         </div>
-                        {sortCategory !== "overall" && (() => {
+                        {isCategorySort(sortCategory) && (() => {
                           const impact = r.score.spendImpact[sortCategory];
                           const delta = Math.round(impact?.delta ?? 0);
                           const cat = SPEND_CATEGORIES.find((c) => c.id === sortCategory);

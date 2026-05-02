@@ -48,6 +48,32 @@ function isRankFilter(s: string | null): s is RankFilter {
   return s === "total" || s === "nofee" || s === "premium";
 }
 
+// Sort axis for the rec panel dropdown — mirrors RecPanelDesktop. Three
+// groups: "overall" → engine `total`; cash/points/perks → engine
+// `specialization` lens; SpendCategoryId → engine `category`.
+type SortValue =
+  | "overall"
+  | "cash"
+  | "points"
+  | "perks"
+  | SpendCategoryId;
+
+type SpecializationLens = "cash" | "points" | "perks";
+
+function isSpecializationLens(s: SortValue): s is SpecializationLens {
+  return s === "cash" || s === "points" || s === "perks";
+}
+
+function isCategorySort(s: SortValue): s is SpendCategoryId {
+  return s !== "overall" && !isSpecializationLens(s);
+}
+
+const SPECIALIZATION_EMPTY: Record<SpecializationLens, string> = {
+  cash: "No cash-back specialists match this filter.",
+  points: "No transferable-points cards match this filter.",
+  perks: "No perks specialists match this filter.",
+};
+
 export interface RecPanelMobileProps {
   profile: UserProfile;
   serializedDb: SerializedDb;
@@ -124,9 +150,7 @@ export function RecPanelMobile({
   // Category sort — session-only. "overall" → engine default; otherwise
   // pass a category sort and swap the per-row headline number for that
   // category's marginal delta.
-  const [sortCategory, setSortCategory] = useState<SpendCategoryId | "overall">(
-    "overall",
-  );
+  const [sortCategory, setSortCategory] = useState<SortValue>("overall");
   const [tab, setTab] = useState<Tab>("top");
 
   const {
@@ -167,7 +191,9 @@ export function RecPanelMobile({
       sortBy:
         sortCategory === "overall"
           ? { kind: "total" }
-          : { kind: "category", category: sortCategory },
+          : isSpecializationLens(sortCategory)
+            ? { kind: "specialization", lens: sortCategory }
+            : { kind: "category", category: sortCategory },
     }),
     [
       filter,
@@ -572,9 +598,9 @@ export function RecPanelMobile({
               <Segmented value={filter} onChange={setFilter} options={FILTER_OPTIONS} />
               <select
                 value={sortCategory}
-                onChange={(e) => setSortCategory(e.target.value as SpendCategoryId | "overall")}
-                aria-label="Sort by category"
-                title="Sort by category"
+                onChange={(e) => setSortCategory(e.target.value as SortValue)}
+                aria-label="Sort by"
+                title="Sort by"
                 style={{
                   fontSize: 12,
                   padding: "6px 10px",
@@ -587,11 +613,18 @@ export function RecPanelMobile({
                 }}
               >
                 <option value="overall">Overall</option>
-                {categoryOptions.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.label}
-                  </option>
-                ))}
+                <optgroup label="Optimize for">
+                  <option value="cash">Cash</option>
+                  <option value="points">Points</option>
+                  <option value="perks">Perks</option>
+                </optgroup>
+                <optgroup label="Best card for">
+                  {categoryOptions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.label}
+                    </option>
+                  ))}
+                </optgroup>
               </select>
             </div>
             {display.length === 0 ? (
@@ -620,6 +653,8 @@ export function RecPanelMobile({
                   </>
                 ) : sortCategory === "overall" ? (
                   "No cards match this filter."
+                ) : isSpecializationLens(sortCategory) ? (
+                  SPECIALIZATION_EMPTY[sortCategory]
                 ) : (
                   (() => {
                     const cat = SPEND_CATEGORIES.find((c) => c.id === sortCategory);
@@ -719,7 +754,7 @@ export function RecPanelMobile({
                           <div style={{ marginTop: 6, fontSize: 12, color: "var(--ink-2)", lineHeight: 1.4 }}>
                             {r.why}
                           </div>
-                          {sortCategory !== "overall" && (() => {
+                          {isCategorySort(sortCategory) && (() => {
                             const impact = r.score.spendImpact[sortCategory];
                             const delta = Math.round(impact?.delta ?? 0);
                             const cat = SPEND_CATEGORIES.find((c) => c.id === sortCategory);

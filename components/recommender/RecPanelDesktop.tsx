@@ -19,7 +19,8 @@ import type {
   RankOptions,
 } from "@/lib/engine/types";
 import { variantForCard } from "@/lib/cardArt";
-import type { UserProfile } from "@/lib/profile/types";
+import { useProfile, profileErrorMessage } from "@/lib/profile/client";
+import type { UserProfile, WalletCardHeld } from "@/lib/profile/types";
 import { fmt } from "@/lib/utils/format";
 import { DrillIn } from "./DrillIn";
 import { RecHeader, type CreditsMode, type ViewMode } from "./Header";
@@ -40,7 +41,7 @@ export interface RecPanelDesktopProps {
 }
 
 export function RecPanelDesktop({
-  profile,
+  profile: serverProfile,
   serializedDb,
   eligibilityOverrides,
 }: RecPanelDesktopProps) {
@@ -52,19 +53,68 @@ export function RecPanelDesktop({
   const [credits, setCredits] = useState<CreditsMode>("realistic");
   const [filter, setFilter] = useState<RankFilter>("total");
 
+  // Wallet writes go through useProfile so the rec page can mutate the
+  // user's held set inline (× on a wallet card, "I have this card" on a
+  // Considering card). Reads still come from profile.cards_held — same
+  // shape as before, just sourced from local state instead of a server
+  // prop.
+  const {
+    profile,
+    update: updateProfile,
+    flushNow,
+    error: saveError,
+  } = useProfile(serverProfile);
+
+  // Considering — session-only simulation set. Cards in here are
+  // treated as held by the engine for ranking + spend coverage, but
+  // never persist. Refresh = empty.
+  const [consideringIds, setConsideringIds] = useState<string[]>([]);
+  const todayIso = useMemo(
+    () => new Date().toISOString().slice(0, 10),
+    [],
+  );
+  // Engine wallet = held + considering. Considering entries default to
+  // today's date and bonus_received=false, matching "if I got this
+  // card right now" — so velocity rules count them and once-per-life
+  // rules don't false-block.
+  const effectiveWallet: WalletCardHeld[] = useMemo(
+    () => [
+      ...profile.cards_held,
+      ...consideringIds.map((id) => ({
+        card_id: id,
+        opened_at: todayIso,
+        bonus_received: false,
+      })),
+    ],
+    [profile.cards_held, consideringIds, todayIso],
+  );
+
   const rankOptions: RankOptions = useMemo(
     () => ({
       filter,
       scoring: { creditsMode: credits, subAmortizeMonths: 24 },
       limit: 5,
-      eligibilityOverrides: eligibilityOverrides ?? undefined,
+      // Server-precomputed verdicts go stale the moment the user
+      // mutates their wallet — drop them and let the engine recompute
+      // eligibility per-card. Page refresh brings fresh overrides.
+      eligibilityOverrides:
+        consideringIds.length === 0 && profile.cards_held === serverProfile.cards_held
+          ? eligibilityOverrides ?? undefined
+          : undefined,
     }),
-    [filter, credits, eligibilityOverrides],
+    [
+      filter,
+      credits,
+      eligibilityOverrides,
+      consideringIds.length,
+      profile.cards_held,
+      serverProfile.cards_held,
+    ],
   );
 
   const ranked = useMemo(
-    () => rankCards(profile, profile.cards_held, db, rankOptions),
-    [profile, db, rankOptions],
+    () => rankCards(profile, effectiveWallet, db, rankOptions),
+    [profile, effectiveWallet, db, rankOptions],
   );
 
   const [selectedId, setSelectedId] = useState<string | null>(
@@ -74,6 +124,17 @@ export function RecPanelDesktop({
   const selected =
     ranked.visible.find((r) => r.card.id === selectedId) ?? ranked.visible[0];
 
+  // Considering as Card[] for left-panel rendering. Filter out IDs the
+  // catalog doesn't know — defensive against stale state.
+  const consideringCards: Card[] = useMemo(
+    () =>
+      consideringIds
+        .map((id) => db.cardById.get(id))
+        .filter((c): c is Card => Boolean(c)),
+    [consideringIds, db],
+  );
+
+  // Wallet today (held only — considering shown separately).
   const walletCards: Card[] = useMemo(
     () =>
       profile.cards_held
@@ -82,17 +143,68 @@ export function RecPanelDesktop({
     [profile.cards_held, db],
   );
 
-  // Wallet "now" — best-rate per category and net annual value summary.
+  // Spend coverage uses the effective wallet — that's the whole point
+  // of trying a card.
+  const coverageCards = useMemo(
+    () => [...walletCards, ...consideringCards],
+    [walletCards, consideringCards],
+  );
+
+  // ── Wallet actions ────────────────────────────────────────────────
+
+  function tryCard(cardId: string) {
+    setConsideringIds((prev) =>
+      prev.includes(cardId) ? prev : [...prev, cardId],
+    );
+  }
+
+  function untryCard(cardId: string) {
+    setConsideringIds((prev) => prev.filter((id) => id !== cardId));
+  }
+
+  async function promoteToWallet(cardId: string) {
+    const newCard: WalletCardHeld = {
+      card_id: cardId,
+      opened_at: todayIso,
+      bonus_received: false,
+    };
+    // Optimistic — pull out of considering, drop into held. Force a
+    // sync save so we know if it landed; revert on failure.
+    setConsideringIds((prev) => prev.filter((id) => id !== cardId));
+    updateProfile((prev) => ({
+      cards_held: [
+        ...prev.cards_held.filter((h) => h.card_id !== cardId),
+        newCard,
+      ],
+    }));
+    const ok = await flushNow();
+    if (!ok) {
+      updateProfile((prev) => ({
+        cards_held: prev.cards_held.filter((h) => h.card_id !== cardId),
+      }));
+      setConsideringIds((prev) => [...prev, cardId]);
+    }
+  }
+
+  function removeFromWallet(cardId: string) {
+    updateProfile((prev) => ({
+      cards_held: prev.cards_held.filter((h) => h.card_id !== cardId),
+    }));
+  }
+
+  // Wallet math uses the effective wallet (held + considering) so the
+  // user sees how the simulation would change their picture. The
+  // section header makes it clear when Considering is contributing.
   const walletBestRates = useMemo(() => {
     const out: Record<SpendCategoryId, { rate: number; from: string }> = {} as Record<
       SpendCategoryId,
       { rate: number; from: string }
     >;
     for (const c of SPEND_CATEGORIES) {
-      out[c.id] = bestRateForCategory(c.id, walletCards, db);
+      out[c.id] = bestRateForCategory(c.id, coverageCards, db);
     }
     return out;
-  }, [walletCards]);
+  }, [coverageCards, db]);
 
   const walletEarned = useMemo(() => {
     let total = 0;
@@ -103,13 +215,13 @@ export function RecPanelDesktop({
     return total;
   }, [profile.spend_profile, walletBestRates]);
 
-  const walletFees = walletCards.reduce((acc, c) => acc + (c.annual_fee_usd ?? 0), 0);
+  const walletFees = coverageCards.reduce((acc, c) => acc + (c.annual_fee_usd ?? 0), 0);
   const walletNet = Math.round(walletEarned - walletFees);
 
   // Held perks, deduplicated by name (first card wins for the source label).
   const heldPerks: { perk: string; from: string }[] = useMemo(() => {
     const seen = new Map<string, string>();
-    for (const c of walletCards) {
+    for (const c of coverageCards) {
       for (const p of c.ongoing_perks) {
         if (!seen.has(p.name)) seen.set(p.name, c.name);
       }
@@ -117,7 +229,7 @@ export function RecPanelDesktop({
     return Array.from(seen.entries())
       .slice(0, 8)
       .map(([perk, from]) => ({ perk, from }));
-  }, [walletCards]);
+  }, [coverageCards]);
 
   return (
     <div
@@ -185,7 +297,15 @@ export function RecPanelDesktop({
                 </Eyebrow>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {walletCards.map((c) => (
-                    <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div
+                      key={c.id}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "auto 1fr auto",
+                        alignItems: "center",
+                        gap: 10,
+                      }}
+                    >
                       <CardArt variant={variantForCard(c)} size="sm" issuer={c.issuer} network={c.network} />
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontSize: 12.5, fontWeight: 500 }}>{c.name}</div>
@@ -193,13 +313,146 @@ export function RecPanelDesktop({
                           {c.issuer} · {(c.annual_fee_usd ?? 0) === 0 ? "No fee" : "$" + c.annual_fee_usd + "/yr"}
                         </div>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => removeFromWallet(c.id)}
+                        aria-label={`Remove ${c.name}`}
+                        title="Remove from wallet"
+                        style={{
+                          background: "transparent",
+                          border: 0,
+                          color: "var(--ink-3)",
+                          fontSize: 14,
+                          cursor: "pointer",
+                          padding: "2px 6px",
+                          lineHeight: 1,
+                          fontFamily: "inherit",
+                        }}
+                      >
+                        ×
+                      </button>
                     </div>
                   ))}
                 </div>
+                {saveError && (
+                  <div
+                    style={{
+                      marginTop: 8,
+                      fontSize: 11,
+                      color: "var(--neg)",
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    {profileErrorMessage(saveError)}
+                  </div>
+                )}
               </div>
 
+              {consideringCards.length > 0 && (
+                <div style={{ marginTop: 28 }}>
+                  <Eyebrow style={{ marginBottom: 6 }}>
+                    Considering · {consideringCards.length}{" "}
+                    {consideringCards.length === 1 ? "card" : "cards"}
+                  </Eyebrow>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: "var(--ink-3)",
+                      marginBottom: 10,
+                      lineHeight: 1.45,
+                    }}
+                  >
+                    Treated as if held — recs and coverage update live.
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {consideringCards.map((c) => (
+                      <div
+                        key={c.id}
+                        style={{
+                          padding: "10px 12px",
+                          border: "1px dashed var(--rule-2)",
+                          borderRadius: 10,
+                          background: "transparent",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 8,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "auto 1fr",
+                            alignItems: "center",
+                            gap: 10,
+                          }}
+                        >
+                          <CardArt
+                            variant={variantForCard(c)}
+                            size="sm"
+                            issuer={c.issuer}
+                            network={c.network}
+                          />
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: 12.5, fontWeight: 500 }}>{c.name}</div>
+                            <div style={{ fontSize: 11, color: "var(--ink-3)" }}>
+                              {c.issuer} ·{" "}
+                              {(c.annual_fee_usd ?? 0) === 0
+                                ? "No fee"
+                                : "$" + c.annual_fee_usd + "/yr"}
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          <button
+                            type="button"
+                            className="btn"
+                            style={{ flex: 1, justifyContent: "center", fontSize: 11.5 }}
+                            onClick={() => promoteToWallet(c.id)}
+                          >
+                            I have this card
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => untryCard(c.id)}
+                            aria-label={`Stop considering ${c.name}`}
+                            title="Stop considering"
+                            style={{
+                              background: "transparent",
+                              border: "1px solid var(--rule)",
+                              borderRadius: 8,
+                              color: "var(--ink-3)",
+                              fontSize: 13,
+                              cursor: "pointer",
+                              padding: "0 10px",
+                              fontFamily: "inherit",
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div style={{ marginTop: 28 }}>
-                <Eyebrow style={{ marginBottom: 10 }}>Spend coverage</Eyebrow>
+                <Eyebrow style={{ marginBottom: 10 }}>
+                  Spend coverage
+                  {consideringCards.length > 0 && (
+                    <span
+                      style={{
+                        marginLeft: 8,
+                        color: "var(--ink-4)",
+                        fontWeight: 400,
+                        textTransform: "none",
+                        letterSpacing: 0,
+                      }}
+                    >
+                      · with Considering
+                    </span>
+                  )}
+                </Eyebrow>
                 <div style={{ display: "flex", flexDirection: "column" }}>
                   {SPEND_CATEGORIES.map((c) => (
                     <HeatRow
@@ -365,18 +618,39 @@ export function RecPanelDesktop({
                         {subVal > 0 && <span>SUB ≈ ${Math.round(subVal)}</span>}
                       </div>
                     </div>
-                    <div style={{ textAlign: "right" }}>
-                      <Money value={delta} sign size="md" />
-                      <div
-                        style={{
-                          fontSize: 11,
-                          color: "var(--ink-3)",
-                          marginTop: 4,
-                          fontFamily: "var(--font-mono), ui-monospace, monospace",
+                    <div
+                      style={{
+                        textAlign: "right",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-end",
+                        gap: 8,
+                      }}
+                    >
+                      <div>
+                        <Money value={delta} sign size="md" />
+                        <div
+                          style={{
+                            fontSize: 11,
+                            color: "var(--ink-3)",
+                            marginTop: 4,
+                            fontFamily: "var(--font-mono), ui-monospace, monospace",
+                          }}
+                        >
+                          {view === "ongoing" ? "NET / YEAR" : "NET, YEAR 1"}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn"
+                        style={{ fontSize: 11.5, padding: "4px 12px" }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          tryCard(r.card.id);
                         }}
                       >
-                        {view === "ongoing" ? "NET / YEAR" : "NET, YEAR 1"}
-                      </div>
+                        Try
+                      </button>
                     </div>
                   </li>
                 );
@@ -414,6 +688,9 @@ export function RecPanelDesktop({
               view={view}
               userProfile={profile}
               db={db}
+              isConsidering={consideringIds.includes(selected.card.id)}
+              onTry={tryCard}
+              onUntry={untryCard}
             />
           ) : (
             <p style={{ fontSize: 13, color: "var(--ink-3)" }}>Select a card to see the breakdown.</p>

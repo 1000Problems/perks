@@ -17,6 +17,11 @@ interface Props {
   view: ViewMode;
   userProfile: UserProfile;
   db: CardDatabase;
+  // True when the recommendation is already in the Considering set —
+  // the action button reads "Stop considering" instead of "Try".
+  isConsidering: boolean;
+  onTry: (cardId: string) => void;
+  onUntry: (cardId: string) => void;
 }
 
 const TRIP_KEY_NORMALIZERS = (s: string) =>
@@ -38,7 +43,15 @@ function findDestination(
   return null;
 }
 
-export function DrillIn({ recommendation: r, view, userProfile, db }: Props) {
+export function DrillIn({
+  recommendation: r,
+  view,
+  userProfile,
+  db,
+  isConsidering,
+  onTry,
+  onUntry,
+}: Props) {
   const { card, score, eligibility } = r;
   const delta = view === "ongoing" ? score.deltaOngoing : score.deltaYear1;
   const [mathOpen, setMathOpen] = useState(false);
@@ -255,27 +268,38 @@ export function DrillIn({ recommendation: r, view, userProfile, db }: Props) {
         )}
       </Section>
 
-      <div style={{ marginTop: 22, display: "flex", gap: 8 }}>
-        <button
-          className="btn btn-primary"
-          style={{ flex: 1, justifyContent: "center", opacity: 0.55, cursor: "not-allowed" }}
-          type="button"
-          disabled
-          title="Coming soon"
-          aria-disabled="true"
+      <div style={{ marginTop: 22, display: "flex", flexDirection: "column", gap: 6 }}>
+        {isConsidering ? (
+          <button
+            className="btn"
+            style={{ justifyContent: "center" }}
+            type="button"
+            onClick={() => onUntry(card.id)}
+          >
+            Stop considering
+          </button>
+        ) : (
+          <button
+            className="btn btn-primary"
+            style={{ justifyContent: "center" }}
+            type="button"
+            onClick={() => onTry(card.id)}
+          >
+            Try in wallet
+          </button>
+        )}
+        <span
+          style={{
+            fontSize: 11,
+            color: "var(--ink-3)",
+            textAlign: "center",
+            lineHeight: 1.5,
+          }}
         >
-          Add to comparison
-        </button>
-        <button
-          className="btn"
-          type="button"
-          disabled
-          style={{ opacity: 0.55, cursor: "not-allowed" }}
-          title="Coming soon"
-          aria-disabled="true"
-        >
-          Save for later
-        </button>
+          Trying simulates having this card so you can see how the rest of
+          the rec list shifts. Doesn&apos;t save until you click{" "}
+          <em>I have this card</em>.
+        </span>
       </div>
     </div>
   );

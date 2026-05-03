@@ -13,6 +13,11 @@ export interface ParsedCard {
   perksDedup: unknown[] | null;
   destinationPerks: Record<string, unknown> | null;
   notes: string;
+  // Money-find content per cards/{id}.md. Both optional. Parsed as
+  // unknown[] (or null when absent) and validated downstream against
+  // PlaySchema / ColdPromptSchema in scripts/build-card-db.ts.
+  cardPlays: unknown[] | null;
+  coldPrompts: unknown[] | null;
   soul: {
     credit_score: unknown | null;
     annual_credits: unknown | null;
@@ -31,6 +36,9 @@ const SECTION_KEYS = {
   perksDedup: /^## perks_dedup\.json/,
   destinationPerks: /^## destination_perks\.json/,
   notes: /^## RESEARCH_NOTES/,
+  // Money-find page content (additive — both optional)
+  cardPlays: /^## card_plays\b/,
+  coldPrompts: /^## cold_prompts\b/,
   // Soul sections (additive — all optional)
   soulCreditScore: /^## card_soul\.credit_score\b/,
   soulAnnualCredits: /^## card_soul\.annual_credits\b/,
@@ -95,6 +103,9 @@ export function parseCardMarkdown(filename: string, md: string): ParsedCard {
   let perksDedup: unknown[] | null;
   let destinationPerks: Record<string, unknown> | null;
 
+  let cardPlays: unknown[] | null;
+  let coldPrompts: unknown[] | null;
+
   try {
     card = extractJson(sections.card);
     program = extractJson(sections.program);
@@ -106,6 +117,10 @@ export function parseCardMarkdown(filename: string, md: string): ParsedCard {
       destRaw && typeof destRaw === "object" && !Array.isArray(destRaw)
         ? (destRaw as Record<string, unknown>)
         : null;
+    const playsRaw = extractJson(sections.cardPlays);
+    cardPlays = Array.isArray(playsRaw) ? playsRaw : null;
+    const promptsRaw = extractJson(sections.coldPrompts);
+    coldPrompts = Array.isArray(promptsRaw) ? promptsRaw : null;
   } catch (e) {
     throw new Error(`${filename}: ${(e as Error).message}`);
   }
@@ -136,6 +151,8 @@ export function parseCardMarkdown(filename: string, md: string): ParsedCard {
     perksDedup,
     destinationPerks,
     notes: (sections.notes ?? "").trim(),
+    cardPlays,
+    coldPrompts,
     soul: {
       credit_score: soulCreditScore,
       annual_credits: soulAnnualCredits,

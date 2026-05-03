@@ -1,23 +1,20 @@
 "use client";
 
-// CardHero — the per-card hero page.
+// CardHero — money-find page composition.
 //
 // Layout (top → bottom):
 //   1. Back link to /wallet/edit
-//   2. Identity strip + 3-pillar found-money tile
-//   3. Live deadlines strip (when applicable)
-//   4. Earning multipliers grid
-//   5. Statement credits + ongoing perks
-//   6. Transfer partners (if program has them)
-//   7. Sweet spots (if program has them)
-//   8. Sign-up bonus + issuer rules
-//   9. Signals editor (the cluster stack)
+//   2. Live deadlines strip (when applicable)
+//   3. Identity strip — card art + name + AF + currency
+//   4. HeroAdaptive — cold/warm/hot based on data depth
+//   5. CatalogGroup × N — Hotels, Airlines, Travel-services, Shopping, Cash, Niche
+//   6. MechanicsZone — calendar-driven items only
+//   7. CrossCardTile — gated until ≥5 catalog answers
+//   8. ManageCardDisclosure — wraps SignalsEditor (opening date, AU count, etc.)
 //
 // Two scenarios:
-//   - Edit existing held card: hydrate from initialHeld, save patches via
-//     server actions with debounce.
-//   - Add new card (?new=1): start with a draft held row, persist on
-//     "Add card" click.
+//   - Edit existing held card: hydrate from initialHeld; persist patches via debounced server actions.
+//   - Add new card (?new=1): start from a draft held row; persist on "Add card" click in SignalsEditor.
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -26,27 +23,32 @@ import type { Route } from "next";
 import { CardArt } from "@/components/perks/CardArt";
 import { variantForCard } from "@/lib/cardArt";
 import { fromSerialized, type SerializedDb } from "@/lib/data/serialized";
+import type { PlayGroupId } from "@/lib/data/loader";
 import type {
   CardPlayState,
   UserProfile,
   WalletCardHeld,
 } from "@/lib/profile/types";
-import { computeFoundMoneyV2 } from "@/lib/engine/foundMoney";
 import {
   updateUserCard,
   updateCardPlayState,
 } from "@/lib/profile/actions";
 import { fmt } from "@/lib/utils/format";
-import { FoundMoneyTile } from "./FoundMoneyTile";
-import { DeadlinesStrip } from "./DeadlinesStrip";
-import { SignalsEditor, type CardPatch } from "./SignalsEditor";
 import {
-  EarningGrid,
-  CreditsAndPerks,
-  TransferPartners,
-  SweetSpots,
-  IssuerRulesSection,
-} from "./HeroSections";
+  ALL_GROUPS,
+  findsByGroup,
+  isGroupSkipped,
+  scoreFinds,
+  type FindStatus,
+} from "@/lib/engine/moneyFind";
+import { deriveHeroState } from "@/lib/engine/heroState";
+import { DeadlinesStrip } from "./DeadlinesStrip";
+import { HeroAdaptive } from "./HeroAdaptive";
+import { CatalogGroup } from "./CatalogGroup";
+import { MechanicsZone } from "./MechanicsZone";
+import { CrossCardTile } from "./CrossCardTile";
+import { ManageCardDisclosure } from "./ManageCardDisclosure";
+import { SignalsEditor, type CardPatch } from "./SignalsEditor";
 
 interface Props {
   cardId: string;
@@ -58,6 +60,13 @@ interface Props {
 }
 
 const DEBOUNCE_MS = 500;
+
+const FIND_STATUS_TO_PLAY: Record<FindStatus, CardPlayState["state"]> = {
+  using: "got_it",
+  going_to: "want_it",
+  skip: "skip",
+  unset: "unset",
+};
 
 export function CardHero({
   cardId,
@@ -71,9 +80,9 @@ export function CardHero({
   const db = useMemo(() => fromSerialized(serializedDb), [serializedDb]);
   const card = db.cardById.get(cardId);
 
-  // Bootstrap held state. For new-card mode (Scenario 1) we initialize a
-  // sensible draft — opened this month, bonus received, status active.
   const today = useMemo(() => new Date(), []);
+  const todayIso = today.toISOString().slice(0, 10);
+
   const [held, setHeld] = useState<WalletCardHeld>(() => {
     if (initialHeld) return initialHeld;
     const m = String(today.getMonth() + 1).padStart(2, "0");
@@ -95,10 +104,7 @@ export function CardHero({
     const patch = pendingRef.current;
     pendingRef.current = {};
     if (Object.keys(patch).length === 0) return true;
-    if (isNew) {
-      // For drafts, accumulate locally; final write happens on Save.
-      return true;
-    }
+    if (isNew) return true;
     const result = await updateUserCard({
       card_id: cardId,
       status: "held",
@@ -133,29 +139,66 @@ export function CardHero({
     queuePatch(patch);
   }
 
-  function handlePlayStateChange(
+  function writePlayState(
     playId: string,
-    patch: { state: CardPlayState["state"]; claimed_at?: string | null },
+    state: CardPlayState["state"],
+    extras: { claimed_at?: string | null; notes?: string | null } = {},
   ) {
     setPlayState((prev) => {
       const idx = prev.findIndex((p) => p.play_id === playId);
       const next: CardPlayState = {
         card_id: cardId,
         play_id: playId,
-        state: patch.state,
+        state,
       };
-      if (patch.claimed_at) next.claimed_at = patch.claimed_at;
+      if (extras.claimed_at) next.claimed_at = extras.claimed_at;
+      if (extras.notes) next.notes = extras.notes;
+      if (state === "unset") {
+        return idx >= 0 ? prev.filter((_, i) => i !== idx) : prev;
+      }
       return idx >= 0
         ? prev.map((p, i) => (i === idx ? next : p))
         : [...prev, next];
     });
     if (!isNew) {
       void updateCardPlayState(cardId, playId, {
-        state: patch.state,
-        claimed_at: patch.claimed_at ?? undefined,
+        state,
+        claimed_at: extras.claimed_at ?? undefined,
+        notes: extras.notes ?? undefined,
       });
     }
   }
+
+  function handleMarkFind(playId: string, status: FindStatus) {
+    const dbState = FIND_STATUS_TO_PLAY[status];
+    const claimed_at =
+      status === "using" ? todayIso : null;
+    writePlayState(playId, dbState, { claimed_at });
+  }
+
+  function handleAnswerColdPrompt(promptId: string, answer: string) {
+    writePlayState(`cold:${promptId}`, "got_it", { notes: answer });
+  }
+
+  function handleToggleGroupSkip(group: PlayGroupId) {
+    const playId = `group:${group}`;
+    const currentlySkipped = isGroupSkipped(playState, group);
+    writePlayState(playId, currentlySkipped ? "unset" : "skip");
+  }
+
+  function handleProbeClick(promptId: string) {
+    // Scroll to the cold prompt in the Hero region.
+    const el = document.querySelector(
+      `.cold-prompt[data-prompt-id="${promptId}"]`,
+    );
+    if (el && "scrollIntoView" in el) {
+      (el as HTMLElement).scrollIntoView({ behavior: "smooth", block: "center" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
+  // ── persistence on Save / Cancel / Remove for the SignalsEditor ────
 
   async function handleSave() {
     if (timerRef.current) {
@@ -163,7 +206,6 @@ export function CardHero({
       timerRef.current = null;
     }
     if (isNew) {
-      // First save — INSERT the held row with all the in-memory fields.
       await updateUserCard({
         card_id: cardId,
         status: "held",
@@ -177,12 +219,12 @@ export function CardHero({
         ...(held.activity_threshold_met != null ? { activity_threshold_met: held.activity_threshold_met } : {}),
         ...(held.card_status_v2 != null ? { card_status_v2: held.card_status_v2 } : {}),
       });
-      // Persist any play-state we accumulated locally.
       await Promise.all(
         playState.map((p) =>
           updateCardPlayState(cardId, p.play_id, {
             state: p.state,
             claimed_at: p.claimed_at,
+            notes: p.notes,
           }),
         ),
       );
@@ -201,10 +243,39 @@ export function CardHero({
     await updateUserCard({
       card_id: cardId,
       status: "closed_long_ago",
-      closed_at: new Date().toISOString().slice(0, 10),
+      closed_at: todayIso,
     });
     router.push("/wallet/edit" as Route);
   }
+
+  // ── derived data for rendering ─────────────────────────────────────
+
+  const heroSummary = useMemo(
+    () => (card ? deriveHeroState(card, playState) : null),
+    [card, playState],
+  );
+
+  const finds = useMemo(
+    () => (card ? scoreFinds(card, profile, playState, db, todayIso) : []),
+    [card, profile, playState, db, todayIso],
+  );
+
+  const groupedFinds = useMemo(() => findsByGroup(finds), [finds]);
+
+  const topFinds = useMemo(
+    () => [...finds].filter((f) => f.visible).sort((a, b) => b.score - a.score),
+    [finds],
+  );
+
+  const coldAnswers = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const p of playState) {
+      if (p.play_id.startsWith("cold:") && p.state === "got_it") {
+        map[p.play_id.slice("cold:".length)] = p.notes ?? "";
+      }
+    }
+    return map;
+  }, [playState]);
 
   // ── render ─────────────────────────────────────────────────────────
 
@@ -225,7 +296,6 @@ export function CardHero({
   }
 
   const fee = card.annual_fee_usd ?? 0;
-  const fm = computeFoundMoneyV2(card, held, profile, db);
 
   return (
     <main className="card-hero-page">
@@ -250,43 +320,70 @@ export function CardHero({
             {card.network ?? ""}
             {card.network ? " · " : ""}
             {fee === 0 ? "No annual fee" : `${fmt.usd(fee)}/yr annual fee`}
-            {card.currency_earned ? ` · earns ${prettyProgram(card.currency_earned, db)}` : ""}
+            {card.currency_earned
+              ? ` · earns ${db.programById.get(card.currency_earned)?.name ?? card.currency_earned}`
+              : ""}
           </div>
           {isNew && (
             <div className="hero-new-badge">
-              Adding to your wallet — fill in details below and save.
+              Adding to your wallet — fill in below and save.
             </div>
           )}
         </div>
       </header>
 
-      <div className="card-hero-fm">
-        <FoundMoneyTile value={fm} />
-      </div>
+      {heroSummary && (
+        <HeroAdaptive
+          summary={heroSummary}
+          coldPrompts={card.cold_prompts ?? []}
+          coldAnswers={coldAnswers}
+          topFinds={topFinds}
+          onAnswerColdPrompt={handleAnswerColdPrompt}
+        />
+      )}
 
-      <EarningGrid card={card} />
-      <CreditsAndPerks card={card} />
-      <TransferPartners card={card} db={db} />
-      <SweetSpots card={card} db={db} />
-      <IssuerRulesSection card={card} db={db} />
+      {ALL_GROUPS.map((group) => {
+        const groupFinds = groupedFinds.get(group) ?? [];
+        if (groupFinds.length === 0) return null;
+        return (
+          <CatalogGroup
+            key={group}
+            group={group}
+            finds={groupFinds}
+            skipped={isGroupSkipped(playState, group)}
+            onToggleGroupSkip={() => handleToggleGroupSkip(group)}
+            onMarkFind={handleMarkFind}
+            onProbeClick={handleProbeClick}
+          />
+        );
+      })}
 
-      <SignalsEditor
+      <MechanicsZone card={card} held={held} today={today} />
+
+      <CrossCardTile
         card={card}
-        held={held}
-        profile={profile}
-        db={db}
-        playState={playState}
-        isNew={isNew}
-        onPatch={handlePatch}
-        onPlayStateChange={handlePlayStateChange}
-        onCancel={handleCancel}
-        onRemove={handleRemove}
-        onSave={handleSave}
+        catalogAnswered={heroSummary?.catalogAnswered ?? 0}
       />
+
+      <ManageCardDisclosure>
+        <SignalsEditor
+          card={card}
+          held={held}
+          profile={profile}
+          db={db}
+          playState={playState}
+          isNew={isNew}
+          onPatch={handlePatch}
+          onPlayStateChange={(playId, state) =>
+            writePlayState(playId, state.state, {
+              claimed_at: state.claimed_at,
+            })
+          }
+          onCancel={handleCancel}
+          onRemove={handleRemove}
+          onSave={handleSave}
+        />
+      </ManageCardDisclosure>
     </main>
   );
-}
-
-function prettyProgram(programId: string, db: ReturnType<typeof fromSerialized>): string {
-  return db.programById.get(programId)?.name ?? programId;
 }

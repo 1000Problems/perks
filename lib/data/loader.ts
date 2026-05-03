@@ -109,4 +109,8 @@ export type {
   IssuerRules,
   PerksDedupEntry,
   DestinationPerk,
+  Play,
+  PlayGroupId,
+  PlayQuestionId,
+  ColdPrompt,
 } from "../../scripts/lib/schemas";

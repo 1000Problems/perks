@@ -61,6 +61,115 @@ const OngoingPerk = z.object({
   notes: z.string().nullable().optional(),
 });
 
+// ── card_plays: money-find content for the per-card hero page ──────────
+//
+// Each entry is a single value-extraction opportunity rendered as a
+// MoneyFindRow on /wallet/cards/[id]. The page groups rows by `group`,
+// ranks them per-user via lib/engine/moneyFind.ts, and renders a
+// tristate question whose label varies by `question` type.
+
+const PlayGroup = z.enum([
+  "hotels",
+  "airlines",
+  "travel_services",   // car rentals, lounges, trip protections, FX
+  "shopping",          // online portals, gift cards, brand multipliers
+  "cash",              // earning multipliers, pooling, cash-out plays
+  "niche",             // tax-payment, Curve hack, sharing-window, retention
+]);
+
+const PlayValueModel = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("multiplier_on_category"),
+    spend_category: z.enum([
+      "groceries", "dining", "gas", "airfare", "hotels",
+      "streaming", "shopping", "drugstore", "transit",
+      "utilities", "home", "other",
+    ]),
+    pts_per_dollar: z.number(),
+    cap_usd_per_year: z.number().nullable().optional(),
+  }),
+  z.object({
+    kind: z.literal("fixed_credit"),
+    value_usd: z.number(),
+    period: z.enum(["calendar_year", "anniversary_year", "monthly", "quarterly", "per_stay"]),
+    requires_signal_id: z.string().nullable().optional(),
+  }),
+  z.object({
+    kind: z.literal("transfer_redemption"),
+    partner_program: z.string(),
+    points_one_way: z.number(),
+    cash_equiv_usd_low: z.number(),
+    cash_equiv_usd_high: z.number(),
+    destination_signal: z.string().nullable().optional(),
+    surcharges_usd: z.number().nullable().optional(),
+  }),
+  z.object({
+    kind: z.literal("protection_coverage"),
+    max_value_usd: z.number(),
+    period: z.enum(["per_trip", "per_claim", "annual"]),
+    trigger_question: z.string(),
+  }),
+  z.object({
+    kind: z.literal("system_mechanic"),
+    note: z.string(),
+  }),
+  z.object({
+    kind: z.literal("niche_play"),
+    estimated_annual_value_usd: z.number().nullable().optional(),
+    risk_tier: z.enum(["green", "yellow"]).default("green"),
+  }),
+]);
+
+// Item-question style — drives the tristate label above the chips.
+// All groups use the same three states (using / going_to / skip) but
+// the displayed question varies by item type.
+const PlayQuestion = z.enum([
+  "spending_here",          // multipliers: "Spending here regularly?"
+  "claimed_this_year",      // credits: "Claimed this year?"
+  "have_done_this",         // sweet spots / niche: "Done this redemption?"
+  "have_filed_claim",       // protections: "Happen to you / filed a claim?"
+  "set_up",                 // mechanics: "Set this up / done?"
+]);
+
+export const PlaySchema = z.object({
+  id: z.string(),
+  group: PlayGroup,
+  headline: z.string(),
+  personalization_template: z.string(),
+  value_model: PlayValueModel,
+  question: PlayQuestion,
+  prerequisites: z.object({
+    cards_held_any_of: z.array(z.string()).default([]),
+    cards_held_all_of: z.array(z.string()).default([]),
+    profile_signals: z.array(z.string()).default([]),
+  }).default({ cards_held_any_of: [], cards_held_all_of: [], profile_signals: [] }),
+  action_label: z.string().optional(),
+  mechanism_md: z.string(),
+  how_to_md: z.string(),
+  conditions_md: z.string().optional(),
+  expires_at: IsoDate.optional(),
+  source_urls: z.array(Url).default([]),
+});
+
+export type Play = z.infer<typeof PlaySchema>;
+export type PlayGroupId = z.infer<typeof PlayGroup>;
+export type PlayQuestionId = z.infer<typeof PlayQuestion>;
+
+export const ColdPromptSchema = z.object({
+  id: z.string(),
+  question: z.string(),
+  answer_chips: z.array(
+    z.object({
+      value: z.string(),
+      label: z.string(),
+    }),
+  ),
+  unlocks_value_estimate_usd: z.number(),
+  unlocks_groups: z.array(PlayGroup).default([]),
+});
+
+export type ColdPrompt = z.infer<typeof ColdPromptSchema>;
+
 export const CardSchema = z
   .object({
     id: z.string(),
@@ -112,6 +221,14 @@ export const CardSchema = z
     accepts_pinned_category: z.array(z.string()).optional(),
     is_pool_spoke: z.boolean().optional(),
     is_cobrand: z.boolean().optional(),
+
+    // Money-find page content. card_plays is the canonical list of
+    // value-extraction opportunities for this card; cold_prompts are
+    // the 3 priority questions the page asks when a user has no
+    // signals yet. Both optional and additive — a card with empty
+    // arrays renders mostly-empty groups in the new hero page.
+    card_plays: z.array(PlaySchema).default([]),
+    cold_prompts: z.array(ColdPromptSchema).default([]),
   });
 
 export type Card = z.infer<typeof CardSchema>;

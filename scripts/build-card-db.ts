@@ -93,9 +93,22 @@ function mergeFile(db: DB, filename: string): void {
     err(`${filename}: missing required ## cards.json entry`);
   }
 
+  // Money-find content lives in separate ## sections of the markdown
+  // but rides on the Card object so the loader sees one shape. Merge
+  // before Zod validation so PlaySchema / ColdPromptSchema enforce
+  // their constraints alongside the rest of the card.
+  const cardWithPlays =
+    typeof parsed.card === "object" && parsed.card !== null
+      ? {
+          ...(parsed.card as Record<string, unknown>),
+          ...(parsed.cardPlays != null ? { card_plays: parsed.cardPlays } : {}),
+          ...(parsed.coldPrompts != null ? { cold_prompts: parsed.coldPrompts } : {}),
+        }
+      : parsed.card;
+
   let card: Card;
   try {
-    card = CardSchema.parse(parsed.card);
+    card = CardSchema.parse(cardWithPlays);
   } catch (e) {
     err(`${filename}: cards.json validation: ${(e as Error).message}`);
   }

@@ -16,7 +16,12 @@
 import { sql, isUndefinedTableError } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getCurrentProfile } from "./server";
-import type { CreditScoreBand, UserProfile, WalletCardHeld } from "./types";
+import type {
+  CardPlayState,
+  CreditScoreBand,
+  UserProfile,
+  WalletCardHeld,
+} from "./types";
 
 const VALID_CREDIT_BANDS: ReadonlyArray<CreditScoreBand> = [
   "building",
@@ -168,37 +173,141 @@ export async function updateProfile(
 // Granular update for a single user_cards row. Used by new UI flows
 // that record closed_in_past_year, closed_long_ago, or per-card edits.
 // Writes ONLY to user_cards — never to perks_profiles.cards_held.
+//
+// Wallet-edit-v2 fields (nickname, authorized_users, pool_status,
+// pinned_category, elite_reached, activity_threshold_met,
+// card_status_v2, signals_filled/total, found_money_cached_usd) are all
+// optional and additive. Pass any subset; only the supplied keys are
+// updated. The legacy four fields (status, opened_at, closed_at,
+// bonus_received) are required-on-insert; on update, missing values
+// preserve the existing row.
 export interface UpdateUserCardInput {
   card_id: string;
-  status: "held" | "closed_in_past_year" | "closed_long_ago";
+  status?: "held" | "closed_in_past_year" | "closed_long_ago";
   opened_at?: string | null;
   closed_at?: string | null;
   bonus_received?: boolean;
+
+  // v2 fields
+  nickname?: string | null;
+  authorized_users?: number | null;
+  pool_status?: "yes" | "not_yet" | "unknown" | null;
+  pinned_category?: string | null;
+  elite_reached?: boolean | null;
+  activity_threshold_met?: boolean | null;
+  card_status_v2?: "active" | "considering_close" | "downgraded" | "closed" | null;
+  found_money_cached_usd?: number | null;
+  signals_filled?: number | null;
+  signals_total?: number | null;
 }
 
 export async function updateUserCard(input: UpdateUserCardInput): Promise<UpdateResult> {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "not_authenticated" };
+  // Build the SET clause dynamically from whatever the caller passed.
+  // postgres-js's tagged template doesn't easily handle dynamic column
+  // lists, so we use sql.unsafe for the column names (which are
+  // hardcoded literals here, not user input) and parameterize the values.
+  const sets: { col: string; val: unknown }[] = [];
+  const push = <T>(col: string, val: T | undefined) => {
+    if (val !== undefined) sets.push({ col, val });
+  };
+  push("status", input.status);
+  push("opened_at", input.opened_at);
+  push("closed_at", input.closed_at);
+  push("bonus_received", input.bonus_received);
+  push("nickname", input.nickname);
+  push("authorized_users", input.authorized_users);
+  push("pool_status", input.pool_status);
+  push("pinned_category", input.pinned_category);
+  push("elite_reached", input.elite_reached);
+  push("activity_threshold_met", input.activity_threshold_met);
+  push("card_status_v2", input.card_status_v2);
+  push("found_money_cached_usd", input.found_money_cached_usd);
+  push("signals_filled", input.signals_filled);
+  push("signals_total", input.signals_total);
+
+  // Insert-on-conflict needs sane defaults for non-null columns even
+  // when the caller is just updating a single field. status defaults to
+  // 'held' (matches the legacy onboarding flow).
+  const insertStatus = input.status ?? "held";
+  const insertOpenedAt = input.opened_at ?? null;
+  const insertClosedAt = input.closed_at ?? null;
+  const insertBonus = input.bonus_received ?? false;
+
   try {
-    await sql`
-      insert into user_cards (
-        user_id, card_id, status, opened_at, closed_at, bonus_received
-      ) values (
-        ${user.id}, ${input.card_id}, ${input.status},
-        ${input.opened_at ?? null}, ${input.closed_at ?? null},
-        ${input.bonus_received ?? false}
-      )
-      on conflict (user_id, card_id) do update set
-        status = excluded.status,
-        opened_at = excluded.opened_at,
-        closed_at = excluded.closed_at,
-        bonus_received = excluded.bonus_received,
-        updated_at = now()
-    `;
+    if (sets.length === 0) {
+      // No-op; treat as success.
+      return { ok: true };
+    }
+    // Use a parameterized UPSERT. Build the update assignment list from
+    // the keys we got. postgres.js unsafe interpolation is restricted
+    // to the hardcoded `col` strings above (never user-supplied keys).
+    const updateAssignments = sets
+      .map((s, i) => `${s.col} = $${i + 6}`)
+      .join(", ");
+    type Param = string | number | boolean | null;
+    const params: Param[] = [
+      user.id,
+      input.card_id,
+      insertStatus,
+      insertOpenedAt,
+      insertClosedAt,
+      ...sets.map((s) => s.val as Param),
+      insertBonus,
+    ];
+    await sql.unsafe(
+      `insert into user_cards (
+         user_id, card_id, status, opened_at, closed_at, bonus_received
+       ) values ($1, $2, $3, $4, $5, $${6 + sets.length})
+       on conflict (user_id, card_id) do update set
+         ${updateAssignments},
+         updated_at = now()`,
+      params,
+    );
     return { ok: true };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[profile:update_user_card] failed:", msg);
+    return { ok: false, error: classifyDbError(e), detail: msg };
+  }
+}
+
+// Per-card per-play tristate writer. Upserts a single row in
+// user_card_play_state. Soft-fails when migration 0005 hasn't applied
+// yet so the page still loads for users on an older DB.
+export async function updateCardPlayState(
+  cardId: string,
+  playId: string,
+  state: Pick<CardPlayState, "state" | "claimed_at" | "notes">,
+): Promise<UpdateResult> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "not_authenticated" };
+  try {
+    await sql`
+      insert into user_card_play_state (
+        user_id, card_id, play_id, state, claimed_at, notes
+      ) values (
+        ${user.id}, ${cardId}, ${playId}, ${state.state}::play_state,
+        ${state.claimed_at ?? null}, ${state.notes ?? null}
+      )
+      on conflict (user_id, card_id, play_id) do update set
+        state = excluded.state,
+        claimed_at = excluded.claimed_at,
+        notes = excluded.notes,
+        updated_at = now()
+    `;
+    return { ok: true };
+  } catch (e) {
+    if (isUndefinedTableError(e)) {
+      // Migration 0005 not applied. Treat as no-op — the UI still
+      // reflects local state; persistence catches up after migration.
+      const msg = e instanceof Error ? e.message : String(e);
+      console.warn("[profile:update_card_play_state] table missing — skipping persist:", msg);
+      return { ok: true };
+    }
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[profile:update_card_play_state] failed:", msg);
     return { ok: false, error: classifyDbError(e), detail: msg };
   }
 }

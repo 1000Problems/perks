@@ -54,7 +54,9 @@
 
   "recently_changed": false,
   "data_freshness": "2026-05-01",
-  "sources": ["https://www.citi.com/credit-cards/citi-double-cash-credit-card"]
+  "sources": ["https://www.citi.com/credit-cards/citi-double-cash-credit-card"],
+
+  "is_pool_spoke": true
 }
 ```
 

@@ -31,7 +31,10 @@ export type CardArtVariant =
   | "art-rust"
   | "art-cream"
   | "art-ink"
-  | "art-skyblue";
+  | "art-skyblue"
+  | "art-claret"
+  | "art-mint"
+  | "art-bronze";
 
 export type EligibilityStatus = "green" | "yellow" | "red";
 

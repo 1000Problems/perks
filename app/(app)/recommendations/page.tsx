@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import type { Route } from "next";
 import { RecPanelDesktop } from "@/components/recommender/RecPanelDesktop";
 import { RecPanelMobile } from "@/components/recommender/RecPanelMobile";
 import { getCurrentProfile, getCurrentUserId } from "@/lib/profile/server";
@@ -15,16 +16,16 @@ export default async function RecommendationsPage() {
       getCurrentUserId(),
     ]);
   } catch {
-    redirect("/login");
+    redirect("/login" as Route);
   }
   // Onboarding gate — credit band first, then spend.
   if (profile.credit_score_band == null) {
-    redirect("/onboarding/credit");
+    redirect("/onboarding/credit" as Route);
   }
   const hasSpend =
     Object.values(profile.spend_profile ?? {}).some((v) => (v ?? 0) > 0);
   if (!hasSpend && (profile.cards_held?.length ?? 0) === 0) {
-    redirect("/onboarding/spend");
+    redirect("/onboarding/spend" as Route);
   }
   const db = loadCardDatabase();
   const serializedDb = toSerialized(db);

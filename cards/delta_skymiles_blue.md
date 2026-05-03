@@ -50,7 +50,9 @@
 
   "recently_changed": false,
   "data_freshness": "2026-05-01",
-  "sources": ["https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-blue/"]
+  "sources": ["https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-blue/"],
+
+  "is_cobrand": true
 }
 ```
 

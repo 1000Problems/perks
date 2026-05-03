@@ -51,7 +51,9 @@
 
   "recently_changed": false,
   "data_freshness": "2026-05-01",
-  "sources": ["https://creditcards.chase.com/a1/aerlingus"]
+  "sources": ["https://creditcards.chase.com/a1/aerlingus"],
+
+  "is_cobrand": true
 }
 ```
 

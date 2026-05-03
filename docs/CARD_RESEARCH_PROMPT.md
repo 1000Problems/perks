@@ -1,34 +1,4 @@
-# Card Research Prompt
-
-Drop-in prompt for Claude Research (or any deep-research tool) to produce a structured value-extraction profile per card. Output is shaped to match our card markdown schema + plays schema so we can paste with minimal editing.
-
----
-
-## When to use Claude Research vs NotebookLM
-
-For most cards in our list, **Claude Research is sufficient** — it produces a structured single-pass report against high-quality public sources (issuer terms, NerdWallet, The Points Guy, Doctor of Credit, ViewFromTheWing, Reddit r/churning, AwardHacker).
-
-**Build a NotebookLM only for the high-complexity ecosystem cards** where deep transfer logic, niche plays, and devaluation timing matter and where a single research pass tends to leave gaps. Specifically:
-
-- Chase Sapphire Preferred and Chase Sapphire Reserve — anchor cards for the entire UR ecosystem; need every transfer partner sweet spot, the recent CSR overhaul, and the Hyatt/UA/Air Canada redemption depth.
-- Chase World of Hyatt — the best-in-class hotel cobrand; sweet-spot pricing varies by category and changes; brand-explorer mechanics, cat 1-4 free night certs, status-trigger spend.
-- Chase Marriott Bonvoy Boundless — the 35K free-night certificate use cases, peak/off-peak chart, top-up rule, status mechanics.
-- Chase IHG One Rewards Premier — 4th-night-free, fourth-night-points-back, anniversary night up to 40k, Diamond status thresholds, all-inclusive pricing quirks.
-- Amex Gold — coupon-book credits (Uber, Resy, Dunkin', dining), Pay Over Time, MR transfer partners.
-
-For everything else (BoA Atmos Ascent, BoA Customized Cash, Capital One Venture, Citi Double Cash, Costco Anywhere, Wells Fargo Autograph, Amex Delta SkyMiles Gold), **Claude Research alone is sufficient** — these cards have shallower ecosystem logic and well-documented public terms.
-
-Recommended sequence: run the prompt below for **all 13 cards via Claude Research**. For the five high-complexity cards above, follow up with a NotebookLM where you load 25–40 sources (their issuer T&Cs PDF, two NerdWallet articles, two Points Guy guides, the relevant subreddit master post, a YouTube deep-dive or two), then ask the same structured questions again to plug any gaps.
-
----
-
-## The prompt
-
-Paste verbatim. Replace `{CARD_NAME}` with the exact card name (e.g., "Chase Sapphire Preferred").
-
----
-
-I am building a personal-finance app that surfaces every way a credit-card holder can extract value from a specific card — earning multipliers, statement credits, transfer sweet spots, protections, signup mechanics, and niche/counterintuitive plays. I need a comprehensive structured research report on the **{CARD_NAME}** as it stands today (verify everything against issuer terms current as of the date you run this — flag any recent or upcoming changes with dates).
+I am building a personal-finance app that surfaces every way a credit-card holder can extract value from a specific card — earning multipliers, statement credits, transfer sweet spots, protections, signup mechanics, and niche/counterintuitive plays. I need a comprehensive structured research report on the card mentioned above as it stands today (verify everything against issuer terms current as of the date you run this — flag any recent or upcoming changes with dates).
 
 The report should be exhaustive, cite specific dollar amounts and conditions, and be grounded in primary sources where possible (issuer T&Cs, official benefit documents) supplemented by reputable secondary sources (NerdWallet, The Points Guy, Doctor of Credit, ViewFromTheWing, r/churning master posts).
 

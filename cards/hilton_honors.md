@@ -51,7 +51,9 @@
 
   "recently_changed": false,
   "data_freshness": "2026-05-01",
-  "sources": ["https://www.americanexpress.com/us/credit-cards/card/hilton-honors-amex/"]
+  "sources": ["https://www.americanexpress.com/us/credit-cards/card/hilton-honors-amex/"],
+
+  "is_cobrand": true
 }
 ```
 

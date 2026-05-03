@@ -54,7 +54,21 @@
 
   "recently_changed": false,
   "data_freshness": "2026-05-01",
-  "sources": ["https://www.citi.com/credit-cards/citi-custom-cash-credit-card"]
+  "sources": ["https://www.citi.com/credit-cards/citi-custom-cash-credit-card"],
+
+  "is_pool_spoke": true,
+  "accepts_pinned_category": [
+    "dining",
+    "gas",
+    "groceries",
+    "drugstore",
+    "home",
+    "streaming",
+    "transit",
+    "airfare",
+    "hotels",
+    "shopping"
+  ]
 }
 ```
 

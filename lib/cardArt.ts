@@ -15,12 +15,17 @@ export function variantForCard(card: Card): CardArtVariant {
   if (cur.includes("delta") || cur.includes("united") || cur.includes("aa")) return "art-emerald";
   if (cur.includes("hyatt")) return "art-ink";
 
+  // BoA cards land on claret (their brand red); Costco's wholesale-club
+  // cash card lands on bronze (warm, distinct from the Citi graphite).
+  // Kept narrow so adding one card doesn't reshuffle existing variants.
+  if (card.id === "costco_anywhere_visa") return "art-bronze";
+  if (card.issuer === "Bank of America") return "art-claret";
+
   switch (card.issuer) {
     case "Chase": return "art-navy";
     case "Amex": return "art-platinum";
     case "Citi": return "art-graphite";
     case "Capital One": return "art-skyblue";
-    case "Bank of America": return "art-emerald";
     default: return "art-graphite";
   }
 }

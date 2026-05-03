@@ -3,10 +3,11 @@
 
 import type { SpendCategoryId } from "@/lib/data/types";
 import type {
+  CardPlayState,
   CreditScoreBand,
   UserProfile,
   WalletCardHeld,
 } from "@/lib/engine/types";
 
-export type { UserProfile, WalletCardHeld, CreditScoreBand };
+export type { UserProfile, WalletCardHeld, CardPlayState, CreditScoreBand };
 export type { SpendCategoryId };

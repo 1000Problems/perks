@@ -95,6 +95,23 @@ export const CardSchema = z
     closed_to_new_apps: z.boolean().optional(),
     data_freshness: IsoDate.optional(),
     sources: z.array(Url).default([]),
+
+    // Wallet-edit-v2 cluster metadata. All optional. Drives which
+    // conditional clusters render on the rich per-card edit panel.
+    //   - accepts_pinned_category: list of SpendCategoryId strings the
+    //     user can "pin" this card to (Custom Cash 5x, etc.). Empty/
+    //     omitted = no category picker for this card.
+    //   - is_pool_spoke: true for no-AF cards in a transferable family
+    //     whose points only reach 1:1 transfer ratio after pooling to a
+    //     premium anchor (Citi Double Cash, Citi Custom Cash). Drives
+    //     the "Point pooling" cluster.
+    //   - is_cobrand: true for airline / hotel cobrand cards with elite
+    //     status mechanics tied to spend (United, Delta, Marriott,
+    //     Hyatt, IHG). Drives the elite-reached / activity-threshold
+    //     cluster.
+    accepts_pinned_category: z.array(z.string()).optional(),
+    is_pool_spoke: z.boolean().optional(),
+    is_cobrand: z.boolean().optional(),
   });
 
 export type Card = z.infer<typeof CardSchema>;

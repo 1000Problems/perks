@@ -115,7 +115,14 @@ export default async function SettingsPage() {
       title: "Wallet",
       blurb: "Cards you already hold — used for eligibility and dedup.",
       summary: walletSummary(profile),
-      editHref: "/onboarding/cards",
+      // Wallet-edit-v2 redesign lives at /wallet/edit when the flag is
+      // on. Falls back to the legacy onboarding page otherwise so the
+      // site keeps working for users without the feature.
+      editHref:
+        process.env.NEXT_PUBLIC_WALLET_EDIT_V2 === "1"
+          ? "/wallet/edit"
+          : "/onboarding/cards",
+      bare: process.env.NEXT_PUBLIC_WALLET_EDIT_V2 === "1",
     },
   ];
 
@@ -206,13 +213,23 @@ interface SectionData {
   title: string;
   blurb: string;
   summary: { text: string; muted: boolean };
-  editHref: "/onboarding/credit" | "/onboarding/spend" | "/onboarding/brands" | "/onboarding/cards";
+  editHref:
+    | "/onboarding/credit"
+    | "/onboarding/spend"
+    | "/onboarding/brands"
+    | "/onboarding/cards"
+    | "/wallet/edit";
+  // When true, the link points to a v2 surface and the ?from=settings
+  // suffix is omitted (the v2 page doesn't need it; it knows where it
+  // came from via the back link).
+  bare?: boolean;
 }
 
-function SectionCard({ num, title, blurb, summary, editHref }: SectionData) {
+function SectionCard({ num, title, blurb, summary, editHref, bare }: SectionData) {
+  const href = bare ? editHref : `${editHref}?from=settings`;
   return (
     <Link
-      href={`${editHref}?from=settings` as Route}
+      href={href as Route}
       style={{
         textDecoration: "none",
         color: "inherit",

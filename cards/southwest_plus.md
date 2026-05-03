@@ -51,7 +51,9 @@
 
   "recently_changed": false,
   "data_freshness": "2026-05-01",
-  "sources": ["https://creditcards.chase.com/southwest-credit-cards/plus"]
+  "sources": ["https://creditcards.chase.com/southwest-credit-cards/plus"],
+
+  "is_cobrand": true
 }
 ```
 

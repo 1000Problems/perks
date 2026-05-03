@@ -51,7 +51,9 @@
 
   "recently_changed": false,
   "data_freshness": "2026-05-01",
-  "sources": ["https://creditcards.chase.com/a1/iberia"]
+  "sources": ["https://creditcards.chase.com/a1/iberia"],
+
+  "is_cobrand": true
 }
 ```
 

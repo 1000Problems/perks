@@ -51,7 +51,9 @@
 
   "recently_changed": false,
   "data_freshness": "2026-05-01",
-  "sources": ["https://creditcards.chase.com/ihg-one-rewards-traveler-credit-card"]
+  "sources": ["https://creditcards.chase.com/ihg-one-rewards-traveler-credit-card"],
+
+  "is_cobrand": true
 }
 ```
 

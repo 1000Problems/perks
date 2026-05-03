@@ -43,7 +43,9 @@
 
   "recently_changed": false,
   "data_freshness": "2026-05-01",
-  "sources": ["https://cards.barclaycardus.com/banking/cards/jetblue-card/"]
+  "sources": ["https://cards.barclaycardus.com/banking/cards/jetblue-card/"],
+
+  "is_cobrand": true
 }
 ```
 

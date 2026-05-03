@@ -7,6 +7,36 @@ export interface WalletCardHeld {
   card_id: string;
   opened_at: string; // ISO date "YYYY-MM-DD"
   bonus_received: boolean;
+
+  // Wallet-edit-v2 signals — all optional, additive. The engine
+  // currently ignores these (they feed the audit page and ecosystem
+  // analyzer, not scoring/ranking). New persisted columns on user_cards
+  // map 1:1 to these fields. See db/migrations/0005_wallet_v2.sql.
+  nickname?: string;
+  authorized_users?: number;
+  pool_status?: "yes" | "not_yet" | "unknown";
+  pinned_category?: SpendCategoryId;
+  elite_reached?: boolean;
+  activity_threshold_met?: boolean;
+  card_status_v2?: "active" | "considering_close" | "downgraded" | "closed";
+  // Cached audit metadata. Server fills these on save so the wallet list
+  // can render quickly without re-running the audit per card.
+  found_money_cached_usd?: number;
+  signals_filled?: number;
+  signals_total?: number;
+}
+
+// Per-card per-play user state. Drives the audit page's tristate
+// checkboxes (claimed credits, "going to" intent, etc.). Stored in the
+// user_card_play_state table; see db/migrations/0005_wallet_v2.sql.
+export interface CardPlayState {
+  card_id: string;
+  play_id: string;
+  state: "got_it" | "want_it" | "skip" | "unset";
+  // Set when state="got_it" and the play is a claimable credit. Used by
+  // the audit math to date-stamp captures.
+  claimed_at?: string; // ISO date "YYYY-MM-DD"
+  notes?: string;
 }
 
 // Self-reported credit band. Matches the Postgres credit_score_band enum

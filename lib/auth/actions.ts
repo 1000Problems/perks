@@ -8,6 +8,7 @@
 // constants live in lib/auth/types.ts.
 
 import { redirect } from "next/navigation";
+import type { Route } from "next";
 import { sql, isUndefinedTableError } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { createSession, destroySession } from "@/lib/auth/session";
@@ -83,7 +84,7 @@ export async function signupAction(
   `;
 
   await createSession(userId);
-  redirect("/onboarding/credit");
+  redirect("/onboarding/credit" as Route);
 }
 
 export async function loginAction(
@@ -145,12 +146,12 @@ export async function loginAction(
   const hasCreditBand = (self[0]?.credit_score_band ?? null) !== null;
 
   if (!hasCreditBand) {
-    redirect("/onboarding/credit");
+    redirect("/onboarding/credit" as Route);
   }
-  redirect(hasData ? "/recommendations" : "/onboarding/spend");
+  redirect((hasData ? "/recommendations" : "/onboarding/spend") as Route);
 }
 
 export async function logoutAction() {
   await destroySession();
-  redirect("/");
+  redirect("/" as Route);
 }

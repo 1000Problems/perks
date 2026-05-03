@@ -374,8 +374,9 @@ function PillarInlinePoints({
 }: PillarInlinePointsProps) {
   const isZero = !points || points.pts <= 0;
   const numColor = isZero ? "var(--ink-4)" : "var(--ink)";
+  const tooltip = !isZero ? cppTooltip(points!) : undefined;
   return (
-    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }} title={tooltip}>
       <span style={{ fontSize: labelSize, color: "var(--ink-4)", letterSpacing: "0.08em" }}>
         {label}
       </span>
@@ -392,7 +393,7 @@ function PillarInlinePoints({
       </span>
       {!isZero && (
         <span style={{ fontSize: captionSize ?? 10, color: "var(--ink-3)" }}>
-          ≈ {fmt.usd(points!.valueUsd)}
+          ≈ {fmt.usd(points!.valueUsd)} · {cppSourceLabel(points!)}
         </span>
       )}
     </div>
@@ -488,6 +489,8 @@ function PointsPillar({
   // Loyalty currency renders in a calm ink color (not green): it's not
   // statement-credit cash, so the eye shouldn't bank it as such.
   const numColor = isZero ? "var(--ink-4)" : "var(--ink)";
+  const sourceLabel = !isZero ? cppSourceLabel(points!) : "";
+  const tooltip = !isZero ? cppTooltip(points!) : undefined;
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", minWidth: 0 }}>
       <span
@@ -523,6 +526,7 @@ function PointsPillar({
         )}
       </span>
       <span
+        title={tooltip}
         style={{
           fontSize: subSize,
           color: "var(--ink-3)",
@@ -531,10 +535,46 @@ function PointsPillar({
           lineHeight: 1.2,
           opacity: isZero ? 0.55 : 1,
           whiteSpace: "nowrap",
+          cursor: tooltip ? "help" : undefined,
         }}
       >
-        {isZero ? "—" : `≈ ${fmt.usd(points!.valueUsd)} portal`}
+        {isZero ? "—" : `≈ ${fmt.usd(points!.valueUsd)} · ${sourceLabel}`}
       </span>
     </div>
   );
+}
+
+// Short caption rendered inline under the pts count. Compact because the
+// pillar caption is tight on width — the full attribution lives in the
+// hover tooltip.
+function cppSourceLabel(p: PointsBucket): string {
+  switch (p.cppSource) {
+    case "median":
+      return `${p.cpp.toFixed(p.cpp >= 1 ? 2 : 1).replace(/\.?0+$/, "")}¢/pt TPG`;
+    case "portal":
+      return `${p.cpp}¢/pt portal`;
+    case "fixed":
+      return `${p.cpp}¢/pt fixed`;
+    case "cash":
+      return "1¢/pt cash";
+  }
+}
+
+// Hover tooltip: full attribution. Used by both the rec list and the
+// drill-in. We expand the source code into the natural-language form
+// the user expects.
+function cppTooltip(p: PointsBucket): string {
+  const baseline = `Valued at ${p.cpp}¢ per ${p.programName} point`;
+  switch (p.cppSource) {
+    case "median": {
+      const date = p.cppAsOf ? ` (${p.cppAsOf})` : "";
+      return `${baseline} — TPG monthly valuation${date}. Reflects what a typical user captures by transferring to airline/hotel partners.`;
+    }
+    case "portal":
+      return `${baseline} — portal redemption rate. Switch redemption style to "transfers" if you transfer to partners.`;
+    case "fixed":
+      return `${baseline} — fixed redemption (statement credit / cash equivalent).`;
+    case "cash":
+      return `${baseline} — cash-equivalent floor.`;
+  }
 }

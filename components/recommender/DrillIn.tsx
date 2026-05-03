@@ -649,7 +649,7 @@ function SpendMath({
   category: SpendCategory;
   impact: CardScore["spendImpact"][keyof CardScore["spendImpact"]];
 }) {
-  const { spend, current, new: nw, currentFrom, newFrom, newCap, newBase } = impact;
+  const { spend, current, new: nw, currentFrom, newFrom, newCap, newBase, newMode, currentMode } = impact;
   // Cap-aware split. Engine sets newCap/newBase only when the candidate
   // is the winner AND its rule has a cap. If spend stays under the cap,
   // the over-cap term is zero and we render the simple two-line math.
@@ -684,11 +684,13 @@ function SpendMath({
           {currentFrom && currentFrom !== "—" && (
             <span style={{ color: "var(--ink-3)" }}> · {currentFrom}</span>
           )}
+          {currentMode && <CurrencyChip mode={currentMode} />}
         </span>
         <span style={{ color: "var(--ink-3)" }}>With this card</span>
         <span>
           <b style={{ color: "var(--ink)" }}>{fmt.pct(nw)}</b>
           <span style={{ color: "var(--ink-3)" }}> · {newFrom}</span>
+          {newMode && <CurrencyChip mode={newMode} />}
           {hasOverCap && (
             <span style={{ color: "var(--ink-3)" }}>
               {" "}
@@ -760,6 +762,39 @@ function SpendMath({
         </div>
       </div>
     </div>
+  );
+}
+
+// Tiny chip that labels the currency the new earnings land in. The
+// CASH/POINTS pillars in the hero already do this comparison globally;
+// the chip is here so a user reading the per-category math sees that
+// "5.7% from Strata Premier" lands in points, not cash, and can mentally
+// reconcile against the redemption_style they picked.
+function CurrencyChip({ mode }: { mode: "cash" | "loyalty" }) {
+  const isCash = mode === "cash";
+  return (
+    <span
+      title={
+        isCash
+          ? "Earnings land as statement credit / cash."
+          : "Earnings land in the card's loyalty currency. Headline value uses your redemption style — see the POINTS pillar tooltip."
+      }
+      style={{
+        marginLeft: 6,
+        fontSize: 10,
+        padding: "1px 6px",
+        borderRadius: 4,
+        background: isCash ? "var(--pos-soft, #e7f4ec)" : "var(--paper-2)",
+        color: isCash ? "var(--pos)" : "var(--ink-2)",
+        border: "1px solid var(--rule)",
+        fontFamily: "var(--font-mono), ui-monospace, monospace",
+        letterSpacing: "0.04em",
+        textTransform: "uppercase",
+        cursor: "help",
+      }}
+    >
+      {isCash ? "cash" : "pts"}
+    </span>
   );
 }
 

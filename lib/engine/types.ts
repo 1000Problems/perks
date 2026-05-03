@@ -245,6 +245,13 @@ export interface CardScore {
       // card lands in `cashOngoing`, "loyalty" when it lands in
       // `pointsOngoing`. Null only when no card contributes (newFrom: "—").
       newMode: "cash" | "loyalty" | null;
+      // Currency type of the CURRENT best earner (the wallet without
+      // the candidate). Null when there's no current earner. Used by
+      // the drill-in to label the cash↔loyalty switch when the active
+      // card flips, so the user sees "+5.7% from Strata Premier in pts"
+      // is replacing "+4.0% from Costco in cash", not just the
+      // percentage delta.
+      currentMode: "cash" | "loyalty" | null;
     }
   >;
   newPerks: NewPerkOut[];

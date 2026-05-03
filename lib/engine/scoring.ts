@@ -330,6 +330,7 @@ export function scoreCard(
       newCap: candidateRule?.cap_usd_per_year ?? null,
       newBase: candidateWins ? cardNorm.base : null,
       newMode: newBest.mode,
+      currentMode: curBest.mode,
     };
   }
 

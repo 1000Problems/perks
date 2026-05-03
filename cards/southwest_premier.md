@@ -72,6 +72,9 @@
   "issuer": "Southwest Airlines",
   "earning_cards": ["southwest_plus", "southwest_premier", "southwest_priority", "southwest_performance_business"],
   "fixed_redemption_cpp": 1.4,
+  "median_redemption_cpp": 1.25,
+  "median_cpp_source_url": "https://thepointsguy.com/loyalty-programs/monthly-valuations/",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners_notes": "Receives transfers from Chase UR (1:1)",
   "sweet_spots": [
     {"description": "Companion Pass: free fly-with-companion entire calendar year", "value_estimate_usd": "$1,500-3,000", "source": null}

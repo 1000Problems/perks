@@ -67,23 +67,20 @@ describe("scoreCard — premium travel card on heavy travel spend", () => {
   });
 });
 
-describe("scoreCard — credits mode", () => {
-  it("face-mode credits return more value than realistic-mode for premium cards", () => {
-    const realistic = scoreCard(
+describe("scoreCard — perk-capture gating", () => {
+  it("perks default to $0 unless the user opts in (Amex Platinum)", () => {
+    // No perk_opt_ins → every signal_gated credit/perk on Platinum
+    // contributes $0. The headline collapses to earnings minus fee.
+    const noOptIns = scoreCard(
       card("amex_platinum"),
       heavyTravelProfile,
       [],
       db,
-      opts("realistic"),
+      opts(),
     );
-    const face = scoreCard(
-      card("amex_platinum"),
-      heavyTravelProfile,
-      [],
-      db,
-      opts("face"),
-    );
-    expect(face.deltaOngoing).toBeGreaterThan(realistic.deltaOngoing);
+    expect(noOptIns.components.perksOngoing).toBe(0);
+    // availablePerks should list the opt-in candidates.
+    expect(noOptIns.availablePerks.length).toBeGreaterThan(0);
   });
 });
 
@@ -189,11 +186,13 @@ describe("scoreCard — components reconcile to deltas", () => {
     expect(result.components.feeOngoing).toBe(0);
   });
 
-  it("a premium credit-heavy card surfaces perks > spend on travel-light spend", () => {
-    // Amex Plat's value comes overwhelmingly from credits and lounge
-    // access on a profile with light direct travel spend. The split
-    // should make this obvious — perks pillar dominant, spend pillar
-    // small.
+  it("a premium credit-heavy card with no opt-ins has perks pillar at $0", () => {
+    // Pre-fix this test asserted that face-mode credits dominate spend
+    // on Amex Platinum. Under perk-capture gating that's no longer true:
+    // perks default to $0 until the user explicitly opts in. The card
+    // now has to win on earnings, which is the right behavior — Platinum
+    // shouldn't rank well for users whose spend doesn't match its 5×
+    // airfare bonus.
     const lightSpend: UserProfile = {
       spend_profile: { other: 3000 },
       brands_used: [],
@@ -206,11 +205,9 @@ describe("scoreCard — components reconcile to deltas", () => {
       lightSpend,
       [],
       db,
-      opts("face"),
+      opts(),
     );
-    expect(result.components.perksOngoing).toBeGreaterThan(
-      result.components.spendOngoing,
-    );
+    expect(result.components.perksOngoing).toBe(0);
     expect(result.components.feeOngoing).toBeLessThan(0);
   });
 
@@ -243,7 +240,12 @@ describe("scoreCard — components reconcile to deltas", () => {
 
 describe("scoreCard — spend caps", () => {
   it("respects cap_usd_per_year on category rules", () => {
-    // Amex Gold: 4x on us_supermarkets capped at $25,000/yr
+    // Amex Gold: 4x MR on us_supermarkets capped at $25,000/yr.
+    // Under TPG-anchored amex_mr at 2.0¢: 25k × 4 × 2.0/100 = $2000
+    // capped + 5k × 1 × 2.0/100 = $100 over-cap = $2100 total. Without
+    // the cap it would be 30k × 4 × 2.0/100 = $2400. We assert the
+    // earnings line is below the uncapped value (cap is being honored)
+    // and equals the capped arithmetic to within rounding.
     const profile: UserProfile = {
       spend_profile: { groceries: 30000, other: 5000 },
       brands_used: [],
@@ -252,15 +254,16 @@ describe("scoreCard — spend caps", () => {
       preferences: {},
     };
     const result = scoreCard(card("amex_gold"), profile, [], db, opts());
-    // Earnings on groceries should be capped: 25k @ 4x + 5k @ 1x = ~$1050,
-    // not 30k @ 4x = $1200. With baseline of 1% covering the over-cap.
     const earningLine = result.breakdown.find(
       (b) => b.kind === "earning" && /Groceries/.test(b.label),
     );
     expect(earningLine).toBeDefined();
     if (earningLine) {
-      // Should be substantially less than 30000 * 0.04 = 1200
-      expect(earningLine.value).toBeLessThan(1200);
+      // Cap is in effect: less than uncapped 30k × 4 × 2.0/100 = $2400.
+      expect(earningLine.value).toBeLessThan(2400);
+      // And matches the capped arithmetic within $50.
+      expect(earningLine.value).toBeGreaterThan(2050);
+      expect(earningLine.value).toBeLessThan(2150);
     }
   });
 });

@@ -77,6 +77,9 @@
   "issuer": "United Airlines",
   "earning_cards": ["united_explorer", "united_quest", "united_club_infinite", "united_gateway", "united_business"],
   "fixed_redemption_cpp": 1.0,
+  "median_redemption_cpp": 1.35,
+  "median_cpp_source_url": "https://thepointsguy.com/loyalty-programs/monthly-valuations/",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners": [],
   "transfer_partners_notes": "Receives transfers from Chase UR, Bilt, Marriott Bonvoy",
   "sweet_spots": [

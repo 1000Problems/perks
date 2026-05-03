@@ -69,6 +69,9 @@
   "issuer": "JetBlue Airways",
   "earning_cards": ["jetblue_plus", "jetblue_business"],
   "fixed_redemption_cpp": 1.4,
+  "median_redemption_cpp": 1.35,
+  "median_cpp_source_url": "https://thepointsguy.com/loyalty-programs/monthly-valuations/",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners_notes": "Receives transfers from Chase UR (1:1), Citi TY (1:1), Bilt (1:1). Amex MR transfers at 1.25:1 (less favorable).",
   "sweet_spots": [
     {"description": "Mint business class with low cash equivalents during sales", "value_estimate_usd": "~1.6cpp", "source": null}

@@ -60,6 +60,9 @@
   "issuer": "Lufthansa",
   "earning_cards": ["lufthansa_miles_and_more"],
   "fixed_redemption_cpp": 1.5,
+  "median_redemption_cpp": 1.2,
+  "median_cpp_source_url": "estimated",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners_notes": "No major US transferable currency partners.",
   "sweet_spots": [
     {"description": "Star Alliance partner award flights", "value_estimate_usd": "~2-3cpp", "source": null}

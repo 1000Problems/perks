@@ -68,6 +68,9 @@
   "issuer": "IHG",
   "earning_cards": ["ihg_premier", "ihg_traveler", "ihg_business"],
   "fixed_redemption_cpp": 0.6,
+  "median_redemption_cpp": 0.6,
+  "median_cpp_source_url": "https://thepointsguy.com/loyalty-programs/monthly-valuations/",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners_notes": "Receives transfers from Chase UR (1:1) and Bilt (1:1).",
   "sweet_spots": [
     {"description": "4th-night-free for Premier holders + reasonable point pricing", "value_estimate_usd": "~+25%", "source": null}

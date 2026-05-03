@@ -70,6 +70,9 @@
   "earning_cards": ["wells_fargo_autograph", "wells_fargo_autograph_journey"],
   "fixed_redemption_cpp": 1.0,
   "portal_redemption_cpp": 1.0,
+  "median_redemption_cpp": 1.75,
+  "median_cpp_source_url": "https://thepointsguy.com/loyalty-programs/monthly-valuations/",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners_notes": "Transfer access requires Autograph Journey (the higher-tier card). Autograph alone earns redeemable points only.",
   "transfer_partners": [
     {"partner": "Air France-KLM Flying Blue", "ratio": "1:1", "type": "airline", "min_transfer": 1000},

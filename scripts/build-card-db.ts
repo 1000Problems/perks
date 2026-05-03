@@ -288,6 +288,68 @@ function deriveEarningCards(db: DB): void {
   }
 }
 
+// Default median_redemption_cpp for cash and fixed_value programs to 1.0
+// so the engine doesn't have to special-case them. Loyalty programs
+// (transferable, cobrand_airline, cobrand_hotel) MUST carry an explicit
+// median value with an as-of date — see assertMedianCppFreshness.
+function defaultCashMedianCpp(db: DB): void {
+  for (const program of db.programs.values()) {
+    const isLoyalty =
+      program.type === "transferable" ||
+      program.type.startsWith("cobrand_") ||
+      program.transfer_partners.length > 0;
+    if (isLoyalty) continue;
+    if (program.median_redemption_cpp == null) {
+      program.median_redemption_cpp = 1.0;
+      program.median_cpp_source_url = "fixed_value";
+    }
+  }
+}
+
+// Build-time guard: every loyalty program must have a median cpp from a
+// dated source no older than 60 days. Without this, monthly TPG
+// refreshes slip and the recommendation math rots silently. The
+// freshness window is intentionally tight — slow-rolling drift is
+// exactly what we want surfaced as a build failure.
+function assertMedianCppFreshness(db: DB): void {
+  const FRESH_DAYS = 60;
+  const now = new Date();
+  const stale: string[] = [];
+  const missing: string[] = [];
+  for (const program of db.programs.values()) {
+    const isLoyalty =
+      program.type === "transferable" ||
+      program.type.startsWith("cobrand_") ||
+      program.transfer_partners.length > 0;
+    if (!isLoyalty) continue;
+    if (program.median_redemption_cpp == null) {
+      missing.push(`${program.id} (${program.name})`);
+      continue;
+    }
+    if (!program.median_cpp_as_of) {
+      missing.push(`${program.id}: missing median_cpp_as_of`);
+      continue;
+    }
+    const asOf = new Date(`${program.median_cpp_as_of}T00:00:00Z`);
+    const ageDays = (now.getTime() - asOf.getTime()) / (1000 * 60 * 60 * 24);
+    if (ageDays > FRESH_DAYS) {
+      stale.push(
+        `${program.id}: median_cpp_as_of ${program.median_cpp_as_of} (${Math.round(ageDays)} days old)`,
+      );
+    }
+  }
+  if (missing.length > 0) {
+    err(
+      `${missing.length} loyalty programs are missing median_redemption_cpp:\n  - ${missing.join("\n  - ")}\n\nPull current values from https://thepointsguy.com/loyalty-programs/monthly-valuations/`,
+    );
+  }
+  if (stale.length > 0) {
+    err(
+      `${stale.length} loyalty programs have stale median_cpp_as_of (>${FRESH_DAYS} days):\n  - ${stale.join("\n  - ")}\n\nRefresh from https://thepointsguy.com/loyalty-programs/monthly-valuations/`,
+    );
+  }
+}
+
 // ── write ──────────────────────────────────────────────────────────────
 
 function writeJSON(filename: string, value: unknown): void {
@@ -376,6 +438,8 @@ function main(): void {
   }
 
   deriveEarningCards(db);
+  defaultCashMedianCpp(db);
+  assertMedianCppFreshness(db);
   writeOutputs(db);
   regenAllCards(db);
 

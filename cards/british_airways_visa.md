@@ -65,6 +65,9 @@
   "issuer": "British Airways (IAG group; pooled with Aer Lingus, Iberia, Qatar)",
   "earning_cards": ["british_airways_visa", "aer_lingus_visa", "iberia_visa"],
   "fixed_redemption_cpp": 1.4,
+  "median_redemption_cpp": 1.4,
+  "median_cpp_source_url": "https://thepointsguy.com/loyalty-programs/monthly-valuations/",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners_notes": "Receives transfers from Chase UR (1:1), Amex MR (1:1), Capital One Miles (1:1), Bilt (1:1). Avios pool 1:1 across BA/AY/IB/QR.",
   "sweet_spots": [
     {"description": "Short-haul AA flights via Avios at distance-based pricing (4-6k Avios SFO-LAX)", "value_estimate_usd": "~3-6cpp", "source": null},

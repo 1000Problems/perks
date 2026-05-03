@@ -70,6 +70,9 @@
   "issuer": "American Airlines",
   "earning_cards": ["citi_aa_platinum", "citi_aa_executive", "barclays_aa_aviator", "citi_aa_business"],
   "fixed_redemption_cpp": 1.5,
+  "median_redemption_cpp": 1.6,
+  "median_cpp_source_url": "https://thepointsguy.com/loyalty-programs/monthly-valuations/",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners_notes": "Receives transfers from Citi TY (1:1) and Bilt (1:1)",
   "sweet_spots": [
     {"description": "Web Specials and off-peak awards", "value_estimate_usd": "~2-3cpp", "source": null}

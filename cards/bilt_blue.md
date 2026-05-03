@@ -80,6 +80,9 @@
   "fixed_redemption_cpp": 1.25,
   "fixed_redemption_cpp_notes": "Via Bilt Travel portal; 1.25cpp",
   "portal_redemption_cpp": 1.25,
+  "median_redemption_cpp": 2.2,
+  "median_cpp_source_url": "https://thepointsguy.com/loyalty-programs/monthly-valuations/",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners": [
     {"partner": "Hyatt", "ratio": "1:1", "type": "hotel", "min_transfer": 1, "notes": null},
     {"partner": "Marriott Bonvoy", "ratio": "1:1", "type": "hotel", "min_transfer": 1, "notes": null},

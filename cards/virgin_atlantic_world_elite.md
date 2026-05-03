@@ -60,6 +60,9 @@
   "issuer": "Virgin Atlantic",
   "earning_cards": ["virgin_atlantic_world_elite"],
   "fixed_redemption_cpp": 1.5,
+  "median_redemption_cpp": 1.3,
+  "median_cpp_source_url": "https://thepointsguy.com/loyalty-programs/monthly-valuations/",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners_notes": "Receives transfers from Chase UR (1:1), Amex MR (1:1), Citi TY (1:1), Capital One Miles (1:1), Bilt (1:1).",
   "sweet_spots": [
     {"description": "ANA business class to Tokyo (95-120k r/t)", "value_estimate_usd": "~5-7cpp", "source": null},

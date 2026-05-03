@@ -71,6 +71,9 @@
   "issuer": "Alaska Airlines",
   "earning_cards": ["alaska_airlines_visa", "alaska_airlines_business_visa"],
   "fixed_redemption_cpp": 1.4,
+  "median_redemption_cpp": 1.4,
+  "median_cpp_source_url": "https://thepointsguy.com/loyalty-programs/monthly-valuations/",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners_notes": "Receives transfers from Bilt (1:1). Marriott Bonvoy 60k:25k.",
   "sweet_spots": [
     {"description": "JAL business class to Asia (legacy AS Mileage Plan; verify post-merger continuity)", "value_estimate_usd": "~5-7cpp", "source": null},

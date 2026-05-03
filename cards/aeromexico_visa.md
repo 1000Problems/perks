@@ -54,6 +54,9 @@
   "issuer": "Aeromexico",
   "earning_cards": ["aeromexico_visa", "aeromexico_rewards_premier"],
   "fixed_redemption_cpp": 1.5,
+  "median_redemption_cpp": 0.8,
+  "median_cpp_source_url": "https://thepointsguy.com/loyalty-programs/monthly-valuations/",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners_notes": "Receives transfers from Capital One Miles (1:1).",
   "sweet_spots": [],
   "sources": ["https://aeromexico.com/"]

@@ -69,6 +69,9 @@
   "issuer": "Air Canada",
   "earning_cards": ["aeroplan_card"],
   "fixed_redemption_cpp": 1.5,
+  "median_redemption_cpp": 1.4,
+  "median_cpp_source_url": "https://thepointsguy.com/loyalty-programs/monthly-valuations/",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners_notes": "Receives transfers from Chase UR (1:1), Amex MR (1:1), Capital One Miles (1:1), Bilt (1:1). Marriott Bonvoy 60k:25k+5k bonus.",
   "sweet_spots": [
     {"description": "Star Alliance partner award flights with stopovers (5k pts)", "value_estimate_usd": "~3-5cpp", "source": null},

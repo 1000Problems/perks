@@ -72,6 +72,9 @@
   "issuer": "Hilton",
   "earning_cards": ["hilton_honors", "hilton_honors_surpass", "hilton_honors_aspire", "hilton_honors_business"],
   "fixed_redemption_cpp": 0.5,
+  "median_redemption_cpp": 0.4,
+  "median_cpp_source_url": "https://thepointsguy.com/loyalty-programs/monthly-valuations/",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners_notes": "Receives transfers from Amex MR (1:2 — generally bad value). Earn directly via Hilton stays and co-brand cards.",
   "sweet_spots": [
     {"description": "5th-night-free on award stays for Gold/Diamond members", "value_estimate_usd": "~+25%", "source": null},

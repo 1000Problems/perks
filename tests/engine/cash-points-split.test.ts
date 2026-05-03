@@ -52,8 +52,11 @@ describe("classifyEarning", () => {
     const card = get("chase_sapphire_preferred");
     const m = classifyEarning(card, [card], db);
     expect(m.mode).toBe("loyalty");
-    expect(m.cpp).toBe(1.25);
+    // TPG May 2026 median for chase_ur. Drives the headline number under
+    // the default `transfers` redemption_style.
+    expect(m.cpp).toBe(2.05);
     expect(m.programId).toBe("chase_ur");
+    expect(m.cppSource).toBe("median");
   });
 
   it("loyalty program — CFU alone falls back to cash mode", () => {
@@ -72,8 +75,25 @@ describe("classifyEarning", () => {
     const csp = get("chase_sapphire_preferred");
     const m = classifyEarning(cfu, [csp, cfu], db);
     expect(m.mode).toBe("loyalty");
-    expect(m.cpp).toBe(1.25);
+    expect(m.cpp).toBe(2.05);
     expect(m.programId).toBe("chase_ur");
+  });
+
+  it("portal_only redemption style falls back to portal cpp", () => {
+    const card = get("chase_sapphire_preferred");
+    const m = classifyEarning(card, [card], db, "portal_only");
+    expect(m.mode).toBe("loyalty");
+    // chase_ur portal redemption is 1.25¢ via Sapphire Preferred.
+    expect(m.cpp).toBe(1.25);
+    expect(m.cppSource).toBe("portal");
+  });
+
+  it("cash_only redemption style values everything at 1¢", () => {
+    const card = get("chase_sapphire_preferred");
+    const m = classifyEarning(card, [card], db, "cash_only");
+    expect(m.mode).toBe("loyalty");
+    expect(m.cpp).toBe(1);
+    expect(m.cppSource).toBe("cash");
   });
 
   it("cobrand program → always loyalty regardless of wallet", () => {
@@ -103,7 +123,8 @@ describe("scoreCard split — cash vs points buckets", () => {
     expect(pts).not.toBeNull();
     expect(pts!.pts).toBeGreaterThan(0);
     expect(pts!.programId).toBe("chase_ur");
-    expect(pts!.cpp).toBe(1.25);
+    expect(pts!.cpp).toBe(2.05);
+    expect(pts!.cppSource).toBe("median");
     expect(score.components.spendOngoing).toBe(pts!.valueUsd);
   });
 

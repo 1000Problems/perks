@@ -104,6 +104,9 @@
   "fixed_redemption_cpp": 0.6,
   "portal_redemption_cpp": 1.0,
   "portal_redemption_cpp_notes": "1cpp on flights via AmexTravel for Platinum/Business Platinum; lower for other cards. Pay With Points highly variable.",
+  "median_redemption_cpp": 2.0,
+  "median_cpp_source_url": "https://thepointsguy.com/loyalty-programs/monthly-valuations/",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners": [
     {"partner": "Delta SkyMiles", "ratio": "1:1", "type": "airline", "min_transfer": 1000, "notes": null},
     {"partner": "Air Canada Aeroplan", "ratio": "1:1", "type": "airline", "min_transfer": 1000, "notes": null},

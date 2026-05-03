@@ -71,6 +71,9 @@
   "issuer": "Marriott International",
   "earning_cards": ["marriott_bonvoy_boundless", "marriott_bonvoy_bevy", "marriott_bonvoy_bountiful", "marriott_bonvoy_brilliant", "marriott_bonvoy_business"],
   "fixed_redemption_cpp": 0.7,
+  "median_redemption_cpp": 0.8,
+  "median_cpp_source_url": "https://thepointsguy.com/loyalty-programs/monthly-valuations/",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners_notes": "Receives transfers from Chase UR (1:1) and Amex MR (1:1). Transfers OUT to airline programs at 3:1 + 5k bonus per 60k transferred.",
   "sweet_spots": [
     {"description": "5th-night-free on award stays", "value_estimate_usd": "~+25%", "source": null},

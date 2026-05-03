@@ -30,6 +30,14 @@ export const CREDIT_BAND_RANK: Record<CreditScoreBand, number> = {
   unknown: -1,
 };
 
+// How the user redeems points. Drives which cpp the engine uses to
+// value loyalty earnings. Defaults to `transfers` because the audience
+// for this app — anyone with 2+ cards — is normalizing across issuers.
+//   - "transfers"   → median_redemption_cpp (TPG-tracked)
+//   - "portal_only" → portal_redemption_cpp ?? 1
+//   - "cash_only"   → 1
+export type RedemptionStyle = "transfers" | "portal_only" | "cash_only";
+
 export interface UserProfile {
   spend_profile: Partial<Record<SpendCategoryId, number>>;
   brands_used: string[];
@@ -39,13 +47,27 @@ export interface UserProfile {
   // user. The engine treats both the same as "no signal" — `unknown` is
   // a separate state the user explicitly opts into via the radio.
   credit_score_band?: CreditScoreBand | null;
+  // How the user redeems. Optional for backward compat; engine treats
+  // missing as "transfers".
+  redemption_style?: RedemptionStyle;
+  // Signal IDs the user has opted into via the Perks Settings page.
+  // Each signal_id matches a tag on annual_credits / ongoing_perks in
+  // the card data. Empty (or undefined) means no perks contribute to
+  // any card's score — the user has to actively claim a perk to value
+  // it. This is the deliberate floor: perks default to $0.
+  perk_opt_ins?: string[];
   preferences: {
+    // Legacy field. Engine no longer branches on this; perks are
+    // captured via opt-in instead of an ease-multiplier mode. Kept on
+    // the type so existing persisted profiles still validate.
     creditsMode?: "realistic" | "face";
     viewMode?: "ongoing" | "year1";
   };
 }
 
 export interface ScoringOptions {
+  // Legacy. Ignored by the new engine. Retained because existing call
+  // sites still pass it; remove once the UI no longer constructs it.
   creditsMode: "realistic" | "face";
   subAmortizeMonths: number; // default 24
 }
@@ -68,17 +90,30 @@ export interface EarningMode {
   cpp: number; // dollar value per point. 1.0 in cash mode.
   programId: string | null;
   programName: string | null;
+  // Provenance of the cpp value for UI tooltips. See PointsBucket.cppSource.
+  cppSource: "median" | "portal" | "fixed" | "cash";
+  cppAsOf?: string | null;
 }
 
 // Loyalty-currency earnings split out of the cash bucket. `pts` is raw
 // points/yr; `valueUsd` is `pts × cpp / 100` rounded. The UI renders
 // `pts` as the headline number with `valueUsd` as the caption.
+//
+// `cppSource` describes where the cpp came from so the UI can render
+// a tooltip ("Valued at 1.9¢/pt — TPG May 2026"):
+//   - "median": TPG-tracked median_redemption_cpp
+//   - "portal": fall-back to portal_redemption_cpp
+//   - "fixed":  fall-back to fixed_redemption_cpp
+//   - "cash":   1cpp default (cash programs, or loyalty programs whose
+//               wallet doesn't unlock transfers)
 export interface PointsBucket {
   pts: number;
   valueUsd: number;
   programId: string;
   programName: string;
   cpp: number;
+  cppSource: "median" | "portal" | "fixed" | "cash";
+  cppAsOf?: string | null;
 }
 
 // Year-1 sign-up bonus, broken out by currency type. Cash-mode SUBs put
@@ -158,6 +193,24 @@ export interface NewPerkOut {
   note?: string;
 }
 
+// A perk the user has NOT opted into. Listed in the UI under "Available
+// perks — turn on to count" but contributes $0 to the score. The user
+// toggles it on via the Perks Settings page (which writes signal_id
+// into UserProfile.perk_opt_ins).
+export interface AvailablePerkOut {
+  name: string;
+  faceValue: number;
+  signal_id: string | null;
+  note?: string;
+}
+
+// A passive feature of the card (no FX fee, primary CDW, etc). Always-on,
+// never valued. Surfaced as a labeled feature next to the score.
+export interface PassiveFeatureOut {
+  name: string;
+  note?: string;
+}
+
 export interface CardScore {
   deltaOngoing: number;
   deltaYear1: number;
@@ -196,6 +249,11 @@ export interface CardScore {
   >;
   newPerks: NewPerkOut[];
   duplicatedPerks: string[];
+  // Perks the user could opt into but hasn't. Listed but $0 in score.
+  availablePerks: AvailablePerkOut[];
+  // Passive features that come with the card automatically. Always-on,
+  // never valued in dollars. Rendered as labeled chips/lines.
+  passiveFeatures: PassiveFeatureOut[];
 }
 
 export type EligibilityStatus = "green" | "yellow" | "red";

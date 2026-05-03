@@ -93,6 +93,9 @@
   ],
   "fixed_redemption_cpp": 1.0,
   "portal_redemption_cpp": 1.0,
+  "median_redemption_cpp": 1.9,
+  "median_cpp_source_url": "https://thepointsguy.com/loyalty-programs/monthly-valuations/",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners": [
     {"partner": "American Airlines AAdvantage", "ratio": "1:1", "type": "airline", "min_transfer": 1000, "notes": "Unique to TY among major US transferable currencies"},
     {"partner": "Air France-KLM Flying Blue", "ratio": "1:1", "type": "airline", "min_transfer": 1000, "notes": null},

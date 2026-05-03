@@ -72,6 +72,9 @@
   "issuer": "Delta Air Lines",
   "earning_cards": ["delta_skymiles_blue", "delta_skymiles_gold", "delta_skymiles_platinum", "delta_skymiles_reserve", "delta_skymiles_business_variants"],
   "fixed_redemption_cpp": 1.2,
+  "median_redemption_cpp": 1.2,
+  "median_cpp_source_url": "https://thepointsguy.com/loyalty-programs/monthly-valuations/",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners_notes": "Receives transfers from Amex MR (1:1)",
   "sweet_spots": [
     {"description": "Delta Flash Sales / 'mile sales' for round-trip flights", "value_estimate_usd": "~1.5cpp", "source": null}

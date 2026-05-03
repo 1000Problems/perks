@@ -12,10 +12,13 @@
 import type { Card, CardDatabase } from "@/lib/data/loader";
 import type { SpendCategoryId } from "@/lib/data/types";
 import type {
+  AvailablePerkOut,
   CardScore,
   EarningMode,
   NewPerkOut,
+  PassiveFeatureOut,
   PointsBucket,
+  RedemptionStyle,
   ScoreLineItem,
   ScoringOptions,
   SubBucket,
@@ -78,13 +81,58 @@ interface NormalizedEarning {
   mode: EarningMode;
 }
 
+// Resolve the cpp the engine should use for a loyalty program given the
+// user's redemption style. Three modes:
+//   - "transfers"   (default): TPG-tracked median, fall back to portal,
+//                   fall back to 1¢. This is what anyone holding 2+
+//                   cards from different ecosystems should see.
+//   - "portal_only": fall back to portal, then fixed, then 1¢. For users
+//                   who never transfer (book travel through the issuer
+//                   portal or take statement credit).
+//   - "cash_only":  always 1¢. For users who redeem only for cash.
+function resolveLoyaltyCpp(
+  program: { median_redemption_cpp?: number | null; portal_redemption_cpp?: number | null; fixed_redemption_cpp?: number | null; median_cpp_as_of?: string | null },
+  style: RedemptionStyle,
+): { cpp: number; cppSource: "median" | "portal" | "fixed" | "cash"; cppAsOf?: string | null } {
+  if (style === "cash_only") {
+    return { cpp: 1, cppSource: "cash" };
+  }
+  if (style === "portal_only") {
+    if (program.portal_redemption_cpp != null && program.portal_redemption_cpp > 0) {
+      return { cpp: program.portal_redemption_cpp, cppSource: "portal" };
+    }
+    if (program.fixed_redemption_cpp != null && program.fixed_redemption_cpp > 0) {
+      return { cpp: program.fixed_redemption_cpp, cppSource: "fixed" };
+    }
+    return { cpp: 1, cppSource: "cash" };
+  }
+  // "transfers" — TPG median is the headline. Portal is the fallback
+  // for programs we haven't valued yet (the build script enforces fill
+  // for transferables/cobrand programs, so this path is rare).
+  if (program.median_redemption_cpp != null && program.median_redemption_cpp > 0) {
+    return {
+      cpp: program.median_redemption_cpp,
+      cppSource: "median",
+      cppAsOf: program.median_cpp_as_of ?? null,
+    };
+  }
+  if (program.portal_redemption_cpp != null && program.portal_redemption_cpp > 0) {
+    return { cpp: program.portal_redemption_cpp, cppSource: "portal" };
+  }
+  if (program.fixed_redemption_cpp != null && program.fixed_redemption_cpp > 0) {
+    return { cpp: program.fixed_redemption_cpp, cppSource: "fixed" };
+  }
+  return { cpp: 1, cppSource: "cash" };
+}
+
 // Classify a card's earned currency in the context of a wallet. Cash
 // programs always return cash mode at 1cpp. Loyalty programs return
-// loyalty mode at the program's portal cpp ONLY when the wallet
-// contains an unlock card — Sapphire/Ink Preferred for chase_ur,
-// Strata Premier/Elite for citi_thankyou. Cobrand programs (United,
-// Hilton, etc.) and fully-open transferable programs (Capital One,
-// Bilt) have empty unlock lists and always classify as loyalty.
+// loyalty mode at the program's redemption cpp (resolved from the
+// user's redemption_style) ONLY when the wallet contains an unlock
+// card — Sapphire/Ink Preferred for chase_ur, Strata Premier/Elite for
+// citi_thankyou. Cobrand programs (United, Hilton, etc.) and
+// fully-open transferable programs (Capital One, Bilt) have empty
+// unlock lists and always classify as loyalty.
 //
 // This is the gate that makes Chase Freedom Unlimited / Citi Double
 // Cash earn cash on their own and points when paired — the engine
@@ -96,27 +144,26 @@ export function classifyEarning(
   card: Card,
   contextCards: Card[],
   db: CardDatabase,
+  redemptionStyle: RedemptionStyle = "transfers",
 ): EarningMode {
   if (!card.currency_earned) {
-    return { mode: "cash", cpp: 1, programId: null, programName: null };
+    return { mode: "cash", cpp: 1, programId: null, programName: null, cppSource: "cash" };
   }
   const program = db.programById.get(card.currency_earned);
   if (!program) {
-    return { mode: "cash", cpp: 1, programId: null, programName: null };
+    return { mode: "cash", cpp: 1, programId: null, programName: null, cppSource: "cash" };
   }
   const programId = program.id;
   const programName = program.name;
   if (program.kind === "cash") {
-    return { mode: "cash", cpp: 1, programId, programName };
+    return { mode: "cash", cpp: 1, programId, programName, cppSource: "cash" };
   }
-  // Loyalty branch. Conservative cpp: max(portal, fixed) || 1.
-  const portal = program.portal_redemption_cpp ?? 0;
-  const fixed = program.fixed_redemption_cpp ?? 0;
-  const cpp = Math.max(portal, fixed) || 1;
+  // Loyalty branch. cpp resolves through the redemption_style ladder.
+  const resolved = resolveLoyaltyCpp(program, redemptionStyle);
   // Empty unlock list = always loyalty mode (cobrand currencies and
   // fully-open transferables like Capital One Miles, Bilt Rewards).
   if (program.transfer_unlock_card_ids.length === 0) {
-    return { mode: "loyalty", cpp, programId, programName };
+    return { mode: "loyalty", cpp: resolved.cpp, programId, programName, cppSource: resolved.cppSource, cppAsOf: resolved.cppAsOf ?? null };
   }
   // Gated transferable. Loyalty if any context card unlocks; otherwise
   // the points sit at fixed cash redemption value, which the engine
@@ -125,9 +172,9 @@ export function classifyEarning(
     program.transfer_unlock_card_ids.includes(c.id),
   );
   if (unlocks) {
-    return { mode: "loyalty", cpp, programId, programName };
+    return { mode: "loyalty", cpp: resolved.cpp, programId, programName, cppSource: resolved.cppSource, cppAsOf: resolved.cppAsOf ?? null };
   }
-  return { mode: "cash", cpp: 1, programId, programName };
+  return { mode: "cash", cpp: 1, programId, programName, cppSource: "cash" };
 }
 
 // Per-process memoization of normalizeEarning. Keyed by card.id PLUS
@@ -148,8 +195,9 @@ function normalizeEarning(
   card: Card,
   contextCards: Card[],
   db: CardDatabase,
+  redemptionStyle: RedemptionStyle = "transfers",
 ): NormalizedEarning {
-  const mode = classifyEarning(card, contextCards, db);
+  const mode = classifyEarning(card, contextCards, db, redemptionStyle);
   const key = normKey(card.id, mode);
   const cached = normalizeCache.get(key);
   if (cached) return cached;
@@ -191,6 +239,7 @@ function bestRateForCategory(
   category: SpendCategoryId,
   cards: Card[],
   db: CardDatabase,
+  redemptionStyle: RedemptionStyle = "transfers",
 ): { rate: number; from: string; mode: "cash" | "loyalty" | null } {
   let best: { rate: number; from: string; mode: "cash" | "loyalty" | null } = {
     rate: 0,
@@ -198,7 +247,7 @@ function bestRateForCategory(
     mode: null,
   };
   for (const c of cards) {
-    const norm = normalizeEarning(c, cards, db);
+    const norm = normalizeEarning(c, cards, db, redemptionStyle);
     const r = norm.byCat.get(category)?.rate ?? norm.base;
     if (r > best.rate) {
       best = { rate: r, from: c.name, mode: norm.mode.mode };
@@ -221,13 +270,6 @@ function earningsOnCategory(
   const overCap = Math.max(spend - rule.cap_usd_per_year, 0);
   return inCap * rule.rate + overCap * baseRate;
 }
-
-const EASE_MULT: Record<string, number> = {
-  easy: 1.0,
-  medium: 0.75,
-  hard: 0.4,
-  coupon_book: 0.2,
-};
 
 // Lowercase + collapse internal whitespace so "TSA PreCheck" and
 // "tsa  precheck" key the same. Also trims leading/trailing whitespace.
@@ -261,17 +303,20 @@ export function scoreCard(
     .filter((c): c is Card => Boolean(c));
   const walletPlus = [...walletCards, card];
   const walletCardIds = walletCards.map((c) => c.id);
+  const redemptionStyle: RedemptionStyle =
+    userProfile.redemption_style ?? "transfers";
+  const optIns = new Set(userProfile.perk_opt_ins ?? []);
 
   // Spend impact — best rate per category, before vs after, with
   // source-card attribution and cap info for the drill-in's per-row math.
   // The candidate's normalized earning resolves against `walletPlus` so
   // the candidate counts toward unlocking transfers for its own program
   // (e.g. scoring CSP unlocks UR for itself).
-  const cardNorm = normalizeEarning(card, walletPlus, db);
+  const cardNorm = normalizeEarning(card, walletPlus, db, redemptionStyle);
   const spendImpact = {} as CardScore["spendImpact"];
   for (const cat of ALL_CATS) {
-    const curBest = bestRateForCategory(cat, walletCards, db);
-    const newBest = bestRateForCategory(cat, walletPlus, db);
+    const curBest = bestRateForCategory(cat, walletCards, db, redemptionStyle);
+    const newBest = bestRateForCategory(cat, walletPlus, db, redemptionStyle);
     const spend = userProfile.spend_profile[cat] ?? 0;
     const candidateWins = newBest.from === card.name && newBest.rate > curBest.rate;
     const candidateRule = candidateWins ? cardNorm.byCat.get(cat) : undefined;
@@ -311,24 +356,45 @@ export function scoreCard(
     }
   }
 
-  // Annual credits — apply ease multiplier in realistic mode.
+  // Annual credits — perk-capture gating. Each credit's value contributes
+  // to the score ONLY when its activation is "signal_gated" AND the
+  // user has opted into its signal_id via perk_opt_ins. Passive credits
+  // (no FX, primary CDW, etc) are listed as features and never valued.
+  // Un-opted gated credits are listed under availablePerks at $0 — the
+  // user toggles them on via the Perks Settings page.
   let creditsValue = 0;
+  const availablePerks: AvailablePerkOut[] = [];
+  const passiveFeatures: PassiveFeatureOut[] = [];
   for (const cr of card.annual_credits) {
     const face = cr.value_usd ?? 0;
-    if (face <= 0) continue;
-    const mult = options.creditsMode === "realistic" ? (EASE_MULT[cr.ease_of_use] ?? 0.75) : 1;
-    const captured = face * mult;
-    if (captured > 0) {
-      creditsValue += captured;
+    const activation = cr.activation ?? "signal_gated";
+    if (activation === "passive") {
+      passiveFeatures.push({ name: cr.name, note: cr.notes ?? undefined });
+      continue;
+    }
+    // signal_gated. signal_id must match an opt-in to count.
+    const signalId = cr.signal_id ?? null;
+    const optedIn = signalId != null && optIns.has(signalId);
+    if (face > 0 && optedIn) {
+      creditsValue += face;
       breakdown.push({
-        label: `${cr.name} (${options.creditsMode === "realistic" ? cr.ease_of_use : "face"})`,
-        value: Math.round(captured),
+        label: cr.name,
+        value: Math.round(face),
         kind: "credit",
+      });
+    } else if (face > 0) {
+      availablePerks.push({
+        name: cr.name,
+        faceValue: Math.round(face),
+        signal_id: signalId,
+        note: cr.notes ?? undefined,
       });
     }
   }
 
-  // Perks — split into newPerks and duplicatedPerks.
+  // Ongoing perks — same gating. Dedup-trumped names (lounge access
+  // already covered by another wallet card) drop to duplicatedPerks
+  // regardless of opt-in state — the value is already captured.
   const covered = alreadyCoveredPerks(walletCardIds, db);
   const newPerks: NewPerkOut[] = [];
   const duplicatedPerks: string[] = [];
@@ -337,9 +403,18 @@ export function scoreCard(
     const key = normalizePerkKey(p.name);
     const isCovered = covered.has(key);
     const value = p.value_estimate_usd ?? 0;
+    const activation = p.activation ?? "signal_gated";
     if (isCovered) {
       duplicatedPerks.push(p.name);
-    } else if (value > 0) {
+      continue;
+    }
+    if (activation === "passive") {
+      passiveFeatures.push({ name: p.name, note: p.notes ?? undefined });
+      continue;
+    }
+    const signalId = p.signal_id ?? null;
+    const optedIn = signalId != null && optIns.has(signalId);
+    if (value > 0 && optedIn) {
       newPerks.push({ name: p.name, value: Math.round(value), note: p.notes ?? undefined });
       perksValue += value;
       breakdown.push({
@@ -347,7 +422,17 @@ export function scoreCard(
         value: Math.round(value),
         kind: "perk",
       });
+    } else if (value > 0) {
+      availablePerks.push({
+        name: p.name,
+        faceValue: Math.round(value),
+        signal_id: signalId,
+        note: p.notes ?? undefined,
+      });
     } else {
+      // Zero-dollar "unlocks" perk (e.g. travel insurance, status). List
+      // under newPerks with the unlock marker — these don't depend on
+      // opt-in because they have no dollar value to capture.
       newPerks.push({ name: p.name, value: "unlocks", note: p.notes ?? undefined });
     }
   }
@@ -407,6 +492,8 @@ export function scoreCard(
           programId: mode.programId,
           programName: mode.programName,
           cpp: mode.cpp,
+          cppSource: mode.cppSource,
+          cppAsOf: mode.cppAsOf ?? null,
         }
       : null;
   const brandFitOngoing =
@@ -473,6 +560,8 @@ export function scoreCard(
     spendImpact,
     newPerks,
     duplicatedPerks,
+    availablePerks,
+    passiveFeatures,
   };
 }
 

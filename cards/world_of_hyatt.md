@@ -75,6 +75,9 @@
   "issuer": "Hyatt",
   "earning_cards": ["world_of_hyatt", "world_of_hyatt_business"],
   "fixed_redemption_cpp": 1.7,
+  "median_redemption_cpp": 1.65,
+  "median_cpp_source_url": "https://thepointsguy.com/loyalty-programs/monthly-valuations/",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners_notes": "Receives transfers from Chase UR (1:1) and Bilt (1:1)",
   "sweet_spots": [
     {"description": "Cat 1-4 Free Night cert at Park Hyatt off-peak / Andaz", "value_estimate_usd": "~$300-700 retail value", "source": null},

@@ -68,6 +68,9 @@
   "issuer": "Wyndham",
   "earning_cards": ["wyndham_earner", "wyndham_earner_plus", "wyndham_earner_business"],
   "fixed_redemption_cpp": 1.1,
+  "median_redemption_cpp": 0.65,
+  "median_cpp_source_url": "https://thepointsguy.com/loyalty-programs/monthly-valuations/",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners_notes": "Receives from Capital One Miles, Citi TY at 1:1.",
   "sweet_spots": [
     {"description": "Vacasa vacation rentals at 7,500-15,000 pts/night", "value_estimate_usd": "~3-5cpp at $200-400 cash equivalent", "source": null},

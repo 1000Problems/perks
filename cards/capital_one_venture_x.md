@@ -107,6 +107,9 @@
   "fixed_redemption_cpp_notes": "0.5cpp via cash/statement credit",
   "portal_redemption_cpp": 1.0,
   "portal_redemption_cpp_notes": "1cpp via Purchase Eraser / portal",
+  "median_redemption_cpp": 1.85,
+  "median_cpp_source_url": "https://thepointsguy.com/loyalty-programs/monthly-valuations/",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners": [
     {"partner": "Air Canada Aeroplan", "ratio": "1:1", "type": "airline", "min_transfer": 1000, "notes": null},
     {"partner": "Air France-KLM Flying Blue", "ratio": "1:1", "type": "airline", "min_transfer": 1000, "notes": null},

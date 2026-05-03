@@ -26,14 +26,29 @@ const SignupBonus = z.object({
   notes: z.string().nullable().optional(),
 });
 
+// activation drives capture in the scoring engine:
+//   - "passive": always-on feature (no FX fee, primary CDW, purchase
+//     protection). Listed in the UI but contributes $0 to the score.
+//   - "signal_gated": value is captured only when the user has opted in
+//     via profile.perk_opt_ins matching the entry's signal_id. The
+//     default for any unlabeled credit/perk is "signal_gated" with
+//     null signal_id → $0 contribution. This kills the "perks-as-
+//     presumed-income" inflation that pushed Amex Platinum / Delta
+//     Reserve to the top despite weak earning rates.
+const Activation = z.enum(["passive", "signal_gated"]);
+
 const AnnualCredit = z.object({
   name: z.string(),
   value_usd: z.number().nullable().optional(),
   type: z.string().nullable().optional(),
   expiration: z.string().nullable().optional(),
+  // Legacy field — engine no longer reads it. Kept so existing markdown
+  // parses without modification. New entries can omit it.
   ease_of_use: z
     .enum(["easy", "medium", "hard", "coupon_book"])
-    .default("medium"), // missing-grade falls back to a moderate 0.75 multiplier
+    .default("medium"),
+  activation: Activation.optional().default("signal_gated"),
+  signal_id: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
 });
 
@@ -41,6 +56,8 @@ const OngoingPerk = z.object({
   name: z.string(),
   value_estimate_usd: z.number().nullable().optional(),
   category: z.string(),
+  activation: Activation.optional().default("signal_gated"),
+  signal_id: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
 });
 
@@ -112,6 +129,14 @@ export const ProgramSchema = z
     fixed_redemption_cpp: z.number().nullable().optional(),
     portal_redemption_cpp: z.number().nullable().optional(),
     portal_redemption_cpp_notes: z.string().nullable().optional(),
+    // TPG-anchored median redemption value. Source of truth for headline
+    // valuation under the default `transfers` redemption_style. Required
+    // for any program with kind === "loyalty" (transferable, cobrand
+    // airline, cobrand hotel) — the build script enforces this. Cash and
+    // fixed_value programs default to 1.0 and don't need a manual fill.
+    median_redemption_cpp: z.number().nullable().optional(),
+    median_cpp_source_url: z.string().nullable().optional(),
+    median_cpp_as_of: IsoDate.nullable().optional(),
     transfer_partners: z.array(TransferPartner).default([]),
     // Card IDs that, when present in the wallet, unlock loyalty-mode
     // earning for every card in this program. Empty list means "every

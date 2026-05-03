@@ -103,6 +103,9 @@
   "fixed_redemption_cpp": 1.0,
   "portal_redemption_cpp": 1.25,
   "portal_redemption_cpp_notes": "1.25cpp on Sapphire Preferred / Ink Business Preferred via Chase Travel; Sapphire Reserve has shifted to a different points-and-cash redemption model post-2025 refresh",
+  "median_redemption_cpp": 2.05,
+  "median_cpp_source_url": "https://thepointsguy.com/loyalty-programs/monthly-valuations/",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners": [
     {"partner": "United MileagePlus", "ratio": "1:1", "type": "airline", "min_transfer": 1000, "notes": null},
     {"partner": "Southwest Rapid Rewards", "ratio": "1:1", "type": "airline", "min_transfer": 1000, "notes": null},

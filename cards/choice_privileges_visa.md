@@ -65,6 +65,9 @@
   "issuer": "Choice Hotels",
   "earning_cards": ["choice_privileges_visa", "choice_privileges_visa_business"],
   "fixed_redemption_cpp": 0.6,
+  "median_redemption_cpp": 0.6,
+  "median_cpp_source_url": "https://thepointsguy.com/loyalty-programs/monthly-valuations/",
+  "median_cpp_as_of": "2026-05-01",
   "transfer_partners_notes": "Receives transfers from Citi TY (1:2 — excellent), Capital One Miles (1:1).",
   "sweet_spots": [
     {"description": "Preferred Hotels & Resorts via Choice transfer at fixed point cost", "value_estimate_usd": "~2cpp", "source": null}

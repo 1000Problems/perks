@@ -247,34 +247,111 @@ export function SweetSpots({ card, db }: SweetSpotsProps) {
         <span className="eyebrow">Sweet spots</span>
         <h2 className="hero-section-title">Where these points punch above 1¢</h2>
         <p className="hero-section-sub">
-          Named redemptions with above-average cents-per-point value. We&apos;ll
-          add point-cost / cash-equivalent / step-by-step booking once we
-          author the card&apos;s plays block.
+          Named redemptions with above-average cents-per-point value. Point
+          counts assume you transfer at 1:1 — typically requires a premium card
+          like the Strata Premier or Strata Elite.
         </p>
       </header>
       <div className="sweet-spot-list">
-        {program.sweet_spots!.map((s, i) => (
-          <div key={i} className="sweet-spot">
-            <div className="sweet-spot-body">
-              <div className="sweet-spot-desc">{s.description}</div>
-              {s.value_estimate_usd != null && (
-                <div className="sweet-spot-value mono">
-                  {String(s.value_estimate_usd)}
+        {program.sweet_spots!.map((s, i) => {
+          const hasStructured =
+            s.point_cost_one_way != null ||
+            s.partner_program != null ||
+            s.cash_equiv_usd_low != null;
+          if (!hasStructured) {
+            // Back-compat lightweight render for cards that haven't been
+            // enriched with structured data yet.
+            return (
+              <div key={i} className="sweet-spot">
+                <div className="sweet-spot-body">
+                  <div className="sweet-spot-desc">{s.description}</div>
+                  {s.value_estimate_usd != null && (
+                    <div className="sweet-spot-value mono">
+                      {String(s.value_estimate_usd)}
+                    </div>
+                  )}
                 </div>
+                {s.source && (
+                  <a
+                    className="sweet-spot-source"
+                    href={s.source}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    source ↗
+                  </a>
+                )}
+              </div>
+            );
+          }
+          // Rich render for structured entries.
+          const cashLow = s.cash_equiv_usd_low ?? null;
+          const cashHigh = s.cash_equiv_usd_high ?? null;
+          let cashRange: string | null = null;
+          if (cashLow != null && cashHigh != null) {
+            cashRange = `${fmt.usd(cashLow)}–${fmt.usd(cashHigh)}`;
+          } else if (cashLow != null) {
+            cashRange = `${fmt.usd(cashLow)}+`;
+          }
+          return (
+            <article key={i} className="sweet-spot rich">
+              <header className="sweet-spot-head">
+                <div className="sweet-spot-title">{s.description}</div>
+                {s.value_estimate_usd != null && (
+                  <div className="sweet-spot-value mono">
+                    {String(s.value_estimate_usd)}
+                  </div>
+                )}
+              </header>
+              <dl className="sweet-spot-grid">
+                {s.point_cost_one_way != null && (
+                  <div>
+                    <dt>Point cost</dt>
+                    <dd className="num">
+                      {s.point_cost_one_way.toLocaleString()} pts
+                    </dd>
+                  </div>
+                )}
+                {cashRange && (
+                  <div>
+                    <dt>Cash equivalent</dt>
+                    <dd>{cashRange}</dd>
+                  </div>
+                )}
+                {s.partner_program && (
+                  <div>
+                    <dt>Via</dt>
+                    <dd>{s.partner_program}</dd>
+                  </div>
+                )}
+                {s.surcharges_usd != null && (
+                  <div>
+                    <dt>Surcharges + fees</dt>
+                    <dd>
+                      {s.surcharges_usd === 0
+                        ? "None"
+                        : `~${fmt.usd(s.surcharges_usd)}`}
+                    </dd>
+                  </div>
+                )}
+              </dl>
+              {s.route && <div className="sweet-spot-route">{s.route}</div>}
+              {s.conditions && (
+                <p className="sweet-spot-conditions">{s.conditions}</p>
               )}
-            </div>
-            {s.source && (
-              <a
-                className="sweet-spot-source"
-                href={s.source}
-                target="_blank"
-                rel="noreferrer"
-              >
-                source ↗
-              </a>
-            )}
-          </div>
-        ))}
+              {s.source && (
+                <a
+                  className="sweet-spot-source"
+                  href={s.source}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  source ↗
+                </a>
+              )}
+            </article>
+          );
+        })}
       </div>
     </section>
   );

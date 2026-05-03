@@ -128,8 +128,21 @@ const TransferPartner = z.object({
 
 const SweetSpot = z.object({
   description: z.string(),
+  // Free-form value summary kept for back-compat — accepts a number,
+  // a hand-written string like "~2-3cpp", or null.
   value_estimate_usd: z.union([z.number(), z.string(), z.null()]).optional(),
   source: z.string().nullable().optional(),
+  // Structured fields — optional. When present, the hero page renders
+  // a richer card with point cost / cash equivalent / surcharges /
+  // partner program. Lets us distinguish "ANA biz US East Coast →
+  // Tokyo" from a generic "AAdvantage off-peak" line.
+  partner_program: z.string().nullable().optional(),
+  route: z.string().nullable().optional(),
+  point_cost_one_way: z.number().nullable().optional(),
+  cash_equiv_usd_low: z.number().nullable().optional(),
+  cash_equiv_usd_high: z.number().nullable().optional(),
+  surcharges_usd: z.number().nullable().optional(),
+  conditions: z.string().nullable().optional(),
 });
 
 export const ProgramSchema = z

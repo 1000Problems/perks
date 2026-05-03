@@ -291,6 +291,72 @@ function alreadyCoveredPerks(
   return covered;
 }
 
+// Signal-based dedup. Walks every annual_credit and ongoing_perk on the
+// wallet's cards and collects the set of signal_ids that ALREADY
+// capture under the user's spend profile. A candidate card whose perk
+// shares a signal_id with one already capturing in the wallet drops to
+// $0 — Sky Club shouldn't add $695 over a wallet that already has
+// Priority Pass, free checked bag shouldn't double-count when held
+// across two airline cobrand cards, Global Entry credits shouldn't
+// stack across multiple cards, etc.
+//
+// We require the wallet's perk to ACTUALLY capture (capture > 0) to
+// dedup. A signal-gated perk that captures $0 (no spend signal) does
+// not block the candidate's same-signal perk — both would be at $0
+// anyway, so it's a no-op.
+//
+// Signals that legitimately stack (e.g. trip_insurance — coverage
+// limits aren't fungible) are listed in NON_DEDUPING_SIGNALS and
+// skipped. Conservative default: dedup unless explicitly listed.
+const NON_DEDUPING_SIGNALS: ReadonlySet<string> = new Set([
+  // Insurance coverage stacks — different cards have different limits,
+  // exclusions, and pay-out behavior. The user gets to pick which card
+  // to put the booking on.
+  "trip_insurance",
+  "cell_phone_protection",
+  "purchase_protection",
+  "extended_warranty",
+]);
+
+function collectWalletPerkSignals(
+  walletCards: Card[],
+  userProfile: UserProfile,
+): Set<string> {
+  const signals = new Set<string>();
+  for (const c of walletCards) {
+    for (const cr of c.annual_credits) {
+      const sig = cr.signal_id;
+      if (!sig) continue;
+      if (NON_DEDUPING_SIGNALS.has(sig)) continue;
+      const face = cr.value_usd ?? 0;
+      if (face <= 0) continue;
+      const captureRate = derivePerkCapture(sig, userProfile);
+      if (captureRate > 0) signals.add(sig);
+    }
+    for (const p of c.ongoing_perks) {
+      const sig = p.signal_id;
+      if (!sig) continue;
+      if (NON_DEDUPING_SIGNALS.has(sig)) continue;
+      const face = p.value_estimate_usd ?? 0;
+      // Zero-dollar "unlocks" perks (lounge access often has no face
+      // value but is the perk we want to dedup against). We dedup any
+      // captured signal regardless of dollar value, since the question
+      // is "do you already have this kind of benefit".
+      if (face <= 0) {
+        // Behavioral perks without a face value (lounge_access,
+        // free_checked_bag, hotel_status). They activate via spend
+        // step rules. If the rule fires, the wallet provides this
+        // signal.
+        if (derivePerkCapture(sig, userProfile) > 0) signals.add(sig);
+        continue;
+      }
+      const captureRate = derivePerkCapture(sig, userProfile);
+      if (captureRate > 0) signals.add(sig);
+    }
+  }
+  return signals;
+}
+
 export function scoreCard(
   card: Card,
   userProfile: UserProfile,
@@ -365,9 +431,16 @@ export function scoreCard(
   // FX, primary CDW) bypass the gate and surface as features.
   // Subjective perks (Equinox, Saks) have no spend signal; they
   // capture $0 unless their signal_id is in profile.perk_opt_ins.
+  //
+  // Signal-based dedup: if a perk's signal is already covered by a
+  // wallet card (Sky Club credit when CSR Priority Pass is held,
+  // Global Entry credit when Cap One Venture X grants it), skip the
+  // candidate's perk capture — it's marginal value $0.
+  const walletSignals = collectWalletPerkSignals(walletCards, userProfile);
   let creditsValue = 0;
   const availablePerks: AvailablePerkOut[] = [];
   const passiveFeatures: PassiveFeatureOut[] = [];
+  const duplicatedPerks: string[] = [];
   for (const cr of card.annual_credits) {
     const face = cr.value_usd ?? 0;
     const activation = cr.activation ?? "signal_gated";
@@ -377,6 +450,10 @@ export function scoreCard(
     }
     if (face <= 0) continue;
     const signalId = cr.signal_id ?? null;
+    if (signalId && walletSignals.has(signalId)) {
+      duplicatedPerks.push(cr.name);
+      continue;
+    }
     const captureRate = derivePerkCapture(signalId, userProfile);
     const captured = face * captureRate;
     if (captured > 0) {
@@ -398,13 +475,15 @@ export function scoreCard(
     }
   }
 
-  // Ongoing perks — same gating logic. Dedup-trumped names (lounge
-  // access already covered by another wallet card) drop to
-  // duplicatedPerks before any capture math runs — the value is
-  // already accounted for elsewhere.
+  // Ongoing perks — same gating logic. Two dedup paths:
+  //   1. Name-based dedup via perks_dedup.json (legacy — handles
+  //      perks with explicit dedup mappings).
+  //   2. Signal-based dedup via walletSignals (handles "Sky Club ≈
+  //      Priority Pass" cases where names differ but the perk is
+  //      functionally the same).
+  // Either path zeros the candidate's perk value.
   const covered = alreadyCoveredPerks(walletCardIds, db);
   const newPerks: NewPerkOut[] = [];
-  const duplicatedPerks: string[] = [];
   let perksValue = 0;
   for (const p of card.ongoing_perks) {
     const key = normalizePerkKey(p.name);
@@ -419,6 +498,11 @@ export function scoreCard(
       passiveFeatures.push({ name: p.name, note: p.notes ?? undefined });
       continue;
     }
+    const signalId = p.signal_id ?? null;
+    if (signalId && walletSignals.has(signalId)) {
+      duplicatedPerks.push(p.name);
+      continue;
+    }
     if (value <= 0) {
       // Zero-dollar "unlocks" perk (travel insurance, status). List
       // under newPerks with the unlock marker — no dollar capture to
@@ -426,7 +510,6 @@ export function scoreCard(
       newPerks.push({ name: p.name, value: "unlocks", note: p.notes ?? undefined });
       continue;
     }
-    const signalId = p.signal_id ?? null;
     const captureRate = derivePerkCapture(signalId, userProfile);
     const captured = value * captureRate;
     if (captured > 0) {

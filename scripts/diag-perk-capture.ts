@@ -107,3 +107,30 @@ for (const id of walletIds) {
       `  pts=$${ptsValue}  perks=$${c.perksOngoing}  fee=$${c.feeOngoing}`,
   );
 }
+
+// Score candidate cards (not held) against the full wallet — does the
+// engine still recommend Delta Reserve?
+console.log();
+console.log("=== Candidate cards (not held) — should NOT win for this wallet ===");
+const candidates = [
+  "delta_skymiles_reserve",
+  "amex_platinum",
+  "united_club_infinite",
+  "bilt_blue",
+  "chase_freedom_flex",
+  "citi_custom_cash",
+];
+for (const id of candidates) {
+  const card = db.cardById.get(id);
+  if (!card) {
+    console.log(`  ${id}: not in catalog`);
+    continue;
+  }
+  const score = scoreCard(card, heavyTravel, wallet, db, SCORING);
+  const c = score.components;
+  console.log(
+    `${card.name.padEnd(38)}  delta=${String((score.deltaOngoing >= 0 ? "+$" : "-$") + Math.abs(Math.round(score.deltaOngoing))).padStart(8)}` +
+      `  pts=$${c.pointsOngoing?.valueUsd ?? 0}  perks=$${c.perksOngoing}  fee=$${c.feeOngoing}` +
+      `  dups=${score.duplicatedPerks.length}`,
+  );
+}

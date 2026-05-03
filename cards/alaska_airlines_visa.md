@@ -34,11 +34,11 @@
   },
 
   "annual_credits": [
-    {"name": "Alaska's Famous Companion Fare ($122)", "value_usd": 250, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "easy", "notes": "Companion fare from $122 + taxes/fees on round-trip Alaska flights"}
+    {"name": "Alaska's Famous Companion Fare ($122)", "signal_id": "airline_companion_cert", "value_usd": 250, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "easy", "notes": "Companion fare from $122 + taxes/fees on round-trip Alaska flights"}
   ],
 
   "ongoing_perks": [
-    {"name": "Free first checked bag (primary + up to 6 companions)", "value_estimate_usd": 240, "category": "airline_perk"},
+    {"name": "Free first checked bag (primary + up to 6 companions)", "signal_id": "free_checked_bag", "value_estimate_usd": 240, "category": "airline_perk"},
     {"name": "Boarding priority", "value_estimate_usd": null, "category": "airline_perk"},
     {"name": "20% back on inflight purchases", "value_estimate_usd": null, "category": "airline_perk"}
   ],

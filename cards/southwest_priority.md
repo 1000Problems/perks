@@ -33,7 +33,7 @@
   },
 
   "annual_credits": [
-    {"name": "$75 Southwest annual travel credit", "value_usd": 75, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "easy"}
+    {"name": "$75 Southwest annual travel credit", "signal_id": "travel_credit", "value_usd": 75, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "easy"}
   ],
 
   "ongoing_perks": [

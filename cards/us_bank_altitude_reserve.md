@@ -33,16 +33,16 @@
   },
 
   "annual_credits": [
-    {"name": "Travel/dining credit", "value_usd": 325, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "easy", "notes": "Auto-applied to first $325 of travel and dining each year"},
-    {"name": "TSA PreCheck / Global Entry", "value_usd": 100, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"},
-    {"name": "Priority Pass select", "value_usd": null, "type": "specific", "expiration": "annual", "ease_of_use": "easy", "notes": "4 free visits per year"}
+    {"name": "Travel/dining credit", "signal_id": "dining_credit", "value_usd": 325, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "easy", "notes": "Auto-applied to first $325 of travel and dining each year"},
+    {"name": "TSA PreCheck / Global Entry", "signal_id": "global_entry_tsa", "value_usd": 100, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"},
+    {"name": "Priority Pass select", "signal_id": "lounge_access", "value_usd": null, "type": "specific", "expiration": "annual", "ease_of_use": "easy", "notes": "4 free visits per year"}
   ],
 
   "ongoing_perks": [
-    {"name": "Priority Pass Select (4 free visits)", "value_estimate_usd": 140, "category": "lounge_access"},
-    {"name": "Trip cancellation/interruption", "value_estimate_usd": null, "category": "travel_protection"},
+    {"name": "Priority Pass Select (4 free visits)", "signal_id": "lounge_access", "value_estimate_usd": 140, "category": "lounge_access"},
+    {"name": "Trip cancellation/interruption", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection"},
     {"name": "Auto rental CDW (primary in US)", "value_estimate_usd": null, "category": "travel_protection"},
-    {"name": "Cell phone protection", "value_estimate_usd": null, "category": "purchase_protection"},
+    {"name": "Cell phone protection", "signal_id": "cell_phone_protection", "value_estimate_usd": null, "category": "purchase_protection"},
     {"name": "1.5cpp redemption when redeeming for travel via Real-Time Rewards or US Bank Travel", "value_estimate_usd": null, "category": "rewards_flexibility", "notes": "Effective return: 4.5% mobile wallet, 4.5% travel, 1.5% non-bonus when used for travel"}
   ],
 

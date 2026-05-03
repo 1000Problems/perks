@@ -30,8 +30,8 @@
   "annual_credits": [],
 
   "ongoing_perks": [
-    {"name": "Free first checked bag", "value_estimate_usd": 100, "category": "airline_perk"},
-    {"name": "Priority boarding (Zone 2)", "value_estimate_usd": null, "category": "airline_perk"},
+    {"name": "Free first checked bag", "signal_id": "free_checked_bag", "value_estimate_usd": 100, "category": "airline_perk"},
+    {"name": "Priority boarding (Zone 2)", "signal_id": "priority_boarding", "value_estimate_usd": null, "category": "airline_perk"},
     {"name": "Spirit Status Match path with $5k+ spend", "value_estimate_usd": null, "category": "elite_status_acceleration"}
   ],
 

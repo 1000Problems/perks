@@ -38,7 +38,7 @@
   ],
 
   "ongoing_perks": [
-    {"name": "Free first checked bag", "value_estimate_usd": 140, "category": "airline_perk"},
+    {"name": "Free first checked bag", "signal_id": "free_checked_bag", "value_estimate_usd": 140, "category": "airline_perk"},
     {"name": "50% off inflight food/drink", "value_estimate_usd": null, "category": "airline_perk"},
     {"name": "Mosaic status with $50k spend", "value_estimate_usd": null, "category": "elite_status"}
   ],

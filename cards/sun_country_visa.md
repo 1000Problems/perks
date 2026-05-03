@@ -29,7 +29,7 @@
 
   "annual_credits": [{"name": "$50 Sun Country credit", "value_usd": 50, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "medium"}],
 
-  "ongoing_perks": [{"name": "Free first checked bag (when paying with card)", "value_estimate_usd": 100, "category": "airline_perk"}],
+  "ongoing_perks": [{"name": "Free first checked bag (when paying with card)", "signal_id": "free_checked_bag", "value_estimate_usd": 100, "category": "airline_perk"}],
 
   "transfer_partners_inherited_from": null,
   "issuer_rules": [],

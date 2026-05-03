@@ -33,12 +33,12 @@
   },
 
   "annual_credits": [
-    {"name": "Free Night Award (40,000 pts)", "value_usd": 200, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "easy", "notes": "Top-up with points to use at any IHG property"},
-    {"name": "Global Entry / TSA PreCheck", "value_usd": 100, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"}
+    {"name": "Free Night Award (40,000 pts)", "signal_id": "hotel_free_night_cert", "value_usd": 200, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "easy", "notes": "Top-up with points to use at any IHG property"},
+    {"name": "Global Entry / TSA PreCheck", "signal_id": "global_entry_tsa", "value_usd": 100, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"}
   ],
 
   "ongoing_perks": [
-    {"name": "IHG Platinum Elite status", "value_estimate_usd": null, "category": "hotel_status"},
+    {"name": "IHG Platinum Elite status", "signal_id": "hotel_status", "value_estimate_usd": null, "category": "hotel_status"},
     {"name": "4th-night-free on award stays", "value_estimate_usd": null, "category": "rewards_modifier"}
   ],
 

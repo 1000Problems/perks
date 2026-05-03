@@ -35,12 +35,12 @@
   },
 
   "annual_credits": [
-    {"name": "Hotel/dining/travel credit", "value_usd": null, "type": "specific", "expiration": "annual", "ease_of_use": "medium", "notes": "Details emerging post-launch; verify before recommendation"}
+    {"name": "Hotel/dining/travel credit", "signal_id": "travel_credit", "value_usd": null, "type": "specific", "expiration": "annual", "ease_of_use": "medium", "notes": "Details emerging post-launch; verify before recommendation"}
   ],
 
   "ongoing_perks": [
-    {"name": "Lounge access (Priority Pass and/or Bilt-curated)", "value_estimate_usd": null, "category": "lounge_access"},
-    {"name": "Cell phone protection", "value_estimate_usd": null, "category": "purchase_protection"},
+    {"name": "Lounge access (Priority Pass and/or Bilt-curated)", "signal_id": "lounge_access", "value_estimate_usd": null, "category": "lounge_access"},
+    {"name": "Cell phone protection", "signal_id": "cell_phone_protection", "value_estimate_usd": null, "category": "purchase_protection"},
     {"name": "Trip protections", "value_estimate_usd": null, "category": "travel_protection"}
   ],
 

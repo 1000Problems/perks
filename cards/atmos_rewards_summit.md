@@ -38,9 +38,9 @@
   ],
 
   "ongoing_perks": [
-    {"name": "Free first checked bag (Alaska + Hawaiian)", "value_estimate_usd": 240, "category": "airline_perk"},
-    {"name": "Preferred boarding", "value_estimate_usd": null, "category": "airline_perk"},
-    {"name": "Lounge access (verify scope — likely Alaska Lounges + select partners)", "value_estimate_usd": null, "category": "lounge_access"},
+    {"name": "Free first checked bag (Alaska + Hawaiian)", "signal_id": "free_checked_bag", "value_estimate_usd": 240, "category": "airline_perk"},
+    {"name": "Preferred boarding", "signal_id": "priority_boarding", "value_estimate_usd": null, "category": "airline_perk"},
+    {"name": "Lounge access (verify scope — likely Alaska Lounges + select partners)", "signal_id": "lounge_access", "value_estimate_usd": null, "category": "lounge_access"},
     {"name": "Trip protections", "value_estimate_usd": null, "category": "travel_protection"}
   ],
 

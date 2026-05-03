@@ -38,14 +38,14 @@
   },
 
   "annual_credits": [
-    {"name": "Hotel credit", "value_usd": 100, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "medium", "notes": "Single hotel stay of $500+ via CitiTravel.com"}
+    {"name": "Hotel credit", "signal_id": "hotel_credit", "value_usd": 100, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "medium", "notes": "Single hotel stay of $500+ via CitiTravel.com"}
   ],
 
   "ongoing_perks": [
     {"name": "Auto rental CDW (secondary)", "value_estimate_usd": null, "category": "travel_protection"},
-    {"name": "Trip cancellation/interruption", "value_estimate_usd": null, "category": "travel_protection"},
-    {"name": "Trip delay protection", "value_estimate_usd": null, "category": "travel_protection"},
-    {"name": "Lost or damaged baggage protection", "value_estimate_usd": null, "category": "travel_protection"}
+    {"name": "Trip cancellation/interruption", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection"},
+    {"name": "Trip delay protection", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection"},
+    {"name": "Lost or damaged baggage protection", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection"}
   ],
 
   "transfer_partners_inherited_from": "citi_thankyou",

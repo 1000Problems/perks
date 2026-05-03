@@ -39,8 +39,8 @@
   "annual_credits": [],
 
   "ongoing_perks": [
-    {"name": "Cell phone protection", "value_estimate_usd": null, "category": "purchase_protection"},
-    {"name": "Trip cancellation/interruption", "value_estimate_usd": null, "category": "travel_protection"},
+    {"name": "Cell phone protection", "signal_id": "cell_phone_protection", "value_estimate_usd": null, "category": "purchase_protection"},
+    {"name": "Trip cancellation/interruption", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection"},
     {"name": "Auto rental CDW", "value_estimate_usd": null, "category": "travel_protection"}
   ],
 

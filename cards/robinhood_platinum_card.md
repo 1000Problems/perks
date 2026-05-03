@@ -34,7 +34,7 @@
   "annual_credits": [],
 
   "ongoing_perks": [
-    {"name": "Premium travel benefits (lounge access, etc.) — pending official disclosure", "value_estimate_usd": null, "category": "lounge_access"}
+    {"name": "Premium travel benefits (lounge access, etc.) — pending official disclosure", "signal_id": "lounge_access", "value_estimate_usd": null, "category": "lounge_access"}
   ],
 
   "transfer_partners_inherited_from": null,

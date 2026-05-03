@@ -32,7 +32,7 @@
   ],
 
   "ongoing_perks": [
-    {"name": "Priority boarding", "value_estimate_usd": null, "category": "airline_perk"},
+    {"name": "Priority boarding", "signal_id": "priority_boarding", "value_estimate_usd": null, "category": "airline_perk"},
     {"name": "Free seat selection", "value_estimate_usd": null, "category": "airline_perk"}
   ],
 

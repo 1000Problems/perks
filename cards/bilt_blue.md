@@ -40,7 +40,7 @@
   "annual_credits": [],
 
   "ongoing_perks": [
-    {"name": "Cell phone protection (limited tiers)", "value_estimate_usd": null, "category": "purchase_protection"},
+    {"name": "Cell phone protection (limited tiers)", "signal_id": "cell_phone_protection", "value_estimate_usd": null, "category": "purchase_protection"},
     {"name": "Auto rental CDW (secondary)", "value_estimate_usd": null, "category": "travel_protection"}
   ],
 

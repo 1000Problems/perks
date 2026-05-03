@@ -36,12 +36,12 @@
   },
 
   "annual_credits": [
-    {"name": "Disney+ Bundle credit", "value_usd": 84, "type": "specific", "expiration": "monthly", "ease_of_use": "medium", "notes": "$7/month, requires auto-renewing Disney+ Bundle subscription"}
+    {"name": "Disney+ Bundle credit", "signal_id": "streaming_credit", "value_usd": 84, "type": "specific", "expiration": "monthly", "ease_of_use": "medium", "notes": "$7/month, requires auto-renewing Disney+ Bundle subscription"}
   ],
 
   "ongoing_perks": [
     {"name": "Return protection", "value_estimate_usd": null, "category": "purchase_protection"},
-    {"name": "Purchase protection", "value_estimate_usd": null, "category": "purchase_protection"}
+    {"name": "Purchase protection", "signal_id": "purchase_protection", "value_estimate_usd": null, "category": "purchase_protection"}
   ],
 
   "transfer_partners_inherited_from": null,

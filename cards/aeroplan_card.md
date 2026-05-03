@@ -33,11 +33,11 @@
   },
 
   "annual_credits": [
-    {"name": "Up to $100 Global Entry / NEXUS / TSA PreCheck", "value_usd": 100, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"}
+    {"name": "Up to $100 Global Entry / NEXUS / TSA PreCheck", "signal_id": "global_entry_tsa", "value_usd": 100, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"}
   ],
 
   "ongoing_perks": [
-    {"name": "Free first checked bag on Air Canada", "value_estimate_usd": 200, "category": "airline_perk"},
+    {"name": "Free first checked bag on Air Canada", "signal_id": "free_checked_bag", "value_estimate_usd": 200, "category": "airline_perk"},
     {"name": "25% back on inflight purchases", "value_estimate_usd": null, "category": "airline_perk"},
     {"name": "Path to Aeroplan 25K elite status with $15k+ spend", "value_estimate_usd": null, "category": "elite_status_acceleration"},
     {"name": "Primary auto rental CDW", "value_estimate_usd": null, "category": "travel_protection"}

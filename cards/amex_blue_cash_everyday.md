@@ -35,12 +35,12 @@
   },
 
   "annual_credits": [
-    {"name": "Disney+ Bundle credit", "value_usd": 84, "type": "specific", "expiration": "monthly", "ease_of_use": "medium", "notes": "$7/month, requires auto-renewing Disney+ Bundle"},
+    {"name": "Disney+ Bundle credit", "signal_id": "streaming_credit", "value_usd": 84, "type": "specific", "expiration": "monthly", "ease_of_use": "medium", "notes": "$7/month, requires auto-renewing Disney+ Bundle"},
     {"name": "Home Chef credit", "value_usd": 84, "type": "specific", "expiration": "monthly", "ease_of_use": "hard", "notes": "$15 in statement credits per qualifying delivery, capped"}
   ],
 
   "ongoing_perks": [
-    {"name": "Purchase protection", "value_estimate_usd": null, "category": "purchase_protection"},
+    {"name": "Purchase protection", "signal_id": "purchase_protection", "value_estimate_usd": null, "category": "purchase_protection"},
     {"name": "Return protection", "value_estimate_usd": null, "category": "purchase_protection"}
   ],
 

@@ -36,18 +36,18 @@
   },
 
   "annual_credits": [
-    {"name": "United Travel credit", "value_usd": 200, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "easy", "notes": "Auto-applied to first $200 in United purchases"},
+    {"name": "United Travel credit", "signal_id": "travel_credit", "value_usd": 200, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "easy", "notes": "Auto-applied to first $200 in United purchases"},
     {"name": "Up to $150 in JSX or Avelo credit (newer)", "value_usd": 150, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "hard"},
     {"name": "Anniversary award flight credit", "value_usd": null, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "medium", "notes": "5,000-mile rebate on first award flight redemption per year, up to 10k"}
   ],
 
   "ongoing_perks": [
-    {"name": "Free first checked bag (primary + 1 companion)", "value_estimate_usd": 240, "category": "airline_perk", "notes": "Saves $40 each way x 2 people roundtrip = ~$160 per trip; ~$240/yr if used 1.5 times"},
-    {"name": "Priority boarding (Group 2)", "value_estimate_usd": null, "category": "airline_perk"},
+    {"name": "Free first checked bag (primary + 1 companion)", "signal_id": "free_checked_bag", "value_estimate_usd": 240, "category": "airline_perk", "notes": "Saves $40 each way x 2 people roundtrip = ~$160 per trip; ~$240/yr if used 1.5 times"},
+    {"name": "Priority boarding (Group 2)", "signal_id": "priority_boarding", "value_estimate_usd": null, "category": "airline_perk"},
     {"name": "25% back as statement credit on inflight purchases", "value_estimate_usd": null, "category": "airline_perk"},
-    {"name": "Trip cancellation/interruption", "value_estimate_usd": null, "category": "travel_protection"},
+    {"name": "Trip cancellation/interruption", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection"},
     {"name": "Primary auto rental CDW", "value_estimate_usd": null, "category": "travel_protection"},
-    {"name": "Cell phone protection", "value_estimate_usd": null, "category": "purchase_protection"},
+    {"name": "Cell phone protection", "signal_id": "cell_phone_protection", "value_estimate_usd": null, "category": "purchase_protection"},
     {"name": "Hyatt $50 credit (some periods)", "value_estimate_usd": null, "category": "lifestyle"}
   ],
 

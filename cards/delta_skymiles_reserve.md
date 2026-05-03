@@ -34,14 +34,14 @@
 
   "annual_credits": [
     {"name": "Delta Stays credit", "value_usd": 200, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "medium"},
-    {"name": "Resy dining credit", "value_usd": 240, "type": "specific", "expiration": "monthly", "ease_of_use": "medium"},
+    {"name": "Resy dining credit", "signal_id": "dining_credit", "value_usd": 240, "type": "specific", "expiration": "monthly", "ease_of_use": "medium"},
     {"name": "Rideshare credit", "value_usd": 120, "type": "specific", "expiration": "monthly", "ease_of_use": "easy"}
   ],
 
   "ongoing_perks": [
-    {"name": "Delta Sky Club access", "value_estimate_usd": 695, "category": "lounge_access", "notes": "When flying Delta same-day; standalone Delta One bookings extended; capped at 15 visits/yr unless $75k spend"},
-    {"name": "Centurion Lounge access (when flying Delta on Reserve)", "value_estimate_usd": null, "category": "lounge_access"},
-    {"name": "Free first checked bag", "value_estimate_usd": 240, "category": "airline_perk"},
+    {"name": "Delta Sky Club access", "signal_id": "lounge_access", "value_estimate_usd": 695, "category": "lounge_access", "notes": "When flying Delta same-day; standalone Delta One bookings extended; capped at 15 visits/yr unless $75k spend"},
+    {"name": "Centurion Lounge access (when flying Delta on Reserve)", "signal_id": "lounge_access", "value_estimate_usd": null, "category": "lounge_access"},
+    {"name": "Free first checked bag", "signal_id": "free_checked_bag", "value_estimate_usd": 240, "category": "airline_perk"},
     {"name": "Companion certificate (domestic + Caribbean/Central America)", "value_estimate_usd": 400, "category": "airline_perk"},
     {"name": "First Class upgrade priority increase", "value_estimate_usd": null, "category": "elite_perk"},
     {"name": "MQD boost", "value_estimate_usd": null, "category": "elite_status"},

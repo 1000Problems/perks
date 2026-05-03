@@ -40,8 +40,8 @@
 
   "ongoing_perks": [
     {"name": "Auto rental CDW (primary for business)", "value_estimate_usd": null, "category": "travel_protection"},
-    {"name": "Purchase protection", "value_estimate_usd": null, "category": "purchase_protection"},
-    {"name": "Extended warranty", "value_estimate_usd": null, "category": "purchase_protection"}
+    {"name": "Purchase protection", "signal_id": "purchase_protection", "value_estimate_usd": null, "category": "purchase_protection"},
+    {"name": "Extended warranty", "signal_id": "extended_warranty", "value_estimate_usd": null, "category": "purchase_protection"}
   ],
 
   "transfer_partners_inherited_from": "chase_ur",

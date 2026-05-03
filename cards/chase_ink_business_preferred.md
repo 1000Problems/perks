@@ -38,11 +38,11 @@
   "annual_credits": [],
 
   "ongoing_perks": [
-    {"name": "Cell phone protection", "value_estimate_usd": 100, "category": "purchase_protection", "notes": "Up to $1,000/claim, 3 claims/12mo, $100 deductible"},
-    {"name": "Trip cancellation/interruption", "value_estimate_usd": null, "category": "travel_protection", "notes": "$5,000/person, $10,000/trip"},
+    {"name": "Cell phone protection", "signal_id": "cell_phone_protection", "value_estimate_usd": 100, "category": "purchase_protection", "notes": "Up to $1,000/claim, 3 claims/12mo, $100 deductible"},
+    {"name": "Trip cancellation/interruption", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection", "notes": "$5,000/person, $10,000/trip"},
     {"name": "Primary auto rental CDW for business use", "value_estimate_usd": null, "category": "travel_protection"},
-    {"name": "Purchase protection", "value_estimate_usd": null, "category": "purchase_protection"},
-    {"name": "Extended warranty", "value_estimate_usd": null, "category": "purchase_protection"},
+    {"name": "Purchase protection", "signal_id": "purchase_protection", "value_estimate_usd": null, "category": "purchase_protection"},
+    {"name": "Extended warranty", "signal_id": "extended_warranty", "value_estimate_usd": null, "category": "purchase_protection"},
     {"name": "1.25cpp redemption via Chase Travel", "value_estimate_usd": null, "category": "rewards_flexibility"},
     {"name": "1:1 transfer to UR partners", "value_estimate_usd": null, "category": "rewards_flexibility"}
   ],

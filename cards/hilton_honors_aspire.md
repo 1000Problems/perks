@@ -35,16 +35,16 @@
   },
 
   "annual_credits": [
-    {"name": "Hilton Resort credit", "value_usd": 400, "type": "specific", "expiration": "split_h1_h2", "ease_of_use": "medium", "notes": "$200 H1 + $200 H2"},
+    {"name": "Hilton Resort credit", "signal_id": "hotel_credit", "value_usd": 400, "type": "specific", "expiration": "split_h1_h2", "ease_of_use": "medium", "notes": "$200 H1 + $200 H2"},
     {"name": "Hilton Free Night Reward (no category cap)", "value_usd": 800, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "easy", "notes": "Use anywhere in Hilton portfolio incl. Waldorf Astoria, Conrad — best free-night cert in industry"},
     {"name": "Second Free Night after $30k spend", "value_usd": 800, "type": "spend_threshold", "expiration": "annual_anniversary", "ease_of_use": "hard"},
     {"name": "Flight credit", "value_usd": 200, "type": "specific", "expiration": "annual", "ease_of_use": "medium"},
-    {"name": "Clear+ credit", "value_usd": null, "type": "specific", "expiration": "annual", "ease_of_use": "easy"}
+    {"name": "Clear+ credit", "signal_id": "clear_credit", "value_usd": null, "type": "specific", "expiration": "annual", "ease_of_use": "easy"}
   ],
 
   "ongoing_perks": [
     {"name": "Hilton Diamond status", "value_estimate_usd": null, "category": "hotel_status", "notes": "Highest published Hilton status: 100% room bonus, suite upgrades, exec lounge access, breakfast"},
-    {"name": "Priority Pass Select", "value_estimate_usd": 469, "category": "lounge_access"},
+    {"name": "Priority Pass Select", "signal_id": "lounge_access", "value_estimate_usd": 469, "category": "lounge_access"},
     {"name": "Trip protections", "value_estimate_usd": null, "category": "travel_protection"}
   ],
 

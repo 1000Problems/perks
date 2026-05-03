@@ -35,23 +35,23 @@
   },
 
   "annual_credits": [
-    {"name": "Capital One Travel credit", "value_usd": 300, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "easy", "notes": "Effectively cash equivalent for travel; uses point-and-cash redemption"},
+    {"name": "Capital One Travel credit", "signal_id": "travel_credit", "value_usd": 300, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "easy", "notes": "Effectively cash equivalent for travel; uses point-and-cash redemption"},
     {"name": "10,000 anniversary bonus miles", "value_usd": 200, "type": "rewards", "expiration": "annual", "ease_of_use": "easy", "notes": "Auto-credited each anniversary; valued at ~2cpp"},
-    {"name": "Global Entry / TSA PreCheck credit", "value_usd": 120, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"}
+    {"name": "Global Entry / TSA PreCheck credit", "signal_id": "global_entry_tsa", "value_usd": 120, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"}
   ],
 
   "ongoing_perks": [
-    {"name": "Priority Pass Select (primary only post-Feb-2026)", "value_estimate_usd": 469, "category": "lounge_access", "notes": "1,300+ PP lounges. Authorized users no longer get free access automatically post 2026-02-01."},
-    {"name": "Capital One Lounge access (primary only post-Feb-2026)", "value_estimate_usd": null, "category": "lounge_access", "notes": "Lounges at IAD, DFW, DEN, LAS, JFK, BWI, etc."},
-    {"name": "Plaza Premium Lounge access", "value_estimate_usd": null, "category": "lounge_access"},
+    {"name": "Priority Pass Select (primary only post-Feb-2026)", "signal_id": "lounge_access", "value_estimate_usd": 469, "category": "lounge_access", "notes": "1,300+ PP lounges. Authorized users no longer get free access automatically post 2026-02-01."},
+    {"name": "Capital One Lounge access (primary only post-Feb-2026)", "signal_id": "lounge_access", "value_estimate_usd": null, "category": "lounge_access", "notes": "Lounges at IAD, DFW, DEN, LAS, JFK, BWI, etc."},
+    {"name": "Plaza Premium Lounge access", "signal_id": "lounge_access", "value_estimate_usd": null, "category": "lounge_access"},
     {"name": "Hertz President's Circle status", "value_estimate_usd": null, "category": "rental_status"},
     {"name": "Premier collection hotel benefits", "value_estimate_usd": null, "category": "hotel_perk", "notes": "$100 experience credit, daily breakfast, early check-in/late checkout, room upgrade"},
-    {"name": "Cell phone protection", "value_estimate_usd": null, "category": "purchase_protection", "notes": "$800/claim, $50 deductible, 2 claims/12mo"},
-    {"name": "Trip cancellation/interruption", "value_estimate_usd": null, "category": "travel_protection"},
-    {"name": "Trip delay reimbursement", "value_estimate_usd": null, "category": "travel_protection", "notes": "6+ hour delay, $500/ticket"},
+    {"name": "Cell phone protection", "signal_id": "cell_phone_protection", "value_estimate_usd": null, "category": "purchase_protection", "notes": "$800/claim, $50 deductible, 2 claims/12mo"},
+    {"name": "Trip cancellation/interruption", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection"},
+    {"name": "Trip delay reimbursement", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection", "notes": "6+ hour delay, $500/ticket"},
     {"name": "Primary auto rental CDW", "value_estimate_usd": null, "category": "travel_protection"},
     {"name": "Lost luggage reimbursement", "value_estimate_usd": null, "category": "travel_protection"},
-    {"name": "$75k spend unlocks complimentary guest lounge access for that calendar year", "value_estimate_usd": null, "category": "lounge_access_bonus", "notes": "Post 2026-02-01 policy"}
+    {"name": "$75k spend unlocks complimentary guest lounge access for that calendar year", "signal_id": "lounge_access", "value_estimate_usd": null, "category": "lounge_access_bonus", "notes": "Post 2026-02-01 policy"}
   ],
 
   "transfer_partners_inherited_from": "capital_one_miles",

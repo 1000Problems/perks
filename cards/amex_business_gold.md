@@ -34,14 +34,14 @@
   },
 
   "annual_credits": [
-    {"name": "Walmart+ monthly credit", "value_usd": 155, "type": "specific", "expiration": "monthly", "ease_of_use": "easy", "notes": "$12.95/month covers full Walmart+"},
+    {"name": "Walmart+ monthly credit", "signal_id": "walmart_plus_credit", "value_usd": 155, "type": "specific", "expiration": "monthly", "ease_of_use": "easy", "notes": "$12.95/month covers full Walmart+"},
     {"name": "FedEx / Grubhub / Office supply credit", "value_usd": 240, "type": "specific", "expiration": "monthly", "ease_of_use": "medium", "notes": "$20/month combined; specific merchants"},
     {"name": "Hilton credit", "value_usd": 100, "type": "specific", "expiration": "annual", "ease_of_use": "hard", "notes": "Hilton Aspire-style credit; specific properties"}
   ],
 
   "ongoing_perks": [
-    {"name": "Trip delay insurance", "value_estimate_usd": null, "category": "travel_protection"},
-    {"name": "Cell phone protection", "value_estimate_usd": null, "category": "purchase_protection"},
+    {"name": "Trip delay insurance", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection"},
+    {"name": "Cell phone protection", "signal_id": "cell_phone_protection", "value_estimate_usd": null, "category": "purchase_protection"},
     {"name": "Pay Over Time", "value_estimate_usd": null, "category": "financing"},
     {"name": "25% airfare points rebate when redeeming MR for flights via Amex Travel", "value_estimate_usd": null, "category": "rewards_flexibility", "notes": "Cap of 250k points rebated per calendar year"}
   ],

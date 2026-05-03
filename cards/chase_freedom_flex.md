@@ -39,10 +39,10 @@
   "annual_credits": [],
 
   "ongoing_perks": [
-    {"name": "Cell phone protection", "value_estimate_usd": null, "category": "purchase_protection", "notes": "$800/claim, $50 deductible, 2 claims/12mo"},
-    {"name": "Trip cancellation/interruption", "value_estimate_usd": null, "category": "travel_protection"},
+    {"name": "Cell phone protection", "signal_id": "cell_phone_protection", "value_estimate_usd": null, "category": "purchase_protection", "notes": "$800/claim, $50 deductible, 2 claims/12mo"},
+    {"name": "Trip cancellation/interruption", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection"},
     {"name": "Auto rental CDW (secondary US, primary abroad)", "value_estimate_usd": null, "category": "travel_protection"},
-    {"name": "Purchase protection", "value_estimate_usd": null, "category": "purchase_protection"}
+    {"name": "Purchase protection", "signal_id": "purchase_protection", "value_estimate_usd": null, "category": "purchase_protection"}
   ],
 
   "transfer_partners_inherited_from": "chase_ur",

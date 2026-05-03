@@ -39,9 +39,9 @@
   ],
 
   "ongoing_perks": [
-    {"name": "Free first checked bag (primary + companions)", "value_estimate_usd": 140, "category": "airline_perk"},
+    {"name": "Free first checked bag (primary + companions)", "signal_id": "free_checked_bag", "value_estimate_usd": 140, "category": "airline_perk"},
     {"name": "JetBlue Mosaic status with $50k spend", "value_estimate_usd": null, "category": "elite_status_acceleration"},
-    {"name": "Priority boarding (Even More Speed)", "value_estimate_usd": null, "category": "airline_perk"}
+    {"name": "Priority boarding (Even More Speed)", "signal_id": "priority_boarding", "value_estimate_usd": null, "category": "airline_perk"}
   ],
 
   "transfer_partners_inherited_from": "jetblue_trueblue",

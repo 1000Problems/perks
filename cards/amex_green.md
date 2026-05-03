@@ -35,12 +35,12 @@
   },
 
   "annual_credits": [
-    {"name": "CLEAR+ membership credit", "value_usd": 199, "type": "specific", "expiration": "annual", "ease_of_use": "easy"},
+    {"name": "CLEAR+ membership credit", "signal_id": "clear_credit", "value_usd": 199, "type": "specific", "expiration": "annual", "ease_of_use": "easy"},
     {"name": "LoungeBuddy credit", "value_usd": 100, "type": "specific", "expiration": "annual", "ease_of_use": "hard", "notes": "Pay-per-visit lounge platform; many users never use"}
   ],
 
   "ongoing_perks": [
-    {"name": "Trip delay insurance", "value_estimate_usd": null, "category": "travel_protection"},
+    {"name": "Trip delay insurance", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection"},
     {"name": "Baggage insurance", "value_estimate_usd": null, "category": "travel_protection"}
   ],
 

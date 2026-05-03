@@ -36,18 +36,18 @@
   },
 
   "annual_credits": [
-    {"name": "Dining credit (Grubhub/Seamless/Buffalo Wild Wings/Five Guys/Cheesecake Factory/Wonder)", "value_usd": 120, "type": "specific", "expiration": "monthly", "ease_of_use": "medium", "notes": "$10/month, must enroll"},
-    {"name": "Uber Cash", "value_usd": 120, "type": "specific", "expiration": "monthly", "ease_of_use": "easy", "notes": "$10/month, US Uber rides or Uber Eats"},
-    {"name": "Resy credit", "value_usd": 100, "type": "specific", "expiration": "split_h1_h2", "ease_of_use": "medium", "notes": "$50 H1 + $50 H2; in-person dining at US Resy restaurants"},
+    {"name": "Dining credit (Grubhub/Seamless/Buffalo Wild Wings/Five Guys/Cheesecake Factory/Wonder)", "signal_id": "dining_credit", "value_usd": 120, "type": "specific", "expiration": "monthly", "ease_of_use": "medium", "notes": "$10/month, must enroll"},
+    {"name": "Uber Cash", "signal_id": "uber_credit", "value_usd": 120, "type": "specific", "expiration": "monthly", "ease_of_use": "easy", "notes": "$10/month, US Uber rides or Uber Eats"},
+    {"name": "Resy credit", "signal_id": "dining_credit", "value_usd": 100, "type": "specific", "expiration": "split_h1_h2", "ease_of_use": "medium", "notes": "$50 H1 + $50 H2; in-person dining at US Resy restaurants"},
     {"name": "Dunkin' credit", "value_usd": 84, "type": "specific", "expiration": "monthly", "ease_of_use": "hard", "notes": "$7/month at Dunkin'; only valuable if you frequent Dunkin'"}
   ],
 
   "ongoing_perks": [
     {"name": "Baggage insurance", "value_estimate_usd": null, "category": "travel_protection"},
-    {"name": "Trip delay insurance", "value_estimate_usd": null, "category": "travel_protection", "notes": "12+ hour delay, $300 per trip"},
+    {"name": "Trip delay insurance", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection", "notes": "12+ hour delay, $300 per trip"},
     {"name": "Secondary auto rental CDW", "value_estimate_usd": null, "category": "travel_protection"},
-    {"name": "Purchase protection", "value_estimate_usd": null, "category": "purchase_protection"},
-    {"name": "Hotel Collection benefits on 2-night+ prepaid stays", "value_estimate_usd": null, "category": "hotel_perk", "notes": "$100 hotel credit + room upgrade when available"}
+    {"name": "Purchase protection", "signal_id": "purchase_protection", "value_estimate_usd": null, "category": "purchase_protection"},
+    {"name": "Hotel Collection benefits on 2-night+ prepaid stays", "signal_id": "prepaid_hotel_collection", "value_estimate_usd": null, "category": "hotel_perk", "notes": "$100 hotel credit + room upgrade when available"}
   ],
 
   "transfer_partners_inherited_from": "amex_mr",

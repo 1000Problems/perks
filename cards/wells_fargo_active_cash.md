@@ -33,7 +33,7 @@
   "annual_credits": [],
 
   "ongoing_perks": [
-    {"name": "Cell phone protection", "value_estimate_usd": 80, "category": "purchase_protection", "notes": "$600/claim, $25 deductible, 2 claims/12mo"},
+    {"name": "Cell phone protection", "signal_id": "cell_phone_protection", "value_estimate_usd": 80, "category": "purchase_protection", "notes": "$600/claim, $25 deductible, 2 claims/12mo"},
     {"name": "Visa Signature concierge", "value_estimate_usd": null, "category": "lifestyle"},
     {"name": "0% intro APR 12 months on purchases and BT", "value_estimate_usd": null, "category": "financing"}
   ],

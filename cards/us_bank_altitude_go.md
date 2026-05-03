@@ -29,7 +29,7 @@
   "signup_bonus": {"amount_pts": 20000, "spend_required_usd": 1000, "spend_window_months": 90, "estimated_value_usd": 200},
 
   "annual_credits": [
-    {"name": "$15 streaming credit semi-annually", "value_usd": 30, "type": "specific", "expiration": "split_h1_h2", "ease_of_use": "easy"}
+    {"name": "$15 streaming credit semi-annually", "signal_id": "streaming_credit", "value_usd": 30, "type": "specific", "expiration": "split_h1_h2", "ease_of_use": "easy"}
   ],
 
   "ongoing_perks": [],

@@ -39,8 +39,8 @@
   ],
 
   "ongoing_perks": [
-    {"name": "Hilton Gold status", "value_estimate_usd": null, "category": "hotel_status"},
-    {"name": "10 Priority Pass visits per year", "value_estimate_usd": null, "category": "lounge_access"},
+    {"name": "Hilton Gold status", "signal_id": "hotel_status", "value_estimate_usd": null, "category": "hotel_status"},
+    {"name": "10 Priority Pass visits per year", "signal_id": "lounge_access", "value_estimate_usd": null, "category": "lounge_access"},
     {"name": "Diamond status with $40k spend", "value_estimate_usd": null, "category": "elite_status_acceleration"}
   ],
 

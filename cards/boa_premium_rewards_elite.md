@@ -34,16 +34,16 @@
   },
 
   "annual_credits": [
-    {"name": "Airline incidental credit", "value_usd": 300, "type": "specific", "expiration": "calendar_year", "ease_of_use": "medium"},
+    {"name": "Airline incidental credit", "signal_id": "airline_incidental_credit", "value_usd": 300, "type": "specific", "expiration": "calendar_year", "ease_of_use": "medium"},
     {"name": "Lifestyle credit", "value_usd": 150, "type": "specific", "expiration": "calendar_year", "ease_of_use": "medium", "notes": "Streaming, fitness, food delivery, ride-share"},
-    {"name": "Global Entry / TSA PreCheck", "value_usd": 100, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"}
+    {"name": "Global Entry / TSA PreCheck", "signal_id": "global_entry_tsa", "value_usd": 100, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"}
   ],
 
   "ongoing_perks": [
-    {"name": "Priority Pass Select", "value_estimate_usd": 469, "category": "lounge_access"},
-    {"name": "Trip cancellation/interruption", "value_estimate_usd": null, "category": "travel_protection"},
+    {"name": "Priority Pass Select", "signal_id": "lounge_access", "value_estimate_usd": 469, "category": "lounge_access"},
+    {"name": "Trip cancellation/interruption", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection"},
     {"name": "Auto rental CDW (primary)", "value_estimate_usd": null, "category": "travel_protection"},
-    {"name": "Cell phone protection", "value_estimate_usd": null, "category": "purchase_protection"}
+    {"name": "Cell phone protection", "signal_id": "cell_phone_protection", "value_estimate_usd": null, "category": "purchase_protection"}
   ],
 
   "transfer_partners_inherited_from": null,

@@ -33,12 +33,12 @@
   },
 
   "annual_credits": [
-    {"name": "$99 Companion Fare (after $6k spend)", "value_usd": 250, "type": "spend_threshold", "expiration": "annual_anniversary", "ease_of_use": "medium"}
+    {"name": "$99 Companion Fare (after $6k spend)", "signal_id": "airline_companion_cert", "value_usd": 250, "type": "spend_threshold", "expiration": "annual_anniversary", "ease_of_use": "medium"}
   ],
 
   "ongoing_perks": [
-    {"name": "Free first checked bag (Alaska + Hawaiian, primary + 6 companions)", "value_estimate_usd": 240, "category": "airline_perk"},
-    {"name": "Preferred boarding", "value_estimate_usd": null, "category": "airline_perk"},
+    {"name": "Free first checked bag (Alaska + Hawaiian, primary + 6 companions)", "signal_id": "free_checked_bag", "value_estimate_usd": 240, "category": "airline_perk"},
+    {"name": "Preferred boarding", "signal_id": "priority_boarding", "value_estimate_usd": null, "category": "airline_perk"},
     {"name": "20% back on inflight purchases", "value_estimate_usd": null, "category": "airline_perk"}
   ],
 

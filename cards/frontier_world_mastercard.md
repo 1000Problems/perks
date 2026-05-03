@@ -33,7 +33,7 @@
   ],
 
   "ongoing_perks": [
-    {"name": "Free first checked bag (after $25k spend)", "value_estimate_usd": 140, "category": "airline_perk"},
+    {"name": "Free first checked bag (after $25k spend)", "signal_id": "free_checked_bag", "value_estimate_usd": 140, "category": "airline_perk"},
     {"name": "Earn Frontier Elite status with $15k spend", "value_estimate_usd": null, "category": "elite_status_acceleration"}
   ],
 

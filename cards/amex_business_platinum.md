@@ -39,19 +39,19 @@
     {"name": "Indeed credit", "value_usd": 360, "type": "specific", "expiration": "quarterly", "ease_of_use": "hard", "notes": "$90/quarter; only useful for businesses recruiting"},
     {"name": "Adobe credit", "value_usd": 150, "type": "specific", "expiration": "annual", "ease_of_use": "hard", "notes": "Annual Adobe.com"},
     {"name": "Wireless credit (US wireless)", "value_usd": 120, "type": "specific", "expiration": "monthly", "ease_of_use": "easy", "notes": "$10/month at US wireless carriers"},
-    {"name": "CLEAR+ membership", "value_usd": 209, "type": "specific", "expiration": "annual", "ease_of_use": "easy"},
+    {"name": "CLEAR+ membership", "signal_id": "clear_credit", "value_usd": 209, "type": "specific", "expiration": "annual", "ease_of_use": "easy"},
     {"name": "Hilton + Marriott Bonvoy combined credit", "value_usd": 200, "type": "specific", "expiration": "annual", "ease_of_use": "medium", "notes": "Verify current structure"},
-    {"name": "Global Entry / TSA PreCheck", "value_usd": 120, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"}
+    {"name": "Global Entry / TSA PreCheck", "signal_id": "global_entry_tsa", "value_usd": 120, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"}
   ],
 
   "ongoing_perks": [
-    {"name": "Centurion Lounge access", "value_estimate_usd": null, "category": "lounge_access"},
-    {"name": "Priority Pass Select", "value_estimate_usd": null, "category": "lounge_access"},
-    {"name": "Delta Sky Club access (when flying Delta)", "value_estimate_usd": null, "category": "lounge_access"},
-    {"name": "Marriott Gold + Hilton Gold", "value_estimate_usd": null, "category": "hotel_status"},
+    {"name": "Centurion Lounge access", "signal_id": "lounge_access", "value_estimate_usd": null, "category": "lounge_access"},
+    {"name": "Priority Pass Select", "signal_id": "lounge_access", "value_estimate_usd": null, "category": "lounge_access"},
+    {"name": "Delta Sky Club access (when flying Delta)", "signal_id": "lounge_access", "value_estimate_usd": null, "category": "lounge_access"},
+    {"name": "Marriott Gold + Hilton Gold", "signal_id": "hotel_status", "value_estimate_usd": null, "category": "hotel_status"},
     {"name": "35% airfare points rebate via Pay With Points (cap 1M points/yr)", "value_estimate_usd": null, "category": "rewards_flexibility", "notes": "Effectively 1.54cpp on flights — best portal value across MR ecosystem"},
-    {"name": "Cell phone protection", "value_estimate_usd": null, "category": "purchase_protection"},
-    {"name": "Trip cancellation/interruption", "value_estimate_usd": null, "category": "travel_protection"},
+    {"name": "Cell phone protection", "signal_id": "cell_phone_protection", "value_estimate_usd": null, "category": "purchase_protection"},
+    {"name": "Trip cancellation/interruption", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection"},
     {"name": "Premium auto rental (separate enrollment)", "value_estimate_usd": null, "category": "travel_protection_optional"}
   ],
 

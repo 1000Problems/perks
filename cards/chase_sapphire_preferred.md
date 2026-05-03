@@ -37,19 +37,19 @@
   },
 
   "annual_credits": [
-    {"name": "Chase Travel hotel credit", "value_usd": 50, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "medium", "notes": "Must book hotel through Chase Travel"}
+    {"name": "Chase Travel hotel credit", "signal_id": "hotel_credit", "value_usd": 50, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "medium", "notes": "Must book hotel through Chase Travel"}
   ],
 
   "ongoing_perks": [
     {"name": "10% anniversary points bonus", "value_estimate_usd": null, "category": "rewards_boost", "notes": "10% of prior-year purchase points each anniversary"},
-    {"name": "Trip cancellation/interruption insurance", "value_estimate_usd": null, "category": "travel_protection", "notes": "Up to $10,000/person, $20,000/trip"},
+    {"name": "Trip cancellation/interruption insurance", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection", "notes": "Up to $10,000/person, $20,000/trip"},
     {"name": "Primary auto rental CDW", "value_estimate_usd": null, "category": "travel_protection"},
-    {"name": "Trip delay reimbursement", "value_estimate_usd": null, "category": "travel_protection", "notes": "12+ hour delay or overnight, up to $500/ticket"},
-    {"name": "Baggage delay insurance", "value_estimate_usd": null, "category": "travel_protection", "notes": "$100/day up to 5 days after 6-hour delay"},
+    {"name": "Trip delay reimbursement", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection", "notes": "12+ hour delay or overnight, up to $500/ticket"},
+    {"name": "Baggage delay insurance", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection", "notes": "$100/day up to 5 days after 6-hour delay"},
     {"name": "Lost luggage reimbursement", "value_estimate_usd": null, "category": "travel_protection"},
-    {"name": "DoorDash DashPass", "value_estimate_usd": 120, "category": "lifestyle", "notes": "Complimentary through Dec 31 2027 with DoorDash account activation"},
-    {"name": "Purchase protection", "value_estimate_usd": null, "category": "purchase_protection", "notes": "120 days, $500/claim, $50,000/account"},
-    {"name": "Extended warranty", "value_estimate_usd": null, "category": "purchase_protection"},
+    {"name": "DoorDash DashPass", "signal_id": "doordash_credit", "value_estimate_usd": 120, "category": "lifestyle", "notes": "Complimentary through Dec 31 2027 with DoorDash account activation"},
+    {"name": "Purchase protection", "signal_id": "purchase_protection", "value_estimate_usd": null, "category": "purchase_protection", "notes": "120 days, $500/claim, $50,000/account"},
+    {"name": "Extended warranty", "signal_id": "extended_warranty", "value_estimate_usd": null, "category": "purchase_protection"},
     {"name": "1:1 point transfers to airline/hotel partners", "value_estimate_usd": null, "category": "rewards_flexibility"}
   ],
 

@@ -34,15 +34,15 @@
   },
 
   "annual_credits": [
-    {"name": "Global Entry / TSA PreCheck", "value_usd": 100, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"},
+    {"name": "Global Entry / TSA PreCheck", "signal_id": "global_entry_tsa", "value_usd": 100, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"},
     {"name": "United Hotels $100 credit (newer benefit)", "value_usd": 100, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "hard"}
   ],
 
   "ongoing_perks": [
-    {"name": "Free first checked bag (primary + 1 companion)", "value_estimate_usd": 200, "category": "airline_perk"},
-    {"name": "Priority boarding (Group 2)", "value_estimate_usd": null, "category": "airline_perk"},
-    {"name": "2 United Club one-time passes per year", "value_estimate_usd": 100, "category": "lounge_access"},
-    {"name": "Trip cancellation/interruption", "value_estimate_usd": null, "category": "travel_protection"},
+    {"name": "Free first checked bag (primary + 1 companion)", "signal_id": "free_checked_bag", "value_estimate_usd": 200, "category": "airline_perk"},
+    {"name": "Priority boarding (Group 2)", "signal_id": "priority_boarding", "value_estimate_usd": null, "category": "airline_perk"},
+    {"name": "2 United Club one-time passes per year", "signal_id": "lounge_access", "value_estimate_usd": 100, "category": "lounge_access"},
+    {"name": "Trip cancellation/interruption", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection"},
     {"name": "Primary auto rental CDW", "value_estimate_usd": null, "category": "travel_protection"},
     {"name": "25% back on inflight purchases", "value_estimate_usd": null, "category": "airline_perk"}
   ],

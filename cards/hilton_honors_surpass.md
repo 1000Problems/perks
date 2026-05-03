@@ -34,13 +34,13 @@
   },
 
   "annual_credits": [
-    {"name": "Hilton Resort credit", "value_usd": 200, "type": "specific", "expiration": "split_h1_h2", "ease_of_use": "medium", "notes": "$50/quarter at participating Hilton resorts"},
+    {"name": "Hilton Resort credit", "signal_id": "hotel_credit", "value_usd": 200, "type": "specific", "expiration": "split_h1_h2", "ease_of_use": "medium", "notes": "$50/quarter at participating Hilton resorts"},
     {"name": "Free Night Reward after $15k spend", "value_usd": 350, "type": "spend_threshold", "expiration": "annual_anniversary", "ease_of_use": "hard"}
   ],
 
   "ongoing_perks": [
-    {"name": "Hilton Gold status", "value_estimate_usd": null, "category": "hotel_status", "notes": "Includes 80% room bonus, room upgrades, daily food/beverage credit at most US properties"},
-    {"name": "10 Priority Pass visits per year", "value_estimate_usd": null, "category": "lounge_access"},
+    {"name": "Hilton Gold status", "signal_id": "hotel_status", "value_estimate_usd": null, "category": "hotel_status", "notes": "Includes 80% room bonus, room upgrades, daily food/beverage credit at most US properties"},
+    {"name": "10 Priority Pass visits per year", "signal_id": "lounge_access", "value_estimate_usd": null, "category": "lounge_access"},
     {"name": "Diamond status with $40k spend", "value_estimate_usd": null, "category": "elite_status_acceleration"}
   ],
 

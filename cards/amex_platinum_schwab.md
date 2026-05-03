@@ -33,13 +33,13 @@
   },
 
   "annual_credits": [
-    {"name": "All standard Amex Platinum credits (FHR/Resy/Digital Ent/Uber/Walmart+/Saks/CLEAR/etc.)", "value_usd": 2200, "type": "specific", "expiration": "monthly_or_split", "ease_of_use": "medium"},
+    {"name": "All standard Amex Platinum credits (FHR/Resy/Digital Ent/Uber/Walmart+/Saks/CLEAR/etc.)", "signal_id": "uber_credit", "value_usd": 2200, "type": "specific", "expiration": "monthly_or_split", "ease_of_use": "medium"},
     {"name": "Schwab cash-out at 1.1cpp (point-to-cash to brokerage)", "value_usd": null, "type": "rewards_modifier", "expiration": "ongoing", "ease_of_use": "easy", "notes": "Differentiator: Schwab Investor Platinum can cash out MR points to Schwab brokerage at 1.1cpp"}
   ],
 
   "ongoing_perks": [
-    {"name": "Centurion Lounge access", "value_estimate_usd": null, "category": "lounge_access"},
-    {"name": "Priority Pass Select", "value_estimate_usd": null, "category": "lounge_access"},
+    {"name": "Centurion Lounge access", "signal_id": "lounge_access", "value_estimate_usd": null, "category": "lounge_access"},
+    {"name": "Priority Pass Select", "signal_id": "lounge_access", "value_estimate_usd": null, "category": "lounge_access"},
     {"name": "All standard Plat perks", "value_estimate_usd": null, "category": "lounge_access"},
     {"name": "Schwab Pledged Asset Line eligible", "value_estimate_usd": null, "category": "investment_perk"}
   ],

@@ -39,7 +39,7 @@
   ],
 
   "ongoing_perks": [
-    {"name": "Hyatt Discoverist status", "value_estimate_usd": null, "category": "hotel_status"},
+    {"name": "Hyatt Discoverist status", "signal_id": "hotel_status", "value_estimate_usd": null, "category": "hotel_status"},
     {"name": "Free employee cards", "value_estimate_usd": null, "category": "business_admin"}
   ],
 

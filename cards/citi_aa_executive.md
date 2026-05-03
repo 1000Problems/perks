@@ -32,12 +32,12 @@
   },
 
   "annual_credits": [
-    {"name": "Global Entry / TSA PreCheck", "value_usd": 100, "type": "specific", "expiration": "every_5_years", "ease_of_use": "medium"}
+    {"name": "Global Entry / TSA PreCheck", "signal_id": "global_entry_tsa", "value_usd": 100, "type": "specific", "expiration": "every_5_years", "ease_of_use": "medium"}
   ],
 
   "ongoing_perks": [
-    {"name": "Admirals Club membership for primary + authorized users", "value_estimate_usd": 850, "category": "lounge_access"},
-    {"name": "Free first checked bag for primary + 8 companions", "value_estimate_usd": 240, "category": "airline_perk"},
+    {"name": "Admirals Club membership for primary + authorized users", "signal_id": "lounge_access", "value_estimate_usd": 850, "category": "lounge_access"},
+    {"name": "Free first checked bag for primary + 8 companions", "signal_id": "free_checked_bag", "value_estimate_usd": 240, "category": "airline_perk"},
     {"name": "Priority check-in/security/boarding", "value_estimate_usd": null, "category": "airline_perk"},
     {"name": "Loyalty Points contribute toward AA elite status", "value_estimate_usd": null, "category": "elite_status"}
   ],

@@ -39,9 +39,9 @@
   "annual_credits": [],
 
   "ongoing_perks": [
-    {"name": "Purchase protection", "value_estimate_usd": null, "category": "purchase_protection", "notes": "120 days, $500/claim"},
-    {"name": "Extended warranty", "value_estimate_usd": null, "category": "purchase_protection"},
-    {"name": "Trip cancellation/interruption", "value_estimate_usd": null, "category": "travel_protection", "notes": "Up to $1,500/person, $6,000/trip"},
+    {"name": "Purchase protection", "signal_id": "purchase_protection", "value_estimate_usd": null, "category": "purchase_protection", "notes": "120 days, $500/claim"},
+    {"name": "Extended warranty", "signal_id": "extended_warranty", "value_estimate_usd": null, "category": "purchase_protection"},
+    {"name": "Trip cancellation/interruption", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection", "notes": "Up to $1,500/person, $6,000/trip"},
     {"name": "Auto rental CDW (secondary in US, primary abroad)", "value_estimate_usd": null, "category": "travel_protection"}
   ],
 

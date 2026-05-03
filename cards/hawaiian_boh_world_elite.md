@@ -31,7 +31,7 @@
   "annual_credits": [{"name": "$100 Hawaiian companion discount after first purchase + AF payment", "value_usd": 100, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "medium"}],
 
   "ongoing_perks": [
-    {"name": "Free first checked bag", "value_estimate_usd": 240, "category": "airline_perk"},
+    {"name": "Free first checked bag", "signal_id": "free_checked_bag", "value_estimate_usd": 240, "category": "airline_perk"},
     {"name": "Boarding priority", "value_estimate_usd": null, "category": "airline_perk"}
   ],
 

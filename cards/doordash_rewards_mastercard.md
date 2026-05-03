@@ -8,7 +8,7 @@
 ```json
 {
   "id": "doordash_rewards_mastercard",
-  "name": "Chase DoorDash Rewards Mastercard",
+  "name": "Chase DoorDash Rewards Mastercard", "signal_id": "doordash_credit",
   "issuer": "Chase",
   "network": "Mastercard World Elite",
   "card_type": "personal",
@@ -35,11 +35,11 @@
   },
 
   "annual_credits": [
-    {"name": "Free DashPass membership", "value_usd": 120, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "easy"}
+    {"name": "Free DashPass membership", "signal_id": "doordash_credit", "value_usd": 120, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "easy"}
   ],
 
   "ongoing_perks": [
-    {"name": "Free delivery on DoorDash $12+ orders via DashPass", "value_estimate_usd": null, "category": "lifestyle"}
+    {"name": "Free delivery on DoorDash $12+ orders via DashPass", "signal_id": "doordash_credit", "value_estimate_usd": null, "category": "lifestyle"}
   ],
 
   "transfer_partners_inherited_from": null,

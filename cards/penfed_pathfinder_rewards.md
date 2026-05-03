@@ -28,12 +28,12 @@
   "signup_bonus": {"amount_pts": 50000, "spend_required_usd": 3000, "spend_window_months": 90, "estimated_value_usd": 500},
 
   "annual_credits": [
-    {"name": "$100 airline incidental credit", "value_usd": 100, "type": "specific", "expiration": "calendar_year", "ease_of_use": "medium"},
-    {"name": "$100 Global Entry / TSA PreCheck", "value_usd": 100, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"}
+    {"name": "$100 airline incidental credit", "signal_id": "airline_incidental_credit", "value_usd": 100, "type": "specific", "expiration": "calendar_year", "ease_of_use": "medium"},
+    {"name": "$100 Global Entry / TSA PreCheck", "signal_id": "global_entry_tsa", "value_usd": 100, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"}
   ],
 
   "ongoing_perks": [
-    {"name": "Trip cancellation/interruption", "value_estimate_usd": null, "category": "travel_protection"},
+    {"name": "Trip cancellation/interruption", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection"},
     {"name": "Auto rental CDW", "value_estimate_usd": null, "category": "travel_protection"}
   ],
 

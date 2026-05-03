@@ -34,18 +34,18 @@
   },
 
   "annual_credits": [
-    {"name": "Capital One Travel credit", "value_usd": 300, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "easy"},
+    {"name": "Capital One Travel credit", "signal_id": "travel_credit", "value_usd": 300, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "easy"},
     {"name": "10,000 anniversary miles", "value_usd": 200, "type": "rewards", "expiration": "annual", "ease_of_use": "easy"},
-    {"name": "Global Entry / TSA PreCheck", "value_usd": 120, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"}
+    {"name": "Global Entry / TSA PreCheck", "signal_id": "global_entry_tsa", "value_usd": 120, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"}
   ],
 
   "ongoing_perks": [
     {"name": "Pay-in-full charge card structure", "value_estimate_usd": null, "category": "financing"},
-    {"name": "Priority Pass Select (primary only post-Feb-2026)", "value_estimate_usd": 469, "category": "lounge_access"},
-    {"name": "Capital One Lounge access (primary only post-Feb-2026)", "value_estimate_usd": null, "category": "lounge_access"},
-    {"name": "Plaza Premium Lounge access", "value_estimate_usd": null, "category": "lounge_access"},
+    {"name": "Priority Pass Select (primary only post-Feb-2026)", "signal_id": "lounge_access", "value_estimate_usd": 469, "category": "lounge_access"},
+    {"name": "Capital One Lounge access (primary only post-Feb-2026)", "signal_id": "lounge_access", "value_estimate_usd": null, "category": "lounge_access"},
+    {"name": "Plaza Premium Lounge access", "signal_id": "lounge_access", "value_estimate_usd": null, "category": "lounge_access"},
     {"name": "Free employee cards", "value_estimate_usd": null, "category": "business_admin"},
-    {"name": "Cell phone protection", "value_estimate_usd": null, "category": "purchase_protection"},
+    {"name": "Cell phone protection", "signal_id": "cell_phone_protection", "value_estimate_usd": null, "category": "purchase_protection"},
     {"name": "Premier Collection hotel benefits", "value_estimate_usd": null, "category": "hotel_perk"}
   ],
 

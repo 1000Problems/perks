@@ -36,7 +36,7 @@
 
   "ongoing_perks": [
     {"name": "Auto rental CDW (secondary)", "value_estimate_usd": null, "category": "travel_protection"},
-    {"name": "Purchase protection", "value_estimate_usd": null, "category": "purchase_protection"}
+    {"name": "Purchase protection", "signal_id": "purchase_protection", "value_estimate_usd": null, "category": "purchase_protection"}
   ],
 
   "transfer_partners_inherited_from": "chase_ur",

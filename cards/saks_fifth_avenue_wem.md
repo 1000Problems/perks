@@ -8,7 +8,7 @@
 ```json
 {
   "id": "saks_fifth_avenue_wem",
-  "name": "Saks Fifth Avenue World Elite Mastercard",
+  "name": "Saks Fifth Avenue World Elite Mastercard", "signal_id": "saks_credit",
   "issuer": "Capital One",
   "network": "Mastercard World Elite",
   "card_type": "personal",

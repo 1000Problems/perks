@@ -33,7 +33,7 @@
   },
 
   "annual_credits": [
-    {"name": "Free Night Award (35,000 pts)", "value_usd": 250, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "medium", "notes": "After AF posts each year"}
+    {"name": "Free Night Award (35,000 pts)", "signal_id": "hotel_free_night_cert", "value_usd": 250, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "medium", "notes": "After AF posts each year"}
   ],
 
   "ongoing_perks": [

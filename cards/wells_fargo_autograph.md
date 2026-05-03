@@ -39,7 +39,7 @@
   "annual_credits": [],
 
   "ongoing_perks": [
-    {"name": "Cell phone protection", "value_estimate_usd": 80, "category": "purchase_protection", "notes": "$600/claim, $25 deductible"},
+    {"name": "Cell phone protection", "signal_id": "cell_phone_protection", "value_estimate_usd": 80, "category": "purchase_protection", "notes": "$600/claim, $25 deductible"},
     {"name": "Auto rental CDW (secondary)", "value_estimate_usd": null, "category": "travel_protection"}
   ],
 

@@ -34,32 +34,32 @@
   },
 
   "annual_credits": [
-    {"name": "Fine Hotels + Resorts / Hotel Collection credit", "value_usd": 600, "type": "specific", "expiration": "split_h1_h2", "ease_of_use": "medium", "notes": "$300 H1 + $300 H2; prepaid via AmexTravel; Hotel Collection requires 2-night minimum"},
-    {"name": "Resy dining credit", "value_usd": 400, "type": "specific", "expiration": "quarterly", "ease_of_use": "medium", "notes": "$100/quarter at US Resy restaurants; enrollment required"},
+    {"name": "Fine Hotels + Resorts / Hotel Collection credit", "signal_id": "prepaid_hotel_collection", "value_usd": 600, "type": "specific", "expiration": "split_h1_h2", "ease_of_use": "medium", "notes": "$300 H1 + $300 H2; prepaid via AmexTravel; Hotel Collection requires 2-night minimum"},
+    {"name": "Resy dining credit", "signal_id": "dining_credit", "value_usd": 400, "type": "specific", "expiration": "quarterly", "ease_of_use": "medium", "notes": "$100/quarter at US Resy restaurants; enrollment required"},
     {"name": "Digital Entertainment credit", "value_usd": 300, "type": "specific", "expiration": "monthly", "ease_of_use": "medium", "notes": "$25/month; Paramount+, YouTube Premium/TV, Disney+/Hulu/ESPN+, NYT, Peacock, WSJ"},
-    {"name": "Uber Cash", "value_usd": 200, "type": "specific", "expiration": "monthly", "ease_of_use": "easy", "notes": "$15/month + $20 December bonus; US Uber/Uber Eats"},
-    {"name": "Uber One credit", "value_usd": 120, "type": "specific", "expiration": "monthly", "ease_of_use": "medium", "notes": "$10/month for Uber One auto-renewing membership"},
-    {"name": "Airline incidental fee credit", "value_usd": 200, "type": "specific", "expiration": "calendar_year", "ease_of_use": "medium", "notes": "One pre-selected airline; checked bags / inflight food / seat upgrades"},
-    {"name": "CLEAR+ membership credit", "value_usd": 209, "type": "specific", "expiration": "annual", "ease_of_use": "easy", "notes": "Auto-renewing CLEAR+"},
-    {"name": "Walmart+ monthly credit", "value_usd": 155, "type": "specific", "expiration": "monthly", "ease_of_use": "easy", "notes": "$12.95/month covers full Walmart+ subscription"},
-    {"name": "Saks Fifth Avenue credit", "value_usd": 100, "type": "specific", "expiration": "split_h1_h2", "ease_of_use": "hard", "notes": "$50 H1 + $50 H2"},
+    {"name": "Uber Cash", "signal_id": "uber_credit", "value_usd": 200, "type": "specific", "expiration": "monthly", "ease_of_use": "easy", "notes": "$15/month + $20 December bonus; US Uber/Uber Eats"},
+    {"name": "Uber One credit", "signal_id": "uber_credit", "value_usd": 120, "type": "specific", "expiration": "monthly", "ease_of_use": "medium", "notes": "$10/month for Uber One auto-renewing membership"},
+    {"name": "Airline incidental fee credit", "signal_id": "airline_incidental_credit", "value_usd": 200, "type": "specific", "expiration": "calendar_year", "ease_of_use": "medium", "notes": "One pre-selected airline; checked bags / inflight food / seat upgrades"},
+    {"name": "CLEAR+ membership credit", "signal_id": "clear_credit", "value_usd": 209, "type": "specific", "expiration": "annual", "ease_of_use": "easy", "notes": "Auto-renewing CLEAR+"},
+    {"name": "Walmart+ monthly credit", "signal_id": "walmart_plus_credit", "value_usd": 155, "type": "specific", "expiration": "monthly", "ease_of_use": "easy", "notes": "$12.95/month covers full Walmart+ subscription"},
+    {"name": "Saks Fifth Avenue credit", "signal_id": "saks_credit", "value_usd": 100, "type": "specific", "expiration": "split_h1_h2", "ease_of_use": "hard", "notes": "$50 H1 + $50 H2"},
     {"name": "Oura Ring credit", "value_usd": 200, "type": "specific", "expiration": "annual", "ease_of_use": "hard", "notes": "Only if user buys an Oura Ring; not recurring"},
-    {"name": "Global Entry / TSA PreCheck credit", "value_usd": 120, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"}
+    {"name": "Global Entry / TSA PreCheck credit", "signal_id": "global_entry_tsa", "value_usd": 120, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"}
   ],
 
   "ongoing_perks": [
-    {"name": "Centurion Lounge access", "value_estimate_usd": null, "category": "lounge_access"},
-    {"name": "Priority Pass Select", "value_estimate_usd": null, "category": "lounge_access", "notes": "Excludes restaurants since 2019"},
-    {"name": "Delta Sky Club access (when flying Delta)", "value_estimate_usd": null, "category": "lounge_access"},
+    {"name": "Centurion Lounge access", "signal_id": "lounge_access", "value_estimate_usd": null, "category": "lounge_access"},
+    {"name": "Priority Pass Select", "signal_id": "lounge_access", "value_estimate_usd": null, "category": "lounge_access", "notes": "Excludes restaurants since 2019"},
+    {"name": "Delta Sky Club access (when flying Delta)", "signal_id": "lounge_access", "value_estimate_usd": null, "category": "lounge_access"},
     {"name": "Global Lounge Collection 1,550+ lounges", "value_estimate_usd": 850, "category": "lounge_access"},
-    {"name": "Marriott Gold Elite status", "value_estimate_usd": null, "category": "hotel_status"},
-    {"name": "Hilton Gold status", "value_estimate_usd": null, "category": "hotel_status"},
+    {"name": "Marriott Gold Elite status", "signal_id": "hotel_status", "value_estimate_usd": null, "category": "hotel_status"},
+    {"name": "Hilton Gold status", "signal_id": "hotel_status", "value_estimate_usd": null, "category": "hotel_status"},
     {"name": "Avis Preferred Plus / Hertz Five Star / National Executive status", "value_estimate_usd": null, "category": "rental_status"},
-    {"name": "Trip cancellation/interruption", "value_estimate_usd": null, "category": "travel_protection"},
-    {"name": "Trip delay insurance", "value_estimate_usd": null, "category": "travel_protection", "notes": "6+ hour delay, $500/trip"},
+    {"name": "Trip cancellation/interruption", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection"},
+    {"name": "Trip delay insurance", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection", "notes": "6+ hour delay, $500/trip"},
     {"name": "Premium auto rental (separate enrollment, $25-30 per rental)", "value_estimate_usd": null, "category": "travel_protection_optional"},
-    {"name": "Cell phone protection", "value_estimate_usd": null, "category": "purchase_protection", "notes": "$800/claim, $50 deductible"},
-    {"name": "Equinox digital credit (limited time / variable)", "value_estimate_usd": null, "category": "lifestyle"}
+    {"name": "Cell phone protection", "signal_id": "cell_phone_protection", "value_estimate_usd": null, "category": "purchase_protection", "notes": "$800/claim, $50 deductible"},
+    {"name": "Equinox digital credit (limited time / variable)", "signal_id": "equinox_credit", "value_estimate_usd": null, "category": "lifestyle"}
   ],
 
   "transfer_partners_inherited_from": "amex_mr",

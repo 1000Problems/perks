@@ -34,8 +34,8 @@
   },
 
   "annual_credits": [
-    {"name": "TSA PreCheck / Global Entry", "value_usd": 100, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"},
-    {"name": "Streaming credit", "value_usd": null, "type": "specific", "expiration": "annual", "ease_of_use": "medium", "notes": "Verify current structure"}
+    {"name": "TSA PreCheck / Global Entry", "signal_id": "global_entry_tsa", "value_usd": 100, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"},
+    {"name": "Streaming credit", "signal_id": "streaming_credit", "value_usd": null, "type": "specific", "expiration": "annual", "ease_of_use": "medium", "notes": "Verify current structure"}
   ],
 
   "ongoing_perks": [

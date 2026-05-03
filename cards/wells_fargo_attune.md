@@ -29,7 +29,7 @@
   "annual_credits": [],
 
   "ongoing_perks": [
-    {"name": "Cell phone protection", "value_estimate_usd": 80, "category": "purchase_protection"}
+    {"name": "Cell phone protection", "signal_id": "cell_phone_protection", "value_estimate_usd": 80, "category": "purchase_protection"}
   ],
 
   "transfer_partners_inherited_from": null,

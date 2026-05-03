@@ -35,15 +35,15 @@
   },
 
   "annual_credits": [
-    {"name": "$300 travel credit (legacy CSR-style)", "value_usd": 300, "type": "specific", "expiration": "calendar_year", "ease_of_use": "easy"},
-    {"name": "Global Entry / TSA PreCheck", "value_usd": 100, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"}
+    {"name": "$300 travel credit (legacy CSR-style)", "signal_id": "travel_credit", "value_usd": 300, "type": "specific", "expiration": "calendar_year", "ease_of_use": "easy"},
+    {"name": "Global Entry / TSA PreCheck", "signal_id": "global_entry_tsa", "value_usd": 100, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"}
   ],
 
   "ongoing_perks": [
-    {"name": "Priority Pass Select (legacy unlimited)", "value_estimate_usd": 469, "category": "lounge_access"},
-    {"name": "Sapphire Lounge access", "value_estimate_usd": null, "category": "lounge_access"},
+    {"name": "Priority Pass Select (legacy unlimited)", "signal_id": "lounge_access", "value_estimate_usd": 469, "category": "lounge_access"},
+    {"name": "Sapphire Lounge access", "signal_id": "lounge_access", "value_estimate_usd": null, "category": "lounge_access"},
     {"name": "1.5cpp portal redemption (legacy)", "value_estimate_usd": null, "category": "rewards_flexibility"},
-    {"name": "Trip cancellation/interruption", "value_estimate_usd": null, "category": "travel_protection"},
+    {"name": "Trip cancellation/interruption", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection"},
     {"name": "Primary CDW", "value_estimate_usd": null, "category": "travel_protection"}
   ],
 

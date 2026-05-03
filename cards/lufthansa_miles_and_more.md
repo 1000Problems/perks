@@ -31,7 +31,7 @@
   ],
 
   "ongoing_perks": [
-    {"name": "Trip cancellation/interruption", "value_estimate_usd": null, "category": "travel_protection"}
+    {"name": "Trip cancellation/interruption", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection"}
   ],
 
   "transfer_partners_inherited_from": null,

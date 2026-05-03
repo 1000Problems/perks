@@ -36,12 +36,12 @@
 
   "annual_credits": [
     {"name": "Delta Stays credit", "value_usd": 200, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "medium", "notes": "$200 toward prepaid hotel stays via Delta Stays"},
-    {"name": "Resy dining credit", "value_usd": null, "type": "specific", "expiration": "monthly", "ease_of_use": "medium"}
+    {"name": "Resy dining credit", "signal_id": "dining_credit", "value_usd": null, "type": "specific", "expiration": "monthly", "ease_of_use": "medium"}
   ],
 
   "ongoing_perks": [
-    {"name": "Free first checked bag (primary + 8 companions on same itinerary)", "value_estimate_usd": 240, "category": "airline_perk"},
-    {"name": "Priority boarding (Zone 5)", "value_estimate_usd": null, "category": "airline_perk"},
+    {"name": "Free first checked bag (primary + 8 companions on same itinerary)", "signal_id": "free_checked_bag", "value_estimate_usd": 240, "category": "airline_perk"},
+    {"name": "Priority boarding (Zone 5)", "signal_id": "priority_boarding", "value_estimate_usd": null, "category": "airline_perk"},
     {"name": "20% off inflight purchases", "value_estimate_usd": null, "category": "airline_perk"},
     {"name": "$100 Delta flight credit after $10k spend", "value_estimate_usd": 100, "category": "airline_perk", "notes": "Earn anytime in calendar year"}
   ],

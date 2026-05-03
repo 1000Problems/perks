@@ -36,16 +36,16 @@
   },
 
   "annual_credits": [
-    {"name": "Citi Travel hotel credit", "value_usd": 300, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "medium", "notes": "2-night minimum"},
+    {"name": "Citi Travel hotel credit", "signal_id": "hotel_credit", "value_usd": 300, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "medium", "notes": "2-night minimum"},
     {"name": "Splurge credit (choose 2 merchants)", "value_usd": 200, "type": "specific", "expiration": "annual", "ease_of_use": "medium"},
     {"name": "Blacklane car-service credit", "value_usd": 200, "type": "specific", "expiration": "split_h1_h2", "ease_of_use": "hard", "notes": "$100 H1 + $100 H2"},
-    {"name": "Global Entry / TSA PreCheck credit", "value_usd": 120, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"}
+    {"name": "Global Entry / TSA PreCheck credit", "signal_id": "global_entry_tsa", "value_usd": 120, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"}
   ],
 
   "ongoing_perks": [
-    {"name": "Priority Pass Select w/ 2 guests", "value_estimate_usd": 469, "category": "lounge_access"},
-    {"name": "4 Admirals Club passes per calendar year", "value_estimate_usd": 240, "category": "lounge_access"},
-    {"name": "Cell phone protection", "value_estimate_usd": null, "category": "purchase_protection"},
+    {"name": "Priority Pass Select w/ 2 guests", "signal_id": "lounge_access", "value_estimate_usd": 469, "category": "lounge_access"},
+    {"name": "4 Admirals Club passes per calendar year", "signal_id": "lounge_access", "value_estimate_usd": 240, "category": "lounge_access"},
+    {"name": "Cell phone protection", "signal_id": "cell_phone_protection", "value_estimate_usd": null, "category": "purchase_protection"},
     {"name": "Trip protections", "value_estimate_usd": null, "category": "travel_protection"}
   ],
 

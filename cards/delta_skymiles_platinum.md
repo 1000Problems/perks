@@ -36,13 +36,13 @@
 
   "annual_credits": [
     {"name": "Delta Stays credit", "value_usd": 150, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "medium"},
-    {"name": "Resy dining credit", "value_usd": 240, "type": "specific", "expiration": "monthly", "ease_of_use": "medium", "notes": "$20/month"},
+    {"name": "Resy dining credit", "signal_id": "dining_credit", "value_usd": 240, "type": "specific", "expiration": "monthly", "ease_of_use": "medium", "notes": "$20/month"},
     {"name": "Rideshare credit", "value_usd": 120, "type": "specific", "expiration": "monthly", "ease_of_use": "easy", "notes": "$10/month select rideshare"}
   ],
 
   "ongoing_perks": [
-    {"name": "Free first checked bag", "value_estimate_usd": 240, "category": "airline_perk"},
-    {"name": "Priority boarding (Zone 5)", "value_estimate_usd": null, "category": "airline_perk"},
+    {"name": "Free first checked bag", "signal_id": "free_checked_bag", "value_estimate_usd": 240, "category": "airline_perk"},
+    {"name": "Priority boarding (Zone 5)", "signal_id": "priority_boarding", "value_estimate_usd": null, "category": "airline_perk"},
     {"name": "Companion certificate (domestic, after annual renewal)", "value_estimate_usd": 250, "category": "airline_perk", "notes": "Eligible domestic main-cabin round trip; certificate is the differentiator"},
     {"name": "20% off inflight purchases", "value_estimate_usd": null, "category": "airline_perk"},
     {"name": "MQD boost: 1 MQD per $20 spent", "value_estimate_usd": null, "category": "elite_status", "notes": "Updated post-Delta-elite-overhaul"}

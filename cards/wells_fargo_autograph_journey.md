@@ -40,8 +40,8 @@
   ],
 
   "ongoing_perks": [
-    {"name": "Cell phone protection", "value_estimate_usd": 80, "category": "purchase_protection"},
-    {"name": "Trip cancellation insurance", "value_estimate_usd": null, "category": "travel_protection"},
+    {"name": "Cell phone protection", "signal_id": "cell_phone_protection", "value_estimate_usd": 80, "category": "purchase_protection"},
+    {"name": "Trip cancellation insurance", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection"},
     {"name": "Auto rental CDW (secondary)", "value_estimate_usd": null, "category": "travel_protection"}
   ],
 

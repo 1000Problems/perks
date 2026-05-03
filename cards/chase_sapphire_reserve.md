@@ -37,28 +37,28 @@
   },
 
   "annual_credits": [
-    {"name": "The Edit hotel credit", "value_usd": 500, "type": "specific", "expiration": "calendar_year", "ease_of_use": "medium", "notes": "Two $250 increments per calendar year. Prepaid 2+ night stays at The Edit by Chase Travel curated hotels."},
-    {"name": "2026 select-hotels Chase Travel credit", "value_usd": 250, "type": "specific", "expiration": "calendar_year_2026_only", "ease_of_use": "medium", "notes": "Covers IHG, Montage, Pendry, Omni, Virgin, Minor, Pan Pacific; one-time 2026 benefit."},
-    {"name": "Sapphire Reserve Exclusive Tables dining credit", "value_usd": 300, "type": "specific", "expiration": "split_h1_h2", "ease_of_use": "hard", "notes": "$150 H1 + $150 H2; only at curated reservations in select cities; risk of breakage"},
+    {"name": "The Edit hotel credit", "signal_id": "hotel_credit", "value_usd": 500, "type": "specific", "expiration": "calendar_year", "ease_of_use": "medium", "notes": "Two $250 increments per calendar year. Prepaid 2+ night stays at The Edit by Chase Travel curated hotels."},
+    {"name": "2026 select-hotels Chase Travel credit", "signal_id": "travel_credit", "value_usd": 250, "type": "specific", "expiration": "calendar_year_2026_only", "ease_of_use": "medium", "notes": "Covers IHG, Montage, Pendry, Omni, Virgin, Minor, Pan Pacific; one-time 2026 benefit."},
+    {"name": "Sapphire Reserve Exclusive Tables dining credit", "signal_id": "dining_credit", "value_usd": 300, "type": "specific", "expiration": "split_h1_h2", "ease_of_use": "hard", "notes": "$150 H1 + $150 H2; only at curated reservations in select cities; risk of breakage"},
     {"name": "StubHub / viagogo credit", "value_usd": 300, "type": "specific", "expiration": "split_h1_h2", "ease_of_use": "medium", "notes": "$150 H1 + $150 H2 through 2027-12-31"},
     {"name": "Lyft in-app credit", "value_usd": 120, "type": "specific", "expiration": "monthly", "ease_of_use": "easy", "notes": "$10/month, requires monthly use, expires through 2027-09-30"},
-    {"name": "DoorDash monthly credit", "value_usd": 300, "type": "specific", "expiration": "monthly", "ease_of_use": "medium", "notes": "$5 restaurants + 2x $10 grocery/retail per month; requires DashPass linked"},
-    {"name": "Peloton membership credit", "value_usd": 120, "type": "specific", "expiration": "monthly", "ease_of_use": "hard", "notes": "$10/month; only valuable if you actively pay for Peloton membership"},
+    {"name": "DoorDash monthly credit", "signal_id": "doordash_credit", "value_usd": 300, "type": "specific", "expiration": "monthly", "ease_of_use": "medium", "notes": "$5 restaurants + 2x $10 grocery/retail per month; requires DashPass linked"},
+    {"name": "Peloton membership credit", "signal_id": "equinox_credit", "value_usd": 120, "type": "specific", "expiration": "monthly", "ease_of_use": "hard", "notes": "$10/month; only valuable if you actively pay for Peloton membership"},
     {"name": "Apple TV+ subscription", "value_usd": 119, "type": "specific", "expiration": "annual", "ease_of_use": "medium", "notes": "Complimentary; ~$9.99/mo retail"},
     {"name": "Apple Music subscription", "value_usd": 132, "type": "specific", "expiration": "annual", "ease_of_use": "medium", "notes": "Complimentary; ~$10.99/mo retail; perks_dedup with Amex Platinum"},
-    {"name": "Global Entry / TSA PreCheck / NEXUS credit", "value_usd": 120, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"}
+    {"name": "Global Entry / TSA PreCheck / NEXUS credit", "signal_id": "global_entry_tsa", "value_usd": 120, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"}
   ],
 
   "ongoing_perks": [
-    {"name": "Priority Pass Select", "value_estimate_usd": 469, "category": "lounge_access", "notes": "Includes restaurants for primary cardholder"},
-    {"name": "Chase Sapphire Lounge access", "value_estimate_usd": null, "category": "lounge_access"},
-    {"name": "Trip cancellation/interruption insurance", "value_estimate_usd": null, "category": "travel_protection", "notes": "Up to $10k/person, $20k/trip"},
-    {"name": "Trip delay reimbursement", "value_estimate_usd": null, "category": "travel_protection", "notes": "6+ hour delay; $500/ticket"},
+    {"name": "Priority Pass Select", "signal_id": "lounge_access", "value_estimate_usd": 469, "category": "lounge_access", "notes": "Includes restaurants for primary cardholder"},
+    {"name": "Chase Sapphire Lounge access", "signal_id": "lounge_access", "value_estimate_usd": null, "category": "lounge_access"},
+    {"name": "Trip cancellation/interruption insurance", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection", "notes": "Up to $10k/person, $20k/trip"},
+    {"name": "Trip delay reimbursement", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection", "notes": "6+ hour delay; $500/ticket"},
     {"name": "Primary auto rental CDW", "value_estimate_usd": null, "category": "travel_protection"},
-    {"name": "Baggage delay insurance", "value_estimate_usd": null, "category": "travel_protection"},
+    {"name": "Baggage delay insurance", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection"},
     {"name": "Lost luggage reimbursement", "value_estimate_usd": null, "category": "travel_protection"},
     {"name": "Emergency evacuation/medical", "value_estimate_usd": null, "category": "travel_protection"},
-    {"name": "Cell phone protection", "value_estimate_usd": null, "category": "purchase_protection", "notes": "Up to $1,000/claim, 3 claims/12 mo, $50 deductible"},
+    {"name": "Cell phone protection", "signal_id": "cell_phone_protection", "value_estimate_usd": null, "category": "purchase_protection", "notes": "Up to $1,000/claim, 3 claims/12 mo, $50 deductible"},
     {"name": "IHG One Rewards Platinum status", "value_estimate_usd": null, "category": "hotel_status"},
     {"name": "Hertz President's Circle status", "value_estimate_usd": null, "category": "rental_status"}
   ],

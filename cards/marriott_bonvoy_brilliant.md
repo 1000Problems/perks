@@ -34,15 +34,15 @@
   },
 
   "annual_credits": [
-    {"name": "Free Night Award (85,000 pts)", "value_usd": 600, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "medium"},
-    {"name": "Dining credit", "value_usd": 300, "type": "specific", "expiration": "monthly", "ease_of_use": "medium", "notes": "$25/month at restaurants worldwide"}
+    {"name": "Free Night Award (85,000 pts)", "signal_id": "hotel_free_night_cert", "value_usd": 600, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "medium"},
+    {"name": "Dining credit", "signal_id": "dining_credit", "value_usd": 300, "type": "specific", "expiration": "monthly", "ease_of_use": "medium", "notes": "$25/month at restaurants worldwide"}
   ],
 
   "ongoing_perks": [
     {"name": "Marriott Platinum Elite status", "value_estimate_usd": null, "category": "hotel_status", "notes": "Includes lounge access, room upgrades, late checkout"},
     {"name": "25 elite-night credits per year", "value_estimate_usd": null, "category": "elite_status_acceleration"},
-    {"name": "Priority Pass Select", "value_estimate_usd": null, "category": "lounge_access"},
-    {"name": "Trip cancellation/interruption", "value_estimate_usd": null, "category": "travel_protection"},
+    {"name": "Priority Pass Select", "signal_id": "lounge_access", "value_estimate_usd": null, "category": "lounge_access"},
+    {"name": "Trip cancellation/interruption", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection"},
     {"name": "Premium auto rental optional enrollment", "value_estimate_usd": null, "category": "travel_protection_optional"}
   ],
 

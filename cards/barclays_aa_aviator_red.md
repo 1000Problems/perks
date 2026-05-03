@@ -38,8 +38,8 @@
   ],
 
   "ongoing_perks": [
-    {"name": "Free first checked bag (primary + 4 companions)", "value_estimate_usd": 240, "category": "airline_perk"},
-    {"name": "Preferred boarding", "value_estimate_usd": null, "category": "airline_perk"},
+    {"name": "Free first checked bag (primary + 4 companions)", "signal_id": "free_checked_bag", "value_estimate_usd": 240, "category": "airline_perk"},
+    {"name": "Preferred boarding", "signal_id": "priority_boarding", "value_estimate_usd": null, "category": "airline_perk"},
     {"name": "25% back on inflight purchases", "value_estimate_usd": null, "category": "airline_perk"}
   ],
 

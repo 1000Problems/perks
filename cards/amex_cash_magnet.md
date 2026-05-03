@@ -34,7 +34,7 @@
   "annual_credits": [],
 
   "ongoing_perks": [
-    {"name": "Purchase protection", "value_estimate_usd": null, "category": "purchase_protection"},
+    {"name": "Purchase protection", "signal_id": "purchase_protection", "value_estimate_usd": null, "category": "purchase_protection"},
     {"name": "Auto rental CDW (secondary)", "value_estimate_usd": null, "category": "travel_protection"}
   ],
 

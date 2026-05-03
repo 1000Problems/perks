@@ -28,7 +28,7 @@
   "signup_bonus": {"amount_pts": 60000, "spend_required_usd": 1000, "spend_window_months": 90, "estimated_value_usd": 360},
 
   "annual_credits": [
-    {"name": "Free Night Cert (35,000 pts) annually", "value_usd": 175, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "medium"}
+    {"name": "Free Night Cert (35,000 pts) annually", "signal_id": "hotel_free_night_cert", "value_usd": 175, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "medium"}
   ],
 
   "ongoing_perks": [{"name": "Choice Diamond status", "value_estimate_usd": null, "category": "hotel_status"}],

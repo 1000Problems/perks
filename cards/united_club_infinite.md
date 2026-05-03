@@ -8,7 +8,7 @@
 ```json
 {
   "id": "united_club_infinite",
-  "name": "Chase United Club Infinite Card",
+  "name": "Chase United Club Infinite Card", "signal_id": "lounge_access",
   "issuer": "Chase",
   "network": "Visa Infinite",
   "card_type": "personal",
@@ -35,20 +35,20 @@
 
   "annual_credits": [
     {"name": "United Travel Bank credit", "value_usd": null, "type": "specific", "expiration": "annual", "ease_of_use": "medium"},
-    {"name": "Global Entry / TSA PreCheck", "value_usd": 100, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"},
+    {"name": "Global Entry / TSA PreCheck", "signal_id": "global_entry_tsa", "value_usd": 100, "type": "specific", "expiration": "every_4_years", "ease_of_use": "medium"},
     {"name": "$100 Avis/Budget credit (recent addition)", "value_usd": 100, "type": "specific", "expiration": "annual", "ease_of_use": "hard"}
   ],
 
   "ongoing_perks": [
-    {"name": "United Club lounge membership", "value_estimate_usd": 750, "category": "lounge_access", "notes": "Standalone membership ~$750/yr"},
+    {"name": "United Club lounge membership", "signal_id": "lounge_access", "value_estimate_usd": 750, "category": "lounge_access", "notes": "Standalone membership ~$750/yr"},
     {"name": "Free first AND second checked bag (primary + companion)", "value_estimate_usd": 480, "category": "airline_perk"},
-    {"name": "Premier Access (priority boarding/check-in/security)", "value_estimate_usd": null, "category": "airline_perk"},
+    {"name": "Premier Access (priority boarding/check-in/security)", "signal_id": "priority_boarding", "value_estimate_usd": null, "category": "airline_perk"},
     {"name": "25% back on inflight purchases", "value_estimate_usd": null, "category": "airline_perk"},
-    {"name": "Hyatt Discoverist status (in some periods)", "value_estimate_usd": null, "category": "hotel_status"},
-    {"name": "IHG Platinum Elite", "value_estimate_usd": null, "category": "hotel_status"},
+    {"name": "Hyatt Discoverist status (in some periods)", "signal_id": "hotel_status", "value_estimate_usd": null, "category": "hotel_status"},
+    {"name": "IHG Platinum Elite", "signal_id": "hotel_status", "value_estimate_usd": null, "category": "hotel_status"},
     {"name": "Avis President's Club / Hertz Five Star", "value_estimate_usd": null, "category": "rental_status"},
-    {"name": "Trip cancellation/interruption / primary CDW", "value_estimate_usd": null, "category": "travel_protection"},
-    {"name": "Cell phone protection", "value_estimate_usd": null, "category": "purchase_protection"}
+    {"name": "Trip cancellation/interruption / primary CDW", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection"},
+    {"name": "Cell phone protection", "signal_id": "cell_phone_protection", "value_estimate_usd": null, "category": "purchase_protection"}
   ],
 
   "transfer_partners_inherited_from": null,

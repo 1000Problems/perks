@@ -67,20 +67,42 @@ describe("scoreCard — premium travel card on heavy travel spend", () => {
   });
 });
 
-describe("scoreCard — perk-capture gating", () => {
-  it("perks default to $0 unless the user opts in (Amex Platinum)", () => {
-    // No perk_opt_ins → every signal_gated credit/perk on Platinum
-    // contributes $0. The headline collapses to earnings minus fee.
-    const noOptIns = scoreCard(
+describe("scoreCard — spend-driven perk capture", () => {
+  it("perks capture from spend signal: heavy travel → Amex Platinum perks activate", () => {
+    // heavyTravelProfile has airfare/hotels/dining/transit spend, so
+    // signal-gated credits (airline incidental, hotel credit, Uber,
+    // dining) ramp up via lib/engine/perkSignals.ts.
+    const result = scoreCard(
       card("amex_platinum"),
       heavyTravelProfile,
       [],
       db,
       opts(),
     );
-    expect(noOptIns.components.perksOngoing).toBe(0);
-    // availablePerks should list the opt-in candidates.
-    expect(noOptIns.availablePerks.length).toBeGreaterThan(0);
+    expect(result.components.perksOngoing).toBeGreaterThan(0);
+  });
+
+  it("perks stay at $0 when spend signal is absent", () => {
+    // A profile with no airfare/hotels/transit/dining → no spend
+    // signal can fire, so Amex Platinum's signal-gated perks all
+    // capture $0. Subjective perks (Equinox, Saks, Clear) also stay
+    // at $0 because they have no inferable signal.
+    const lightSpend: UserProfile = {
+      spend_profile: { groceries: 2000, other: 3000 },
+      brands_used: [],
+      cards_held: [],
+      trips_planned: [],
+      preferences: {},
+    };
+    const result = scoreCard(
+      card("amex_platinum"),
+      lightSpend,
+      [],
+      db,
+      opts(),
+    );
+    expect(result.components.perksOngoing).toBe(0);
+    expect(result.availablePerks.length).toBeGreaterThan(0);
   });
 });
 

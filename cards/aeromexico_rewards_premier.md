@@ -28,7 +28,7 @@
   "signup_bonus": {"amount_pts": 50000, "spend_required_usd": 2500, "spend_window_months": 90, "estimated_value_usd": 750},
 
   "annual_credits": [{"name": "Aeromexico companion ticket benefit", "value_estimate_usd": null, "category": "airline_perk"}],
-  "ongoing_perks": [{"name": "Free first checked bag", "value_estimate_usd": 100, "category": "airline_perk"}],
+  "ongoing_perks": [{"name": "Free first checked bag", "signal_id": "free_checked_bag", "value_estimate_usd": 100, "category": "airline_perk"}],
   "transfer_partners_inherited_from": "aeromexico_rewards",
   "issuer_rules": ["USB 30-day rule"],
 

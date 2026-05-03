@@ -26,6 +26,7 @@ import type {
   WalletCardHeld,
 } from "./types";
 import { getBrandFit } from "./brandAffinity";
+import { derivePerkCapture } from "./perkSignals";
 
 const ALL_CATS: SpendCategoryId[] = [
   "groceries",
@@ -305,7 +306,6 @@ export function scoreCard(
   const walletCardIds = walletCards.map((c) => c.id);
   const redemptionStyle: RedemptionStyle =
     userProfile.redemption_style ?? "transfers";
-  const optIns = new Set(userProfile.perk_opt_ins ?? []);
 
   // Spend impact — best rate per category, before vs after, with
   // source-card attribution and cap info for the drill-in's per-row math.
@@ -357,12 +357,14 @@ export function scoreCard(
     }
   }
 
-  // Annual credits — perk-capture gating. Each credit's value contributes
-  // to the score ONLY when its activation is "signal_gated" AND the
-  // user has opted into its signal_id via perk_opt_ins. Passive credits
-  // (no FX, primary CDW, etc) are listed as features and never valued.
-  // Un-opted gated credits are listed under availablePerks at $0 — the
-  // user toggles them on via the Perks Settings page.
+  // Annual credits — spend-driven capture. Each credit's value is
+  // multiplied by a 0–1 capture rate derived from the user's spend
+  // profile (see lib/engine/perkSignals.ts). A $200 airline-incidental
+  // credit captures fully when airfare spend ≥ $1500, ramps linearly
+  // between $300–1500, and goes to $0 below $300. Passive credits (no
+  // FX, primary CDW) bypass the gate and surface as features.
+  // Subjective perks (Equinox, Saks) have no spend signal; they
+  // capture $0 unless their signal_id is in profile.perk_opt_ins.
   let creditsValue = 0;
   const availablePerks: AvailablePerkOut[] = [];
   const passiveFeatures: PassiveFeatureOut[] = [];
@@ -373,17 +375,20 @@ export function scoreCard(
       passiveFeatures.push({ name: cr.name, note: cr.notes ?? undefined });
       continue;
     }
-    // signal_gated. signal_id must match an opt-in to count.
+    if (face <= 0) continue;
     const signalId = cr.signal_id ?? null;
-    const optedIn = signalId != null && optIns.has(signalId);
-    if (face > 0 && optedIn) {
-      creditsValue += face;
+    const captureRate = derivePerkCapture(signalId, userProfile);
+    const captured = face * captureRate;
+    if (captured > 0) {
+      creditsValue += captured;
       breakdown.push({
-        label: cr.name,
-        value: Math.round(face),
+        label: captureRate >= 1
+          ? cr.name
+          : `${cr.name} (${Math.round(captureRate * 100)}% based on spend)`,
+        value: Math.round(captured),
         kind: "credit",
       });
-    } else if (face > 0) {
+    } else {
       availablePerks.push({
         name: cr.name,
         faceValue: Math.round(face),
@@ -393,9 +398,10 @@ export function scoreCard(
     }
   }
 
-  // Ongoing perks — same gating. Dedup-trumped names (lounge access
-  // already covered by another wallet card) drop to duplicatedPerks
-  // regardless of opt-in state — the value is already captured.
+  // Ongoing perks — same gating logic. Dedup-trumped names (lounge
+  // access already covered by another wallet card) drop to
+  // duplicatedPerks before any capture math runs — the value is
+  // already accounted for elsewhere.
   const covered = alreadyCoveredPerks(walletCardIds, db);
   const newPerks: NewPerkOut[] = [];
   const duplicatedPerks: string[] = [];
@@ -413,28 +419,37 @@ export function scoreCard(
       passiveFeatures.push({ name: p.name, note: p.notes ?? undefined });
       continue;
     }
+    if (value <= 0) {
+      // Zero-dollar "unlocks" perk (travel insurance, status). List
+      // under newPerks with the unlock marker — no dollar capture to
+      // gate on.
+      newPerks.push({ name: p.name, value: "unlocks", note: p.notes ?? undefined });
+      continue;
+    }
     const signalId = p.signal_id ?? null;
-    const optedIn = signalId != null && optIns.has(signalId);
-    if (value > 0 && optedIn) {
-      newPerks.push({ name: p.name, value: Math.round(value), note: p.notes ?? undefined });
-      perksValue += value;
+    const captureRate = derivePerkCapture(signalId, userProfile);
+    const captured = value * captureRate;
+    if (captured > 0) {
+      newPerks.push({
+        name: p.name,
+        value: Math.round(captured),
+        note: p.notes ?? undefined,
+      });
+      perksValue += captured;
       breakdown.push({
-        label: p.name,
-        value: Math.round(value),
+        label: captureRate >= 1
+          ? p.name
+          : `${p.name} (${Math.round(captureRate * 100)}% based on spend)`,
+        value: Math.round(captured),
         kind: "perk",
       });
-    } else if (value > 0) {
+    } else {
       availablePerks.push({
         name: p.name,
         faceValue: Math.round(value),
         signal_id: signalId,
         note: p.notes ?? undefined,
       });
-    } else {
-      // Zero-dollar "unlocks" perk (e.g. travel insurance, status). List
-      // under newPerks with the unlock marker — these don't depend on
-      // opt-in because they have no dollar value to capture.
-      newPerks.push({ name: p.name, value: "unlocks", note: p.notes ?? undefined });
     }
   }
 

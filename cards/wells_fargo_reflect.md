@@ -27,7 +27,7 @@
 
   "ongoing_perks": [
     {"name": "0% intro APR up to 21 months on purchases and qualifying BT", "value_estimate_usd": null, "category": "financing"},
-    {"name": "Cell phone protection", "value_estimate_usd": 80, "category": "purchase_protection"}
+    {"name": "Cell phone protection", "signal_id": "cell_phone_protection", "value_estimate_usd": 80, "category": "purchase_protection"}
   ],
 
   "transfer_partners_inherited_from": null,

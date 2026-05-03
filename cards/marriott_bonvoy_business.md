@@ -33,12 +33,12 @@
   },
 
   "annual_credits": [
-    {"name": "Free Night Cert (35,000 pts)", "value_usd": 250, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "easy"},
-    {"name": "Second Free Night cert after $60k spend", "value_usd": 250, "type": "spend_threshold", "expiration": "annual_anniversary", "ease_of_use": "hard"}
+    {"name": "Free Night Cert (35,000 pts)", "signal_id": "hotel_free_night_cert", "value_usd": 250, "type": "specific", "expiration": "annual_anniversary", "ease_of_use": "easy"},
+    {"name": "Second Free Night cert after $60k spend", "signal_id": "hotel_free_night_cert", "value_usd": 250, "type": "spend_threshold", "expiration": "annual_anniversary", "ease_of_use": "hard"}
   ],
 
   "ongoing_perks": [
-    {"name": "Marriott Gold Elite status", "value_estimate_usd": null, "category": "hotel_status"},
+    {"name": "Marriott Gold Elite status", "signal_id": "hotel_status", "value_estimate_usd": null, "category": "hotel_status"},
     {"name": "15 elite-night credits/year", "value_estimate_usd": null, "category": "elite_status_acceleration"}
   ],
 

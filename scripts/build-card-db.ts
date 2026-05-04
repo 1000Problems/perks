@@ -17,6 +17,7 @@ import {
   IssuerRulesSchema,
   PerksDedupEntrySchema,
   DestinationPerkSchema,
+  SignalSchema,
   SoulCreditScoreSchema,
   SoulAnnualCreditSchema,
   SoulInsuranceSchema,
@@ -28,12 +29,14 @@ import {
   type IssuerRules,
   type PerksDedupEntry,
   type DestinationPerk,
+  type Signal,
   type Soul,
 } from "./lib/schemas";
 import { parseCardMarkdown } from "./lib/parse";
 
 const ROOT = process.cwd();
 const CARDS_DIR = join(ROOT, "cards");
+const SIGNALS_DIR = join(ROOT, "signals");
 const DATA_DIR = join(ROOT, "data");
 const ALL_CARDS = join(CARDS_DIR, "AllCards.md");
 
@@ -57,6 +60,55 @@ function listCardFiles(): string[] {
     .sort();
 }
 
+function listSignalFiles(): string[] {
+  if (!existsSync(SIGNALS_DIR)) return [];
+  return readdirSync(SIGNALS_DIR)
+    .filter((f) => f.endsWith(".md") && !f.startsWith("_"))
+    .sort();
+}
+
+// Pulls the first ```json fenced block out of a markdown string. Used
+// for signal markdowns where the file has exactly one JSON section
+// (under "## signals.json entry"). Returns null when the file has no
+// fenced block, throws when the JSON is malformed.
+function extractFirstJsonBlock(md: string): unknown | null {
+  const fence = md.match(/```json\s*\n([\s\S]*?)\n```/);
+  if (!fence) return null;
+  try {
+    return JSON.parse(fence[1]);
+  } catch (e) {
+    throw new Error(`malformed JSON: ${(e as Error).message}`);
+  }
+}
+
+function loadSignals(db: DB): void {
+  const seen = new Set<string>();
+  for (const file of listSignalFiles()) {
+    const md = readFileSync(join(SIGNALS_DIR, file), "utf8");
+    let raw: unknown | null;
+    try {
+      raw = extractFirstJsonBlock(md);
+    } catch (e) {
+      err(`signals/${file}: ${(e as Error).message}`);
+    }
+    if (!raw) {
+      err(`signals/${file}: missing \`\`\`json fenced block under "## signals.json entry"`);
+    }
+    let signal: Signal;
+    try {
+      signal = SignalSchema.parse(raw);
+    } catch (e) {
+      err(`signals/${file}: signals.json validation: ${(e as Error).message}`);
+    }
+    if (seen.has(signal.id)) {
+      err(`signals/${file}: duplicate signal id "${signal.id}"`);
+    }
+    seen.add(signal.id);
+    db.signals.push(signal);
+  }
+  db.signals.sort((a, b) => a.id.localeCompare(b.id));
+}
+
 // ── merge ──────────────────────────────────────────────────────────────
 
 interface DB {
@@ -70,6 +122,10 @@ interface DB {
   // soul: keyed by card_id. Optional per card. See
   // docs/SOUL_SCHEMA_PROPOSAL.md for the shape.
   souls: Map<string, Soul>;
+  // Phase 1 of signal-first architecture. Catalog of global facts the
+  // system can know about a user. Read from signals/*.md, written to
+  // data/signals.json. Not yet consumed by the engine.
+  signals: Signal[];
 }
 
 function emptyDB(): DB {
@@ -82,6 +138,7 @@ function emptyDB(): DB {
     destinationPerks: new Map(),
     notes: [],
     souls: new Map(),
+    signals: [],
   };
 }
 
@@ -390,6 +447,10 @@ function writeOutputs(db: DB): void {
   for (const [k, v] of db.souls.entries()) soulObj[k] = v;
   writeJSON("card_soul.json", soulObj);
 
+  // Signal catalog (Phase 1). Sorted array. Loaded by lib/data/loader.ts
+  // and exposed on CardDatabase.signals — not yet consumed by engine.
+  writeJSON("signals.json", db.signals);
+
   // Compiled at: stamp + counts so the loader can surface freshness.
   writeJSON("manifest.json", {
     compiled_at: new Date().toISOString(),
@@ -400,6 +461,7 @@ function writeOutputs(db: DB): void {
       perks_dedup: db.perksDedup.size,
       destinations: db.destinationPerks.size,
       souls: db.souls.size,
+      signals: db.signals.length,
     },
   });
 
@@ -450,6 +512,9 @@ function main(): void {
     mergeFile(db, f);
   }
 
+  loadSignals(db);
+  log(`reading ${db.signals.length} signal files from signals/`);
+
   deriveEarningCards(db);
   defaultCashMedianCpp(db);
   assertMedianCppFreshness(db);
@@ -459,7 +524,7 @@ function main(): void {
   log(
     `wrote ${db.cards.length} cards, ${db.programs.size} programs, ${db.issuerRules.size} issuers, ` +
       `${db.perksDedup.size} dedup perks, ${db.destinationPerks.size} destinations, ` +
-      `${db.souls.size} souls to data/`,
+      `${db.souls.size} souls, ${db.signals.length} signals to data/`,
   );
 }
 

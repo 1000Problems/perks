@@ -15,6 +15,7 @@ import {
   IssuerRulesSchema,
   PerksDedupEntrySchema,
   DestinationPerkSchema,
+  SignalSchema,
 } from "../../scripts/lib/schemas";
 
 const DATA_DIR = join(process.cwd(), "data");
@@ -27,6 +28,11 @@ const ManifestSchema = z.object({
     issuers: z.number(),
     perks_dedup: z.number(),
     destinations: z.number(),
+    // souls / signals are additive — older manifests may omit them, so
+    // they're optional for forward compatibility, but the build script
+    // always writes them.
+    souls: z.number().optional(),
+    signals: z.number().optional(),
   }),
 });
 
@@ -37,6 +43,7 @@ type ParsedProgram = z.output<typeof ProgramSchema>;
 type ParsedIssuerRules = z.output<typeof IssuerRulesSchema>;
 type ParsedPerksDedup = z.output<typeof PerksDedupEntrySchema>;
 type ParsedDestinationPerk = z.output<typeof DestinationPerkSchema>;
+type ParsedSignal = z.output<typeof SignalSchema>;
 
 export interface CardDatabase {
   cards: ParsedCard[];
@@ -44,11 +51,14 @@ export interface CardDatabase {
   issuerRules: ParsedIssuerRules[];
   perksDedup: ParsedPerksDedup[];
   destinationPerks: Record<string, ParsedDestinationPerk>;
+  // Phase 1: signal catalog. Loaded but not yet consumed by the engine.
+  signals: ParsedSignal[];
   manifest: z.infer<typeof ManifestSchema>;
   // Lookup helpers
   cardById: Map<string, ParsedCard>;
   programById: Map<string, ParsedProgram>;
   issuerRulesByIssuer: Map<string, ParsedIssuerRules>;
+  signalById: Map<string, ParsedSignal>;
 }
 
 function readJSON<T>(filename: string, schema: z.ZodType<T>): T {
@@ -84,6 +94,10 @@ export function loadCardDatabase(): CardDatabase {
     "destination_perks.json",
     z.record(DestinationPerkSchema),
   ) as Record<string, ParsedDestinationPerk>;
+  const signals = readJSON(
+    "signals.json",
+    z.array(SignalSchema),
+  ) as ParsedSignal[];
   const manifest = readJSON("manifest.json", ManifestSchema);
 
   const db: CardDatabase = {
@@ -92,10 +106,12 @@ export function loadCardDatabase(): CardDatabase {
     issuerRules,
     perksDedup,
     destinationPerks,
+    signals,
     manifest,
     cardById: new Map(cards.map((c) => [c.id, c])),
     programById: new Map(programs.map((p) => [p.id, p])),
     issuerRulesByIssuer: new Map(issuerRules.map((r) => [r.issuer, r])),
+    signalById: new Map(signals.map((s) => [s.id, s])),
   };
 
   cached = db;
@@ -109,6 +125,7 @@ export type {
   IssuerRules,
   PerksDedupEntry,
   DestinationPerk,
+  Signal,
   Play,
   PlayGroupId,
   PlayQuestionId,

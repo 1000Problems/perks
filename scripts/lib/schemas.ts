@@ -552,3 +552,47 @@ export type SoulProgramAccessEntry = z.infer<typeof SoulProgramAccessEntrySchema
 export type SoulCoBrandPerks = z.infer<typeof SoulCoBrandPerksSchema>;
 export type SoulAbsentPerk = z.infer<typeof SoulAbsentPerkSchema>;
 export type Soul = z.infer<typeof SoulSchema>;
+
+// ── signals.json ───────────────────────────────────────────────────────
+//
+// Signal catalog — Phase 1 of the signal-first architecture (see
+// TASK-signals-catalog-phase1.md). Global facts the system can know
+// about a user, replacing the fragmented per-card-per-play state model.
+//
+// Three signal types:
+//   behavior — observable habit (claims dining credits, uses lounges)
+//   intent   — user-stated aspiration (wants Japan business, plans family trip)
+//   holding  — auto-confirmed by wallet contents (holds a TY feeder card)
+//
+// Decay tells the runtime when to expire: never (lifetime habit), annual
+// (resets each calendar year), trip_bound (expires when associated trip
+// completes or is removed).
+
+const SignalType = z.enum(["behavior", "intent", "holding"]);
+const SignalDecay = z.enum(["never", "annual", "trip_bound"]);
+const EvidenceStrength = z.enum(["weak", "medium", "strong"]);
+
+export const SignalSchema = z.object({
+  // Lowercase dotted, e.g. "claims.dining_credit.standard". The dot
+  // hierarchy is non-semantic — a naming convention to keep the catalog
+  // browsable. Code never parses the segments.
+  id: z
+    .string()
+    .regex(
+      /^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$/,
+      "expected lowercase dotted id like claims.dining_credit.standard",
+    ),
+  type: SignalType,
+  decay: SignalDecay.default("never"),
+  label: z.string(), // human-readable, signals dashboard
+  prompt: z.string(), // question form, when asking the user directly
+  // Free-form notes for human reviewers. Not consumed by code in Phase 1.
+  implies: z.array(z.string()).default([]),
+  evidence_strength: EvidenceStrength.default("medium"),
+  // card_ids whose plays will reveal this signal in Phase 2. Used for
+  // catalog navigation; not validated as foreign keys.
+  source_card_examples: z.array(z.string()).default([]),
+  notes: z.string().optional(),
+});
+
+export type Signal = z.output<typeof SignalSchema>;

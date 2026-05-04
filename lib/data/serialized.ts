@@ -12,6 +12,7 @@ import type {
   IssuerRules,
   PerksDedupEntry,
   Program,
+  Signal,
 } from "./loader";
 
 export interface SerializedDb {
@@ -20,6 +21,7 @@ export interface SerializedDb {
   issuerRules: IssuerRules[];
   perksDedup: PerksDedupEntry[];
   destinationPerks: Record<string, DestinationPerk>;
+  signals: Signal[];
   manifest: CardDatabase["manifest"];
 }
 
@@ -30,6 +32,7 @@ export function toSerialized(db: CardDatabase): SerializedDb {
     issuerRules: db.issuerRules,
     perksDedup: db.perksDedup,
     destinationPerks: db.destinationPerks,
+    signals: db.signals,
     manifest: db.manifest,
   };
 }
@@ -41,9 +44,11 @@ export function fromSerialized(s: SerializedDb): CardDatabase {
     issuerRules: s.issuerRules,
     perksDedup: s.perksDedup,
     destinationPerks: s.destinationPerks,
+    signals: s.signals,
     manifest: s.manifest,
     cardById: new Map(s.cards.map((c) => [c.id, c])),
     programById: new Map(s.programs.map((p) => [p.id, p])),
     issuerRulesByIssuer: new Map(s.issuerRules.map((r) => [r.issuer, r])),
+    signalById: new Map(s.signals.map((sig) => [sig.id, sig])),
   };
 }

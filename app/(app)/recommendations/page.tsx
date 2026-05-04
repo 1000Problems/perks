@@ -2,9 +2,17 @@ import { redirect } from "next/navigation";
 import type { Route } from "next";
 import { RecPanelDesktop } from "@/components/recommender/RecPanelDesktop";
 import { RecPanelMobile } from "@/components/recommender/RecPanelMobile";
-import { getCurrentProfile, getCurrentUserId } from "@/lib/profile/server";
+import {
+  getCurrentProfile,
+  getCurrentUserId,
+  getUserSignals,
+} from "@/lib/profile/server";
 import { loadCardDatabase } from "@/lib/data/loader";
 import { toSerialized } from "@/lib/data/serialized";
+import {
+  deriveHoldingSignals,
+  mergeSignals,
+} from "@/lib/engine/holdingSignals";
 import { loadEngineVerdicts } from "@/lib/rules/serverEligibility";
 
 export default async function RecommendationsPage() {
@@ -36,6 +44,16 @@ export default async function RecommendationsPage() {
   const cardIds = db.cards.map((c) => c.id);
   const eligibilityOverrides = await loadEngineVerdicts(userId, cardIds);
 
+  // Phase 4: load + merge signals server-side. rankCards in the panel
+  // uses these to apply a +10% boost to candidate cards with plays
+  // revealing user's "On my list" intents.
+  const userSignals = await getUserSignals(userId);
+  const merged = mergeSignals(
+    userSignals,
+    deriveHoldingSignals(profile.cards_held),
+  );
+  const userSignalsObject = Object.fromEntries(merged);
+
   return (
     <>
       <div className="hidden md:block">
@@ -43,6 +61,7 @@ export default async function RecommendationsPage() {
           profile={profile}
           serializedDb={serializedDb}
           eligibilityOverrides={eligibilityOverrides}
+          userSignals={userSignalsObject}
         />
       </div>
       <div className="block md:hidden">
@@ -50,6 +69,7 @@ export default async function RecommendationsPage() {
           profile={profile}
           serializedDb={serializedDb}
           eligibilityOverrides={eligibilityOverrides}
+          userSignals={userSignalsObject}
         />
       </div>
     </>

@@ -15,6 +15,7 @@ import type {
   WalletCardHeld,
 } from "./types";
 import { CREDIT_BAND_RANK } from "./types";
+import type { SignalState } from "@/lib/profile/server";
 import { creditBandFloorForCard, evaluateEligibility } from "./eligibility";
 import { scoreCard } from "./scoring";
 import { getBrandFit } from "./brandAffinity";
@@ -264,6 +265,11 @@ export function rankCards(
   wallet: WalletCardHeld[],
   db: CardDatabase,
   options: RankOptions,
+  // Phase 4: optional. When provided, scoreCard applies the
+  // signal-interest bonus to candidate cards with card_plays whose
+  // reveals_signals overlap the user's "interested" set. Empty default
+  // keeps behavior identical to the pre-Phase-4 world.
+  signals: Map<string, SignalState> = new Map(),
 ): RankResult {
   const today = options.today ?? new Date();
   const heldIds = new Set(wallet.map((h) => h.card_id));
@@ -278,7 +284,7 @@ export function rankCards(
     if (heldIds.has(card.id)) continue;
     if (card.closed_to_new_apps) continue;
 
-    const score = scoreCard(card, userProfile, wallet, db, options.scoring);
+    const score = scoreCard(card, userProfile, wallet, db, options.scoring, signals);
     // Prefer a server-supplied verdict (from the catalog-driven rules
     // evaluator). Fall back to the in-engine path for any card the
     // overrides map doesn't cover — keeps the engine usable on a

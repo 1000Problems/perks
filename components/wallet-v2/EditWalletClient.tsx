@@ -13,6 +13,7 @@ import type { Route } from "next";
 import { fromSerialized, type SerializedDb } from "@/lib/data/serialized";
 import type { Card } from "@/lib/data/loader";
 import type { UserProfile, WalletCardHeld } from "@/lib/profile/types";
+import type { SignalState } from "@/lib/profile/server";
 import { computeFoundMoneyV2 } from "@/lib/engine/foundMoney";
 import { fmt } from "@/lib/utils/format";
 import { CardArt } from "@/components/perks/CardArt";
@@ -25,6 +26,11 @@ const MONTH = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "O
 interface Props {
   initialProfile: UserProfile;
   serializedDb: SerializedDb;
+  // Phase 4: serialized signal map (already merged with auto-derived
+  // holdings server-side). Reconstructed as a Map in useMemo. Empty
+  // object until Phase 3 migration is applied; engine handles that
+  // case as identical-to-pre-Phase-4 behavior.
+  userSignals?: Record<string, SignalState>;
 }
 
 function formatOpened(iso: string): string {
@@ -34,11 +40,23 @@ function formatOpened(iso: string): string {
   return `opened ${MONTH[m - 1]} ${y}`;
 }
 
-export function EditWalletClient({ initialProfile, serializedDb }: Props) {
+export function EditWalletClient({
+  initialProfile,
+  serializedDb,
+  userSignals: userSignalsProp,
+}: Props) {
   const router = useRouter();
   const db = useMemo(() => fromSerialized(serializedDb), [serializedDb]);
   const held = initialProfile.cards_held ?? [];
   const heldIds = useMemo(() => new Set(held.map((h) => h.card_id)), [held]);
+
+  // Phase 4: signal map reconstructed once per render. The server has
+  // already merged user-clicked signals with auto-derived holdings, so
+  // this Map is the engine's single source of truth.
+  const signals = useMemo(
+    () => new Map(Object.entries(userSignalsProp ?? {})),
+    [userSignalsProp],
+  );
 
   const totalFound = useMemo(() => {
     let s = 0;
@@ -49,10 +67,10 @@ export function EditWalletClient({ initialProfile, serializedDb }: Props) {
       }
       const c = db.cardById.get(h.card_id);
       if (!c) continue;
-      s += computeFoundMoneyV2(c, h, initialProfile, db).point;
+      s += computeFoundMoneyV2(c, h, initialProfile, db, signals).point;
     }
     return s;
-  }, [held, db, initialProfile]);
+  }, [held, db, initialProfile, signals]);
 
   const totalFee = useMemo(() => {
     let s = 0;
@@ -116,18 +134,15 @@ export function EditWalletClient({ initialProfile, serializedDb }: Props) {
             {held.map((h) => {
               const c = db.cardById.get(h.card_id);
               if (!c) return null;
+              const fm = computeFoundMoneyV2(c, h, initialProfile, db, signals);
               return (
                 <WalletLinkRow
                   key={h.card_id}
                   card={c}
                   held={h}
-                  found={computeFoundMoneyV2(c, h, initialProfile, db).point}
-                  signalsFilled={
-                    computeFoundMoneyV2(c, h, initialProfile, db).signalsFilled
-                  }
-                  signalsTotal={
-                    computeFoundMoneyV2(c, h, initialProfile, db).signalsTotal
-                  }
+                  found={fm.point}
+                  signalsFilled={fm.signalsFilled}
+                  signalsTotal={fm.signalsTotal}
                 />
               );
             })}

@@ -11,9 +11,15 @@ import { notFound, redirect } from "next/navigation";
 import {
   getCurrentProfile,
   getCurrentCardPlayState,
+  getCurrentUserId,
+  getUserSignals,
 } from "@/lib/profile/server";
 import { loadCardDatabase } from "@/lib/data/loader";
 import { toSerialized } from "@/lib/data/serialized";
+import {
+  deriveHoldingSignals,
+  mergeSignals,
+} from "@/lib/engine/holdingSignals";
 import { CardHero } from "@/components/wallet-v2/CardHero";
 import type { CardPlayState } from "@/lib/profile/types";
 import "@/app/wallet-edit-v2.css";
@@ -36,8 +42,10 @@ export default async function CardHeroPage({
   const isNew = Boolean(newFlag);
 
   let profile;
+  let userId: string;
   try {
     profile = await getCurrentProfile();
+    userId = await getCurrentUserId();
   } catch {
     redirect("/login");
   }
@@ -59,6 +67,14 @@ export default async function CardHeroPage({
     playState = [];
   }
 
+  // Phase 4: load + merge signals server-side. Empty object on
+  // pre-Phase-3 DBs (getUserSignals tolerates missing table).
+  const userSignals = await getUserSignals(userId);
+  const merged = mergeSignals(
+    userSignals,
+    deriveHoldingSignals(profile.cards_held),
+  );
+
   return (
     <CardHero
       cardId={id}
@@ -67,6 +83,7 @@ export default async function CardHeroPage({
       initialHeld={held}
       initialPlayState={playState}
       isNew={effectiveIsNew}
+      userSignals={Object.fromEntries(merged)}
     />
   );
 }

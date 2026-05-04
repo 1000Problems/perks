@@ -26,6 +26,7 @@ import type {
 import { variantForCard } from "@/lib/cardArt";
 import { useProfile, profileErrorMessage } from "@/lib/profile/client";
 import type { UserProfile, WalletCardHeld } from "@/lib/profile/types";
+import type { SignalState } from "@/lib/profile/server";
 import { fmt } from "@/lib/utils/format";
 import { DrillIn } from "./DrillIn";
 import { RecHeader, type CreditsMode, type ViewMode } from "./Header";
@@ -78,14 +79,22 @@ export interface RecPanelMobileProps {
   profile: UserProfile;
   serializedDb: SerializedDb;
   eligibilityOverrides: Record<string, EligibilityResult> | null;
+  // Phase 4: serialized signal map. Threaded into rankCards so cards
+  // with card_plays revealing user-interested signals get a +10% boost.
+  userSignals?: Record<string, SignalState>;
 }
 
 export function RecPanelMobile({
   profile: serverProfile,
   serializedDb,
   eligibilityOverrides,
+  userSignals: userSignalsProp,
 }: RecPanelMobileProps) {
   const db = useMemo(() => fromSerialized(serializedDb), [serializedDb]);
+  const signals = useMemo(
+    () => new Map(Object.entries(userSignalsProp ?? {})) as Map<string, SignalState>,
+    [userSignalsProp],
+  );
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -222,8 +231,8 @@ export function RecPanelMobile({
   }, [profile.spend_profile]);
 
   const ranked = useMemo(
-    () => rankCards(profile, effectiveWallet, db, rankOptions),
-    [profile, effectiveWallet, db, rankOptions],
+    () => rankCards(profile, effectiveWallet, db, rankOptions, signals),
+    [profile, effectiveWallet, db, rankOptions, signals],
   );
 
   // Search-time display pipeline — mirrors RecPanelDesktop.

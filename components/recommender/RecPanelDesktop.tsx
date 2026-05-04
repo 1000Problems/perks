@@ -26,6 +26,7 @@ import type {
 import { variantForCard } from "@/lib/cardArt";
 import { useProfile, profileErrorMessage } from "@/lib/profile/client";
 import type { UserProfile, WalletCardHeld } from "@/lib/profile/types";
+import type { SignalState } from "@/lib/profile/server";
 import { fmt } from "@/lib/utils/format";
 import { DrillIn } from "./DrillIn";
 import { RecHeader, type CreditsMode, type ViewMode } from "./Header";
@@ -86,17 +87,26 @@ export interface RecPanelDesktopProps {
   // null when the rules path is disabled or unavailable — the engine
   // computes eligibility client-side as a fallback.
   eligibilityOverrides: Record<string, EligibilityResult> | null;
+  // Phase 4: serialized signal map (Phase 3 storage merged with
+  // auto-derived holdings server-side). Threaded into rankCards so
+  // candidate cards with card_plays receive the +10% interest boost.
+  userSignals?: Record<string, SignalState>;
 }
 
 export function RecPanelDesktop({
   profile: serverProfile,
   serializedDb,
   eligibilityOverrides,
+  userSignals: userSignalsProp,
 }: RecPanelDesktopProps) {
   // Reconstruct lookup Maps once per render of the client tree. The
   // serializedDb arrays are stable (server reloads are full
   // remounts), so this useMemo keys on identity and runs once.
   const db = useMemo(() => fromSerialized(serializedDb), [serializedDb]);
+  const signals = useMemo(
+    () => new Map(Object.entries(userSignalsProp ?? {})) as Map<string, SignalState>,
+    [userSignalsProp],
+  );
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -261,8 +271,8 @@ export function RecPanelDesktop({
   }, [profile.spend_profile]);
 
   const ranked = useMemo(
-    () => rankCards(profile, effectiveWallet, db, rankOptions),
-    [profile, effectiveWallet, db, rankOptions],
+    () => rankCards(profile, effectiveWallet, db, rankOptions, signals),
+    [profile, effectiveWallet, db, rankOptions, signals],
   );
 
   // Search-time display pipeline. When NOT searching, ranked.visible is

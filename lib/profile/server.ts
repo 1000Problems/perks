@@ -252,14 +252,14 @@ export async function getCurrentUserId(): Promise<string> {
 // matching the pattern of getCurrentProfile so multiple Server Components
 // can call it without compounding DB hits.
 //
-// Phase 4 will wire this into the engine. Phase 3 ships the helper and
-// leaves it cold so the cutover is one focused change.
-export type SignalStateValue = "confirmed" | "interested" | "dismissed";
+// Phase 4 wires this into the engine via lib/engine/cardValue.ts and
+// lib/engine/scoring.ts.
+export type SignalState = "confirmed" | "interested" | "dismissed";
 
 export const getUserSignals = cache(
-  async (userId: string): Promise<Map<string, SignalStateValue>> => {
+  async (userId: string): Promise<Map<string, SignalState>> => {
     try {
-      const rows = await sql<{ signal_id: string; state: SignalStateValue }[]>`
+      const rows = await sql<{ signal_id: string; state: SignalState }[]>`
         select signal_id, state
           from perks_user_signals
          where user_id = ${userId}

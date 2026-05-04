@@ -26,9 +26,9 @@ import type {
 
 // Phase 3 of signal-first architecture. UI tristate maps onto the
 // persisted play_state enum, which in turn maps onto the new
-// signal_state enum. Keep both translations in one file so the wire
-// behavior is auditable in one read.
-export type SignalState = "confirmed" | "interested" | "dismissed";
+// signal_state enum. SignalState type lives in ./server (re-exported
+// for convenience) since the read path is the canonical owner.
+import type { SignalState } from "./server";
 
 const PLAY_STATE_TO_SIGNAL_STATE: Record<
   CardPlayState["state"],

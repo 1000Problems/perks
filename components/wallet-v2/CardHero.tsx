@@ -42,6 +42,7 @@ import {
   scoreFinds,
   type FindStatus,
 } from "@/lib/engine/moneyFind";
+import type { SignalState } from "@/lib/profile/server";
 import { deriveHeroState } from "@/lib/engine/heroState";
 import { DeadlinesStrip } from "./DeadlinesStrip";
 import { HeroAdaptive } from "./HeroAdaptive";
@@ -58,6 +59,11 @@ interface Props {
   initialHeld: WalletCardHeld | null;
   initialPlayState: CardPlayState[];
   isNew: boolean;
+  // Phase 4: serialized signal map (Phase 3 storage merged with
+  // auto-derived holdings server-side). Reconstructed as a Map and
+  // threaded into engine calls. Optional for backward compat with
+  // any caller that hasn't been wired yet.
+  userSignals?: Record<string, SignalState>;
 }
 
 const DEBOUNCE_MS = 500;
@@ -76,10 +82,22 @@ export function CardHero({
   initialHeld,
   initialPlayState,
   isNew,
+  userSignals: userSignalsProp,
 }: Props) {
   const router = useRouter();
   const db = useMemo(() => fromSerialized(serializedDb), [serializedDb]);
   const card = db.cardById.get(cardId);
+
+  // Phase 4: signal map reconstructed once. The hero page itself
+  // doesn't render a card-level gauge today (the wallet row does, via
+  // computeFoundMoneyV2), so the value is held here for any future
+  // hero-page consumer (Phase 5's dual-gauge work). Keeping the prop
+  // wired now means Phase 5 can read it without re-plumbing the page.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const signals = useMemo(
+    () => new Map(Object.entries(userSignalsProp ?? {})) as Map<string, SignalState>,
+    [userSignalsProp],
+  );
 
   const today = useMemo(() => new Date(), []);
   const todayIso = today.toISOString().slice(0, 10);

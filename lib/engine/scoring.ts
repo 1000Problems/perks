@@ -25,8 +25,10 @@ import type {
   UserProfile,
   WalletCardHeld,
 } from "./types";
+import type { SignalState } from "@/lib/profile/server";
 import { getBrandFit } from "./brandAffinity";
 import { derivePerkCapture } from "./perkSignals";
+import { computeCardValue } from "./cardValue";
 
 const ALL_CATS: SpendCategoryId[] = [
   "groceries",
@@ -363,6 +365,12 @@ export function scoreCard(
   wallet: WalletCardHeld[],
   db: CardDatabase,
   options: ScoringOptions,
+  // Phase 4: optional. Defaults to empty so 4-arg call sites still
+  // compile. When provided, candidate cards with card_plays receive a
+  // recommendation boost proportional to plays the user has marked
+  // "interested" via the wallet's chip UI. Behavior-level dedup will
+  // come online once a meaningful fraction of cards have card_plays.
+  signals: Map<string, SignalState> = new Map(),
 ): CardScore {
   const breakdown: ScoreLineItem[] = [];
   const walletCards = wallet
@@ -606,7 +614,29 @@ export function scoreCard(
   const spendOngoing = cashOngoing + pointsValueUsd + brandFitRounded;
   const perksOngoing = Math.round(creditsValue + perksValue);
   const feeOngoing = fee > 0 ? -fee : 0;
-  const deltaOngoing = spendOngoing + perksOngoing + feeOngoing;
+
+  // Phase 4: signal-interest bonus. For candidate cards with
+  // card_plays, plays the user has marked "On my list" via chip UI
+  // contribute +10% of their value as a recommendation boost — the
+  // user has explicitly stated intent. For the 238 cards without
+  // card_plays today this is a no-op (computeCardValue's projected_usd
+  // is zero on the legacy path). No double-count concern: the legacy
+  // perk loops above don't have a concept of "interested", so the
+  // bonus only adds value the existing scoring couldn't see.
+  let signalInterestBonus = 0;
+  if ((card.card_plays ?? []).length > 0 && signals.size > 0) {
+    const cv = computeCardValue(card, null, userProfile, signals, db);
+    signalInterestBonus = Math.round(cv.projected_usd * 0.10);
+    if (signalInterestBonus > 0) {
+      breakdown.push({
+        label: `On your list — ${cv.projected_usd > 0 ? `$${cv.projected_usd}` : "$0"} potential, +10% credit toward fit`,
+        value: signalInterestBonus,
+        kind: "other",
+      });
+    }
+  }
+
+  const deltaOngoing = spendOngoing + perksOngoing + feeOngoing + signalInterestBonus;
 
   // Year-1 SUB amortized. Cash-mode cards record the dollar value with
   // pts: 0; loyalty-mode cards split out the amortized point count too

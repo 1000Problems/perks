@@ -8,11 +8,15 @@
 import { useState } from "react";
 import type { ScoredFind, FindStatus } from "@/lib/engine/moneyFind";
 import { fmt } from "@/lib/utils/format";
+import { hostnameOf, type PerkSource } from "./perkSource";
 
 interface Props {
   find: ScoredFind;
   onMark: (status: FindStatus) => void;
   onProbeClick?: (promptId: string) => void; // open the cold prompt inline
+  /** TASK-per-perk-source-urls — when set, renders an inline ⓘ link */
+  /** next to the row's title that opens the perk's source citation. */
+  source?: PerkSource;
 }
 
 // Single chip vocabulary across every question type. The row's
@@ -33,7 +37,7 @@ const QUESTION_PROMPT: Record<string, string> = {
   set_up: "Set up?",
 };
 
-export function MoneyFindRow({ find, onMark, onProbeClick }: Props) {
+export function MoneyFindRow({ find, onMark, onProbeClick, source }: Props) {
   const [expanded, setExpanded] = useState(false);
   const { play, status, valueUsd, valueRange, personalSentence, needsProbe, probeQuestion } = find;
   const questionText = QUESTION_PROMPT[play.question] ?? QUESTION_PROMPT.set_up;
@@ -47,7 +51,10 @@ export function MoneyFindRow({ find, onMark, onProbeClick }: Props) {
     >
       <header className="money-find-head" onClick={() => setExpanded((v) => !v)}>
         <div className="money-find-headline-wrap">
-          <h3 className="money-find-headline">{play.headline}</h3>
+          <h3 className="money-find-headline">
+            {play.headline}
+            {source && <PerkSourceLink source={source} perkName={play.headline} />}
+          </h3>
           {personalSentence && (
             <p className="money-find-personal">{personalSentence}</p>
           )}
@@ -116,6 +123,47 @@ export function MoneyFindRow({ find, onMark, onProbeClick }: Props) {
       )}
     </article>
   );
+}
+
+function PerkSourceLink({
+  source,
+  perkName,
+}: {
+  source: PerkSource;
+  perkName: string;
+}) {
+  const label = source.label ?? hostnameOf(source.url);
+  const verifiedSuffix = source.verified_at
+    ? ` — verified ${formatVerifiedDate(source.verified_at)}`
+    : "";
+  return (
+    <a
+      href={source.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="perk-source-link"
+      title={`Source: ${label}${verifiedSuffix}`}
+      aria-label={`Source for ${perkName} (opens in new tab)`}
+      onClick={(e) => {
+        // Don't toggle the row's expand state when clicking the link.
+        e.stopPropagation();
+      }}
+    >
+      ⓘ
+    </a>
+  );
+}
+
+function formatVerifiedDate(iso: string): string {
+  // "2026-05-04" → "May 2026". Plain English, single word + year.
+  const m = iso.match(/^(\d{4})-(\d{2})-\d{2}$/);
+  if (!m) return iso;
+  const months = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  ];
+  const monthIdx = parseInt(m[2], 10) - 1;
+  return `${months[monthIdx] ?? ""} ${m[1]}`;
 }
 
 function ValueChip({

@@ -12,6 +12,7 @@ import { GROUP_LABELS } from "@/lib/engine/moneyFind";
 import type { PlayGroupId } from "@/lib/data/loader";
 import { fmt } from "@/lib/utils/format";
 import { MoneyFindRow } from "./MoneyFindRow";
+import type { PerkSource } from "./perkSource";
 
 interface Props {
   group: PlayGroupId;
@@ -20,6 +21,9 @@ interface Props {
   onToggleGroupSkip: () => void;
   onMarkFind: (playId: string, status: FindStatus) => void;
   onProbeClick: (promptId: string) => void;
+  /** Optional per-card map of play.id → source citation. */
+  /** Renders an inline ⓘ link next to the row's title when present. */
+  playSourceMap?: Map<string, PerkSource>;
 }
 
 export function CatalogGroup({
@@ -29,6 +33,7 @@ export function CatalogGroup({
   onToggleGroupSkip,
   onMarkFind,
   onProbeClick,
+  playSourceMap,
 }: Props) {
   const [showHidden, setShowHidden] = useState(false);
   const visibleFinds = finds.filter((f) => f.visible);
@@ -90,6 +95,7 @@ export function CatalogGroup({
                     find={f}
                     onMark={(s) => onMarkFind(f.play.id, s)}
                     onProbeClick={onProbeClick}
+                    source={playSourceMap?.get(f.play.id)}
                   />
                 ))}
               </>
@@ -112,6 +118,7 @@ export function CatalogGroup({
                   find={f}
                   onMark={(s) => onMarkFind(f.play.id, s)}
                   onProbeClick={onProbeClick}
+                  source={playSourceMap?.get(f.play.id)}
                 />
               ))}
           </>
@@ -122,6 +129,7 @@ export function CatalogGroup({
               find={f}
               onMark={(s) => onMarkFind(f.play.id, s)}
               onProbeClick={onProbeClick}
+              source={playSourceMap?.get(f.play.id)}
             />
           ))
         )}

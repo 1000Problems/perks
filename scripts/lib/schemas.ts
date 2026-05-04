@@ -37,6 +37,37 @@ const SignupBonus = z.object({
 //     Reserve to the top despite weak earning rates.
 const Activation = z.enum(["passive", "signal_gated"]);
 
+// Per-perk citation. Optional during catalog rollout — the Strata
+// Premier pilot (TASK-per-perk-source-urls) backfills first; other
+// cards land via follow-on TASKs. UI shows an inline ⓘ link next to
+// each perk title that points at this URL. Validator script
+// scripts/check-sources.ts runs HEAD checks across the catalog.
+//
+// Source types form a trust hierarchy:
+//   - "issuer":      bank's own product/T&C page (citi.com)
+//   - "network":     payment network landing (mastercard.com / visa.com)
+//   - "underwriter": Guide to Benefits PDF, cardbenefitservices.com
+//   - "partner":     third-party merchant page (doordash.com, lyft.com)
+//   - "community":   TPG / Frequent Miler — last resort only
+const SourceType = z.enum([
+  "issuer",
+  "network",
+  "underwriter",
+  "partner",
+  "community",
+]);
+
+const Source = z.object({
+  url: Url,
+  type: SourceType,
+  // Optional display label. UI falls back to URL hostname when omitted.
+  label: z.string().optional(),
+  // ISO date when a human last hand-checked the URL points at the
+  // expected content. Independent of the validator's automated HEAD
+  // check (which writes to data/source-validation.json).
+  verified_at: IsoDate.optional(),
+});
+
 const AnnualCredit = z.object({
   name: z.string(),
   value_usd: z.number().nullable().optional(),
@@ -50,6 +81,7 @@ const AnnualCredit = z.object({
   activation: Activation.optional().default("signal_gated"),
   signal_id: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
+  source: Source.optional(),
 });
 
 const OngoingPerk = z.object({
@@ -59,6 +91,7 @@ const OngoingPerk = z.object({
   activation: Activation.optional().default("signal_gated"),
   signal_id: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
+  source: Source.optional(),
 });
 
 // ── card_plays: money-find content for the per-card hero page ──────────

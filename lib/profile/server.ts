@@ -316,3 +316,58 @@ export const getUserSignalsWithSource = cache(
     }
   },
 );
+
+// Per-user per-program cpp overrides. Stored in
+// perks_point_value_overrides (migration 0007). Overrides live on the
+// program, not the card — editing Citi TY's transfer cpp from any
+// Citi TY card's detail page propagates to every card earning Citi TY.
+//
+// Bank transferable currencies populate all three columns; airline/
+// hotel programs only populate transfer_cpp. Either way the column is
+// nullable — null means "use the program default."
+//
+// Soft-fails on missing table the same way getUserSignals does, so the
+// page still renders for users on a database that hasn't applied
+// migration 0007 yet (engine sees an empty map and falls back to
+// program defaults).
+export interface ProgramCppOverride {
+  cash_cpp: number | null;
+  portal_cpp: number | null;
+  transfer_cpp: number | null;
+}
+
+export const getProgramCppOverrides = cache(
+  async (userId: string): Promise<Map<string, ProgramCppOverride>> => {
+    try {
+      const rows = await sql<{
+        program_id: string;
+        cash_cpp: number | null;
+        portal_cpp: number | null;
+        transfer_cpp: number | null;
+      }[]>`
+        select program_id, cash_cpp, portal_cpp, transfer_cpp
+          from perks_point_value_overrides
+         where user_id = ${userId}
+      `;
+      return new Map(
+        rows.map((r) => [
+          r.program_id,
+          {
+            // postgres-js returns numeric columns as strings unless
+            // typed; coerce to number so engine math is consistent.
+            cash_cpp: r.cash_cpp == null ? null : Number(r.cash_cpp),
+            portal_cpp: r.portal_cpp == null ? null : Number(r.portal_cpp),
+            transfer_cpp: r.transfer_cpp == null ? null : Number(r.transfer_cpp),
+          },
+        ]),
+      );
+    } catch (e) {
+      if (isUndefinedTableError(e)) {
+        // Migration 0007 not applied — empty map. Engine falls back to
+        // program defaults; the UI shows defaults with no override hint.
+        return new Map();
+      }
+      throw e;
+    }
+  },
+);

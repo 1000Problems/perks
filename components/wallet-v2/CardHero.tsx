@@ -1,26 +1,29 @@
 "use client";
 
-// CardHero — money-find page composition (v2 redesign).
+// CardHero — money-find page composition (v3 redesign).
 //
 // Layout (top → bottom):
 //   1. Back link to /wallet/edit
 //   2. Live deadlines strip (when applicable)
-//   3. Identity strip — card art + name + AF + currency, with the
-//      opened-at pill inline under the name.
-//   4. CurrencyPanel — what the points are, what they're worth, who
-//      they transfer to. Driven by card.currency_earned.
-//   5. CardIntroBlock — three orientation sentences from card.card_intro.
-//   6. ValueThesisHero — net-AF math + structural edge + ecosystem line
+//   3. Identity strip — card art + name + AF + currency + positioning
+//      one-liner from card.card_intro, with the opened-at pill inline
+//      under the positioning text.
+//   4. CurrencyPanel — editable cpp values for the program this card
+//      earns into. Three rows for transferables (cash/portal/transfer),
+//      one row for airline/hotel programs. Edits propagate to every
+//      card in the wallet earning the same program.
+//   5. ValueThesisHero — net-AF math + structural edge + ecosystem line
 //      (when feeders are held). Chip row was removed in v2.
-//   7. FeederPairBlock — always rendered when card.feeder_pair is
-//      authored. State is derived from cards_held: held → "Set up
-//      pooling" CTA; missing → "Add {Card}" deep-links to ?new=1.
-//   8. CatalogGroup × N — Hotels, Airlines, Travel-services, Shopping,
-//      Cash, Niche.
-//   9. MechanicsZone — calendar-driven items only.
-//  10. ManageCardDisclosure — wraps SignalsEditor (AU count, status,
+//   6. CatalogGroup × N — Hotels, Airlines, Travel-services, Shopping,
+//      Cash, Niche. Per-play dollar figures reflect the user's cpp
+//      overrides via scoreFinds.
+//   7. MechanicsZone — calendar-driven items only.
+//   8. ManageCardDisclosure — wraps SignalsEditor (AU count, status,
 //      pooling, etc.). Opening date is no longer here; the pill on the
 //      identity strip is canonical.
+//
+// Removed in v3: CardIntroBlock (positioning lifted into the header),
+// FeederPairBlock (cross-card recs belong on /recommendations).
 //
 // Two scenarios:
 //   - Edit existing held card: hydrate from initialHeld; persist patches via debounced server actions.
@@ -56,13 +59,13 @@ import type { SignalState } from "@/lib/profile/server";
 import { DeadlinesStrip } from "./DeadlinesStrip";
 import { OpenedAtPill } from "./OpenedAtPill";
 import { CurrencyPanel } from "./CurrencyPanel";
-import { CardIntroBlock } from "./CardIntroBlock";
 import { ValueThesisHero } from "./ValueThesisHero";
-import { FeederPairBlock } from "./FeederPairBlock";
 import { CatalogGroup } from "./CatalogGroup";
+import { buildPlaySourceMap, type PerkSource } from "./perkSource";
 import { MechanicsZone } from "./MechanicsZone";
 import { ManageCardDisclosure } from "./ManageCardDisclosure";
 import { SignalsEditor, type CardPatch } from "./SignalsEditor";
+import type { ProgramCppOverride } from "@/lib/engine/programOverrides";
 
 interface Props {
   cardId: string;
@@ -76,6 +79,11 @@ interface Props {
   // threaded into engine calls. Optional for backward compat with
   // any caller that hasn't been wired yet.
   userSignals?: Record<string, SignalState>;
+  // CLAUDE.md User-driven cpp: serialized per-program cpp overrides
+  // (migration 0007). Reconstructed as a Map and passed to scoreFinds
+  // so the per-play Earning numbers reflect the user's edits. Also
+  // handed to CurrencyPanel for the editable input values.
+  programOverrides?: Record<string, ProgramCppOverride>;
 }
 
 const DEBOUNCE_MS = 500;
@@ -95,6 +103,7 @@ export function CardHero({
   initialPlayState,
   isNew,
   userSignals: userSignalsProp,
+  programOverrides: programOverridesProp,
 }: Props) {
   const router = useRouter();
   const db = useMemo(() => fromSerialized(serializedDb), [serializedDb]);
@@ -110,6 +119,18 @@ export function CardHero({
     () => new Map(Object.entries(userSignalsProp ?? {})) as Map<string, SignalState>,
     [userSignalsProp],
   );
+
+  // CLAUDE.md User-driven cpp: rebuild the override map from the
+  // serialized prop. Local override-edit state mirrors this so the
+  // CurrencyPanel can autosave against the server while the user
+  // continues interacting with the page; reconciled by a router
+  // refresh on the next save round trip.
+  const [programOverrides, setProgramOverrides] = useState<
+    Map<string, ProgramCppOverride>
+  >(() => new Map(Object.entries(programOverridesProp ?? {})));
+  useEffect(() => {
+    setProgramOverrides(new Map(Object.entries(programOverridesProp ?? {})));
+  }, [programOverridesProp]);
 
   const today = useMemo(() => new Date(), []);
   const todayIso = today.toISOString().slice(0, 10);
@@ -286,11 +307,23 @@ export function CardHero({
   // ── derived data for rendering ─────────────────────────────────────
 
   const finds = useMemo(
-    () => (card ? scoreFinds(card, profile, playState, db, todayIso) : []),
-    [card, profile, playState, db, todayIso],
+    () =>
+      card
+        ? scoreFinds(card, profile, playState, db, todayIso, programOverrides)
+        : [],
+    [card, profile, playState, db, todayIso, programOverrides],
   );
 
   const groupedFinds = useMemo(() => findsByGroup(finds), [finds]);
+
+  // TASK-per-perk-source-urls: precompute play.id → source citation
+  // once per render. Drives the inline ⓘ link next to each perk row.
+  // Empty Map for cards that haven't been backfilled yet — graceful
+  // degradation, no icons render.
+  const playSourceMap = useMemo<Map<string, PerkSource>>(
+    () => (card ? buildPlaySourceMap(card) : new Map()),
+    [card],
+  );
 
   // ── render ─────────────────────────────────────────────────────────
 
@@ -314,7 +347,7 @@ export function CardHero({
   const program = card.currency_earned
     ? db.programById.get(card.currency_earned)
     : undefined;
-  const ecosystemLineText = card.value_thesis?.ecosystem_line?.text;
+  const positioningText = card.card_intro?.positioning ?? null;
 
   return (
     <main className="card-hero-page">
@@ -343,6 +376,9 @@ export function CardHero({
               ? ` · earns ${db.programById.get(card.currency_earned)?.name ?? card.currency_earned}`
               : ""}
           </div>
+          {positioningText && (
+            <p className="card-hero-positioning">{positioningText}</p>
+          )}
           <OpenedAtPill
             openedAt={held.opened_at}
             onChange={(next) => handlePatch({ opened_at: next })}
@@ -358,23 +394,23 @@ export function CardHero({
       <CurrencyPanel
         card={card}
         program={program}
-        ecosystemLine={ecosystemLineText}
+        override={
+          program ? (programOverrides.get(program.id) ?? null) : null
+        }
+        onOverrideChange={(programId, next) => {
+          setProgramOverrides((prev) => {
+            const map = new Map(prev);
+            if (next === null) map.delete(programId);
+            else map.set(programId, next);
+            return map;
+          });
+        }}
       />
-
-      <CardIntroBlock card={card} />
 
       {card.value_thesis && (
         <ValueThesisHero
           thesis={card.value_thesis}
           cardsHeld={profile.cards_held ?? []}
-        />
-      )}
-
-      {card.feeder_pair && (
-        <FeederPairBlock
-          pair={card.feeder_pair}
-          cardsHeld={profile.cards_held ?? []}
-          db={db}
         />
       )}
 
@@ -390,6 +426,7 @@ export function CardHero({
             onToggleGroupSkip={() => handleToggleGroupSkip(group)}
             onMarkFind={handleMarkFind}
             onProbeClick={handleProbeClick}
+            playSourceMap={playSourceMap}
           />
         );
       })}

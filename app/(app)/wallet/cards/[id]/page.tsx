@@ -13,6 +13,7 @@ import {
   getCurrentCardPlayState,
   getCurrentUserId,
   getUserSignals,
+  getProgramCppOverrides,
 } from "@/lib/profile/server";
 import { loadCardDatabase } from "@/lib/data/loader";
 import { toSerialized } from "@/lib/data/serialized";
@@ -75,6 +76,12 @@ export default async function CardHeroPage({
     deriveHoldingSignals(profile.cards_held),
   );
 
+  // CLAUDE.md User-driven cpp: per-program cpp overrides drive the
+  // YOUR POINTS panel inputs and the Earning section dollar figures.
+  // Empty map on pre-0007 DBs (getProgramCppOverrides tolerates
+  // missing table).
+  const programOverrides = await getProgramCppOverrides(userId);
+
   return (
     <CardHero
       cardId={id}
@@ -84,6 +91,7 @@ export default async function CardHeroPage({
       initialPlayState={playState}
       isNew={effectiveIsNew}
       userSignals={Object.fromEntries(merged)}
+      programOverrides={Object.fromEntries(programOverrides)}
     />
   );
 }

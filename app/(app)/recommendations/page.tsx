@@ -6,6 +6,7 @@ import {
   getCurrentProfile,
   getCurrentUserId,
   getUserSignals,
+  getProgramCppOverrides,
 } from "@/lib/profile/server";
 import { loadCardDatabase } from "@/lib/data/loader";
 import { toSerialized } from "@/lib/data/serialized";
@@ -54,6 +55,12 @@ export default async function RecommendationsPage() {
   );
   const userSignalsObject = Object.fromEntries(merged);
 
+  // CLAUDE.md User-driven cpp: per-program cpp overrides flow through
+  // the rec engine so user edits on the per-card page also reshape the
+  // recommendations list. Empty when migration 0007 isn't applied.
+  const programOverrides = await getProgramCppOverrides(userId);
+  const programOverridesObject = Object.fromEntries(programOverrides);
+
   return (
     <>
       <div className="hidden md:block">
@@ -62,6 +69,7 @@ export default async function RecommendationsPage() {
           serializedDb={serializedDb}
           eligibilityOverrides={eligibilityOverrides}
           userSignals={userSignalsObject}
+          programOverrides={programOverridesObject}
         />
       </div>
       <div className="block md:hidden">
@@ -70,6 +78,7 @@ export default async function RecommendationsPage() {
           serializedDb={serializedDb}
           eligibilityOverrides={eligibilityOverrides}
           userSignals={userSignalsObject}
+          programOverrides={programOverridesObject}
         />
       </div>
     </>

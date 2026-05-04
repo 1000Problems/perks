@@ -448,4 +448,95 @@ export async function updateCreditBand(band: CreditScoreBand): Promise<UpdateRes
   }
 }
 
+// Per-user per-program cpp override mutators. Both soft-fail on
+// missing perks_point_value_overrides table (migration 0007 not
+// applied) so the page stays functional on older DBs — the override
+// just isn't persisted yet, the UI still reflects local state.
+//
+// Bounds (0.5–5) are enforced server-side via the table's check
+// constraint AND validated here for a clean error before the round
+// trip. The client also clamps for instant feedback; the server is
+// the source of truth.
+
+const CPP_FIELD_NAMES = ["cash_cpp", "portal_cpp", "transfer_cpp"] as const;
+type CppField = (typeof CPP_FIELD_NAMES)[number];
+
+export async function setProgramCppOverride(
+  programId: string,
+  field: CppField,
+  value: number | null,
+): Promise<UpdateResult> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "not_authenticated" };
+  if (!CPP_FIELD_NAMES.includes(field)) {
+    return { ok: false, error: "update_failed", detail: `invalid field ${field}` };
+  }
+  if (value !== null) {
+    if (!Number.isFinite(value) || value < 0.5 || value > 5) {
+      return {
+        ok: false,
+        error: "update_failed",
+        detail: `cpp out of bounds: ${value}`,
+      };
+    }
+  }
+
+  // Build the column list dynamically; only the column being patched is
+  // sent in the UPDATE clause. Other columns preserve their existing
+  // values via on-conflict do-nothing-but-the-target-column. We use
+  // sql.unsafe for the column NAME (whitelisted via CPP_FIELD_NAMES);
+  // the value is parameterized.
+  try {
+    await sql.unsafe(
+      `insert into perks_point_value_overrides (
+         user_id, program_id, ${field}
+       ) values ($1, $2, $3)
+       on conflict (user_id, program_id) do update set
+         ${field} = excluded.${field},
+         updated_at = now()`,
+      [user.id, programId, value],
+    );
+    return { ok: true };
+  } catch (e) {
+    if (isUndefinedTableError(e)) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.warn(
+        "[profile:set_program_cpp] table missing — skipping persist:",
+        msg,
+      );
+      return { ok: true };
+    }
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[profile:set_program_cpp] failed:", msg);
+    return { ok: false, error: classifyDbError(e), detail: msg };
+  }
+}
+
+export async function resetProgramCppOverrides(
+  programId: string,
+): Promise<UpdateResult> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "not_authenticated" };
+  try {
+    await sql`
+      delete from perks_point_value_overrides
+       where user_id = ${user.id}
+         and program_id = ${programId}
+    `;
+    return { ok: true };
+  } catch (e) {
+    if (isUndefinedTableError(e)) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.warn(
+        "[profile:reset_program_cpp] table missing — skipping persist:",
+        msg,
+      );
+      return { ok: true };
+    }
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[profile:reset_program_cpp] failed:", msg);
+    return { ok: false, error: classifyDbError(e), detail: msg };
+  }
+}
+
 export type { WalletCardHeld, CreditScoreBand };

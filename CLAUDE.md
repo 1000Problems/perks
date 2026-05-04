@@ -41,11 +41,20 @@ run `npm run cards:build`. Don't write to `data/*.json`.
   / `RankResult`. No I/O, no `Date.now()` (today is injected). Lives in
   `lib/engine/{eligibility,scoring,ranking}.ts`. Re-runs on every UI change —
   don't add side effects.
-- **Conservative cpp.** `scoring.ts` looks up each program's
-  `portal_redemption_cpp` (or `fixed_redemption_cpp`, or 1) and uses it as
-  the headline rec valuation. Peak transfer-partner sweet spots (Hyatt at 2¢,
-  ANA biz at 4¢) are the why-sentence story, not the score, so the headline
-  number stays defensible.
+- **User-driven cpp.** Each currency program (Citi ThankYou, Amex MR, Chase
+  UR, Capital One Miles, Bilt, plus airline/hotel programs) ships with
+  default cpps and is overridable per user. Bank transferable currencies
+  carry three values — cash, travel portal, and typical transfer.
+  Airline/hotel programs carry one — redemption. Overrides live on the
+  program, not the card: editing Citi TY's transfer cpp on the Strata page
+  propagates to every Citi TY card in the wallet (Premier, Double Cash
+  pooled, Custom Cash pooled, etc.) and never leaks into Amex MR or Chase
+  UR. Engine reads `getEffectiveCpp(programId, userOverrides,
+  programDefaults)` and uses the highest filled value as the headline cpp
+  for scoring. Sweet-spot peaks (Hyatt cat 4 at 2¢, ANA biz at 4¢) stay
+  narrative-only — they appear in why-sentences, never in the score, so
+  edits don't bleed program facts into user opinions. User overrides live
+  in `perks_point_value_overrides` keyed by `(user_id, program_id)`.
 - **Auth is account name + password,** not email + password. No verification,
   no magic links, no MFA. Account names are letters/numbers/dots/dashes/
   underscores, 3–64 chars. Passwords are scrypt'd. Sessions are 30-day

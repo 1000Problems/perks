@@ -5,9 +5,11 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, it, expect } from "vitest";
 import { rankCards } from "@/lib/engine/ranking";
+import { scoreCard } from "@/lib/engine/scoring";
 import { loadCardDatabase } from "@/lib/data/loader";
 import { getBrandFit } from "@/lib/engine/brandAffinity";
 import type { RankOptions, UserProfile } from "@/lib/engine/types";
+import type { ProgramCppOverride } from "@/lib/engine/programOverrides";
 
 const FIXTURE_PATH = join(__dirname, "..", "fixtures", "profile.json");
 const fixture: UserProfile = JSON.parse(readFileSync(FIXTURE_PATH, "utf8"));
@@ -174,5 +176,112 @@ describe("integration — full engine against real card database", () => {
     if (costco) {
       expect(costco.eligibility.note).not.toMatch(/requires costco/i);
     }
+  });
+
+  it("feeder-pair: holding Strata Premier surfaces Double Cash / Custom Cash at the top with value_when_missing copy", () => {
+    // CLAUDE.md / TASK-recommendations-consume-feeder-pair: every held
+    // card with feeder_pair surfaces its missing feeders as ranked
+    // candidates. Strata Premier's feeder_pair pins both Double Cash
+    // and Custom Cash with priority "first", which means they sit at
+    // the top of the visible list ahead of brand pins and the regular
+    // sort.
+    const profile: UserProfile = {
+      ...fixture,
+      cards_held: [
+        {
+          card_id: "citi_strata_premier",
+          opened_at: "2025-01-01",
+          bonus_received: true,
+        },
+      ],
+      // Empty brands_used so brand-pin doesn't compete with feeder-pin
+      // for top slots in this test.
+      brands_used: [],
+    };
+    const r = rankCards(
+      profile,
+      profile.cards_held,
+      db,
+      opts({ limit: 10 }),
+    );
+    const topIds = r.visible.slice(0, 2).map((v) => v.card.id);
+    const hasFeeder =
+      topIds.includes("citi_double_cash") ||
+      topIds.includes("citi_custom_cash");
+    expect(hasFeeder).toBe(true);
+
+    // The why-line should be the value_when_missing copy from Strata
+    // Premier's feeder_pair.
+    const feederRec = r.visible.find(
+      (v) =>
+        v.card.id === "citi_double_cash" || v.card.id === "citi_custom_cash",
+    );
+    expect(feederRec?.why).toMatch(/cashback pools into this card/i);
+  });
+
+  it("feeder-pair: removing the source card drops the pin", () => {
+    // Same fixture but Strata Premier is NOT held — the feeder pin
+    // should disappear. Double Cash / Custom Cash may still appear
+    // somewhere in the visible list on their own merits, but not
+    // pinned to rank 1 by the feeder pass.
+    const profile: UserProfile = {
+      ...fixture,
+      cards_held: [],
+      brands_used: [],
+    };
+    const r = rankCards(profile, [], db, opts({ limit: 10 }));
+    // Direct comparison: Double Cash without a feeder pull shouldn't
+    // win against the highest-leverage cards in the catalog. We
+    // just assert the feeder why-line copy isn't being applied to it.
+    const dc = r.visible.find((v) => v.card.id === "citi_double_cash");
+    if (dc) {
+      expect(dc.why).not.toMatch(/cashback pools into this card/i);
+    }
+  });
+
+  it("user-driven cpp: bumping citi_thankyou transfer cpp lifts Strata Premier's score", () => {
+    // CLAUDE.md: User-driven cpp. The user can override the program's
+    // shipped median (1.9¢) on the Strata page. The engine reads the
+    // override via the programOverrides map and the candidate's
+    // pointsOngoing.valueUsd should rise when the override is higher
+    // than the default.
+    const strata = db.cardById.get("citi_strata_premier");
+    expect(strata).toBeDefined();
+    if (!strata) return;
+
+    const baseScore = scoreCard(
+      strata,
+      fixture,
+      fixture.cards_held ?? [],
+      db,
+      { creditsMode: "realistic", subAmortizeMonths: 24 },
+    );
+
+    const overrides = new Map<string, ProgramCppOverride>([
+      [
+        "citi_thankyou",
+        { cash_cpp: null, portal_cpp: null, transfer_cpp: 2.5 },
+      ],
+    ]);
+    const lifted = scoreCard(
+      strata,
+      fixture,
+      fixture.cards_held ?? [],
+      db,
+      { creditsMode: "realistic", subAmortizeMonths: 24 },
+      new Map(),
+      overrides,
+    );
+
+    // Points ongoing should show a higher cpp on the lifted run.
+    const baseCpp = baseScore.components.pointsOngoing?.cpp ?? 0;
+    const liftedCpp = lifted.components.pointsOngoing?.cpp ?? 0;
+    expect(liftedCpp).toBe(2.5);
+    expect(liftedCpp).toBeGreaterThan(baseCpp);
+
+    // And the dollar value bucket should rise in lockstep.
+    const baseUsd = baseScore.components.pointsOngoing?.valueUsd ?? 0;
+    const liftedUsd = lifted.components.pointsOngoing?.valueUsd ?? 0;
+    expect(liftedUsd).toBeGreaterThan(baseUsd);
   });
 });

@@ -27,6 +27,7 @@ import { variantForCard } from "@/lib/cardArt";
 import { useProfile, profileErrorMessage } from "@/lib/profile/client";
 import type { UserProfile, WalletCardHeld } from "@/lib/profile/types";
 import type { SignalState } from "@/lib/profile/server";
+import type { ProgramCppOverride } from "@/lib/engine/programOverrides";
 import { fmt } from "@/lib/utils/format";
 import { DrillIn } from "./DrillIn";
 import { RecHeader, type CreditsMode, type ViewMode } from "./Header";
@@ -91,6 +92,11 @@ export interface RecPanelDesktopProps {
   // auto-derived holdings server-side). Threaded into rankCards so
   // candidate cards with card_plays receive the +10% interest boost.
   userSignals?: Record<string, SignalState>;
+  // CLAUDE.md User-driven cpp: per-program cpp overrides. Threaded
+  // into rankCards so the rec list reshapes when the user edits cpp
+  // values on a card detail page. Empty when migration 0007 hasn't
+  // applied or the user has no overrides.
+  programOverrides?: Record<string, ProgramCppOverride>;
 }
 
 export function RecPanelDesktop({
@@ -98,6 +104,7 @@ export function RecPanelDesktop({
   serializedDb,
   eligibilityOverrides,
   userSignals: userSignalsProp,
+  programOverrides: programOverridesProp,
 }: RecPanelDesktopProps) {
   // Reconstruct lookup Maps once per render of the client tree. The
   // serializedDb arrays are stable (server reloads are full
@@ -106,6 +113,14 @@ export function RecPanelDesktop({
   const signals = useMemo(
     () => new Map(Object.entries(userSignalsProp ?? {})) as Map<string, SignalState>,
     [userSignalsProp],
+  );
+  const programOverrides = useMemo(
+    () =>
+      new Map(Object.entries(programOverridesProp ?? {})) as Map<
+        string,
+        ProgramCppOverride
+      >,
+    [programOverridesProp],
   );
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -271,8 +286,16 @@ export function RecPanelDesktop({
   }, [profile.spend_profile]);
 
   const ranked = useMemo(
-    () => rankCards(profile, effectiveWallet, db, rankOptions, signals),
-    [profile, effectiveWallet, db, rankOptions, signals],
+    () =>
+      rankCards(
+        profile,
+        effectiveWallet,
+        db,
+        rankOptions,
+        signals,
+        programOverrides,
+      ),
+    [profile, effectiveWallet, db, rankOptions, signals, programOverrides],
   );
 
   // Search-time display pipeline. When NOT searching, ranked.visible is

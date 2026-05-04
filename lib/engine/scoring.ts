@@ -29,6 +29,10 @@ import type { SignalState } from "@/lib/profile/server";
 import { getBrandFit } from "./brandAffinity";
 import { derivePerkCapture } from "./perkSignals";
 import { computeCardValue } from "./cardValue";
+import {
+  getEffectiveProgram,
+  type ProgramCppOverride,
+} from "./programOverrides";
 
 const ALL_CATS: SpendCategoryId[] = [
   "groceries",
@@ -148,14 +152,18 @@ export function classifyEarning(
   contextCards: Card[],
   db: CardDatabase,
   redemptionStyle: RedemptionStyle = "transfers",
+  programOverrides?: Map<string, ProgramCppOverride>,
 ): EarningMode {
   if (!card.currency_earned) {
     return { mode: "cash", cpp: 1, programId: null, programName: null, cppSource: "cash" };
   }
-  const program = db.programById.get(card.currency_earned);
-  if (!program) {
+  const rawProgram = db.programById.get(card.currency_earned);
+  if (!rawProgram) {
     return { mode: "cash", cpp: 1, programId: null, programName: null, cppSource: "cash" };
   }
+  // Apply user's per-program cpp overrides (CLAUDE.md: User-driven cpp).
+  // No-op when overrides is undefined or empty for this program.
+  const program = getEffectiveProgram(rawProgram, programOverrides);
   const programId = program.id;
   const programName = program.name;
   if (program.kind === "cash") {
@@ -199,8 +207,15 @@ function normalizeEarning(
   contextCards: Card[],
   db: CardDatabase,
   redemptionStyle: RedemptionStyle = "transfers",
+  programOverrides?: Map<string, ProgramCppOverride>,
 ): NormalizedEarning {
-  const mode = classifyEarning(card, contextCards, db, redemptionStyle);
+  const mode = classifyEarning(
+    card,
+    contextCards,
+    db,
+    redemptionStyle,
+    programOverrides,
+  );
   const key = normKey(card.id, mode);
   const cached = normalizeCache.get(key);
   if (cached) return cached;
@@ -243,6 +258,7 @@ function bestRateForCategory(
   cards: Card[],
   db: CardDatabase,
   redemptionStyle: RedemptionStyle = "transfers",
+  programOverrides?: Map<string, ProgramCppOverride>,
 ): { rate: number; from: string; mode: "cash" | "loyalty" | null } {
   let best: { rate: number; from: string; mode: "cash" | "loyalty" | null } = {
     rate: 0,
@@ -250,7 +266,13 @@ function bestRateForCategory(
     mode: null,
   };
   for (const c of cards) {
-    const norm = normalizeEarning(c, cards, db, redemptionStyle);
+    const norm = normalizeEarning(
+      c,
+      cards,
+      db,
+      redemptionStyle,
+      programOverrides,
+    );
     const r = norm.byCat.get(category)?.rate ?? norm.base;
     if (r > best.rate) {
       best = { rate: r, from: c.name, mode: norm.mode.mode };
@@ -371,6 +393,10 @@ export function scoreCard(
   // "interested" via the wallet's chip UI. Behavior-level dedup will
   // come online once a meaningful fraction of cards have card_plays.
   signals: Map<string, SignalState> = new Map(),
+  // CLAUDE.md User-driven cpp: per-program overrides flow through the
+  // engine's loyalty cpp ladder. When undefined or empty, programs use
+  // their shipped defaults. Same opt-in tail as `signals`.
+  programOverrides: Map<string, ProgramCppOverride> = new Map(),
 ): CardScore {
   const breakdown: ScoreLineItem[] = [];
   const walletCards = wallet
@@ -386,11 +412,29 @@ export function scoreCard(
   // The candidate's normalized earning resolves against `walletPlus` so
   // the candidate counts toward unlocking transfers for its own program
   // (e.g. scoring CSP unlocks UR for itself).
-  const cardNorm = normalizeEarning(card, walletPlus, db, redemptionStyle);
+  const cardNorm = normalizeEarning(
+    card,
+    walletPlus,
+    db,
+    redemptionStyle,
+    programOverrides,
+  );
   const spendImpact = {} as CardScore["spendImpact"];
   for (const cat of ALL_CATS) {
-    const curBest = bestRateForCategory(cat, walletCards, db, redemptionStyle);
-    const newBest = bestRateForCategory(cat, walletPlus, db, redemptionStyle);
+    const curBest = bestRateForCategory(
+      cat,
+      walletCards,
+      db,
+      redemptionStyle,
+      programOverrides,
+    );
+    const newBest = bestRateForCategory(
+      cat,
+      walletPlus,
+      db,
+      redemptionStyle,
+      programOverrides,
+    );
     const spend = userProfile.spend_profile[cat] ?? 0;
     const candidateWins = newBest.from === card.name && newBest.rate > curBest.rate;
     const candidateRule = candidateWins ? cardNorm.byCat.get(cat) : undefined;

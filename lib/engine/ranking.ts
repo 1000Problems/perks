@@ -19,6 +19,7 @@ import type { SignalState } from "@/lib/profile/server";
 import { creditBandFloorForCard, evaluateEligibility } from "./eligibility";
 import { scoreCard } from "./scoring";
 import { getBrandFit } from "./brandAffinity";
+import type { ProgramCppOverride } from "./programOverrides";
 
 // When the user's reported credit band is below a card's typical-approval
 // floor, we don't hide the card — we keep it visible — but we down-rank
@@ -37,6 +38,62 @@ function rankAdjustedDelta(
   return delta * BELOW_FLOOR_RANK_MULT;
 }
 
+// ── feeder-pair candidates ─────────────────────────────────────────────
+
+// Per CLAUDE.md / TASK-recommendations-consume-feeder-pair.md:
+// the per-card detail page no longer renders the "highest-leverage
+// next card" panel. Instead, every held card with `feeder_pair`
+// surfaces its missing feeders as ranked candidates here. The held
+// card's `value_when_missing` becomes the why-line; the priority drives
+// pin order (first > high > normal).
+
+const PRIORITY_RANK: Record<"first" | "high" | "normal", number> = {
+  first: 2,
+  high: 1,
+  normal: 0,
+};
+
+interface FeederCandidate {
+  cardId: string;
+  priority: "first" | "high" | "normal";
+  whyOverride: string;
+  sourceCardId: string;
+  pairRole: "currency_pooler" | "category_specialist" | "annual_credit_stacker";
+}
+
+function computeFeederCandidates(
+  wallet: WalletCardHeld[],
+  db: CardDatabase,
+): Map<string, FeederCandidate> {
+  const heldIds = new Set(wallet.map((h) => h.card_id));
+  const out = new Map<string, FeederCandidate>();
+  for (const held of wallet) {
+    const card = db.cardById.get(held.card_id);
+    if (!card?.feeder_pair) continue;
+    const { feeder_card_ids, recommendation_priority, value_when_missing, pair_role } =
+      card.feeder_pair;
+    for (const feederId of feeder_card_ids) {
+      if (feederId === card.id) continue; // defensive self-ref guard
+      if (heldIds.has(feederId)) continue;
+      const incoming: FeederCandidate = {
+        cardId: feederId,
+        priority: recommendation_priority,
+        whyOverride: value_when_missing,
+        sourceCardId: card.id,
+        pairRole: pair_role,
+      };
+      const existing = out.get(feederId);
+      if (
+        !existing ||
+        PRIORITY_RANK[incoming.priority] > PRIORITY_RANK[existing.priority]
+      ) {
+        out.set(feederId, incoming);
+      }
+    }
+  }
+  return out;
+}
+
 // ── why generator ──────────────────────────────────────────────────────
 
 interface WhyContext {
@@ -45,6 +102,10 @@ interface WhyContext {
   eligibility: EligibilityResult;
   userProfile: UserProfile;
   db: CardDatabase;
+  /** When set, overrides every other rule and is returned directly. */
+  /** Drives feeder-pair recommendations: the held card's */
+  /** value_when_missing copy reads as a complete why-sentence. */
+  feederWhy?: string;
 }
 
 const TRIP_KEY_NORMALIZERS = (s: string) =>
@@ -177,7 +238,14 @@ function transferPartnersForCard(card: Card, db: CardDatabase): string[] {
 }
 
 export function generateWhy(ctx: WhyContext): string {
-  const { card, score, userProfile, db } = ctx;
+  const { card, score, userProfile, db, feederWhy } = ctx;
+
+  // -1. Feeder-pair recommendation: this card completes a pair the
+  // user already started by holding the source card. The held card's
+  // value_when_missing is authored as a complete sentence — return as-is.
+  if (feederWhy) {
+    return clip(feederWhy);
+  }
 
   // 0. Cobrand match — strongest signal we have. The user told us they
   // shop / fly / stay here; the card is built around that brand. Lead
@@ -270,6 +338,9 @@ export function rankCards(
   // reveals_signals overlap the user's "interested" set. Empty default
   // keeps behavior identical to the pre-Phase-4 world.
   signals: Map<string, SignalState> = new Map(),
+  // CLAUDE.md User-driven cpp: per-program cpp overrides flow through
+  // every candidate's scoring. Empty default = program shipped values.
+  programOverrides: Map<string, ProgramCppOverride> = new Map(),
 ): RankResult {
   const today = options.today ?? new Date();
   const heldIds = new Set(wallet.map((h) => h.card_id));
@@ -279,12 +350,26 @@ export function rankCards(
   const visibleRaw: Row[] = [];
   const denied: Row[] = [];
 
+  // Feeder-pair candidates: missing cards that complete a pair the
+  // user already started. Populated from every held card's
+  // feeder_pair.feeder_card_ids, deduped by highest priority. Used
+  // both for the why-line override and for pin order below.
+  const feederCandidates = computeFeederCandidates(wallet, db);
+
   const userBand = userProfile.credit_score_band;
   for (const card of db.cards) {
     if (heldIds.has(card.id)) continue;
     if (card.closed_to_new_apps) continue;
 
-    const score = scoreCard(card, userProfile, wallet, db, options.scoring, signals);
+    const score = scoreCard(
+      card,
+      userProfile,
+      wallet,
+      db,
+      options.scoring,
+      signals,
+      programOverrides,
+    );
     // Prefer a server-supplied verdict (from the catalog-driven rules
     // evaluator). Fall back to the in-engine path for any card the
     // overrides map doesn't cover — keeps the engine usable on a
@@ -299,7 +384,15 @@ export function rankCards(
         userBand,
         userProfile.brands_used,
       );
-    const why = generateWhy({ card, score, eligibility, userProfile, db });
+    const feederWhy = feederCandidates.get(card.id)?.whyOverride;
+    const why = generateWhy({
+      card,
+      score,
+      eligibility,
+      userProfile,
+      db,
+      feederWhy,
+    });
 
     const row: Row = { card, score, eligibility, why, rank: 0 };
     if (eligibility.status === "red") {
@@ -434,9 +527,29 @@ export function rankCards(
   if (sortBy.kind === "category" || sortBy.kind === "specialization") {
     combined = filtered;
   } else {
+    // Feeder-pin pass — split candidates into three buckets based on
+    // their feeder_pair.recommendation_priority (if any). "first"
+    // priority pins above brand-pinned cobrand cards; "high" priority
+    // pins below brand pins but above the regular sorted list;
+    // "normal" priority falls through (the why-line override still
+    // applies, set above in the why-generator call).
+    const feederFirst: Row[] = [];
+    const feederHigh: Row[] = [];
+    const nonFeeder: Row[] = [];
+    for (const r of filtered) {
+      const fc = feederCandidates.get(r.card.id);
+      if (fc?.priority === "first") feederFirst.push(r);
+      else if (fc?.priority === "high") feederHigh.push(r);
+      else nonFeeder.push(r);
+    }
+
+    // Brand-pin pass over the non-feeder bucket only. Feeder candidates
+    // that ALSO match a brand pin still pin via feeder priority — the
+    // feeder signal is more specific (it depends on what the user
+    // already holds).
     const familyBest = new Map<string, Row>();
     const rest: Row[] = [];
-    for (const r of filtered) {
+    for (const r of nonFeeder) {
       const fit = getBrandFit(r.card, userProfile.brands_used);
       if (!fit) {
         rest.push(r);
@@ -454,12 +567,14 @@ export function rankCards(
         rest.push(r);
       }
     }
-    // Sort pinned cards among themselves by deltaOngoing desc so multi-
-    // family pin order is deterministic (highest-value pin first).
+    // Sort pinned brand cards among themselves by deltaOngoing desc so
+    // multi-family pin order is deterministic (highest-value pin first).
     const pinned = Array.from(familyBest.values()).sort(
       (a, b) => b.score.deltaOngoing - a.score.deltaOngoing,
     );
-    combined = [...pinned, ...rest];
+    // Feeder buckets are already in the filtered order (deltaOngoing
+    // desc within each priority tier).
+    combined = [...feederFirst, ...pinned, ...feederHigh, ...rest];
   }
   const visible = combined.slice(0, limit).map((r, i) => ({ ...r, rank: i + 1 }));
 

@@ -20,6 +20,10 @@
 import type { Card, CardDatabase, Play, PlayGroupId } from "@/lib/data/loader";
 import type { SpendCategoryId } from "@/lib/data/types";
 import type { CardPlayState, UserProfile } from "@/lib/profile/types";
+import {
+  getEffectiveProgram,
+  type ProgramCppOverride,
+} from "./programOverrides";
 
 export type FindStatus = "using" | "going_to" | "skip" | "unset";
 
@@ -186,12 +190,18 @@ function computeValue(
   profile: UserProfile,
   db: CardDatabase,
   cardCurrencyId: string | null,
+  programOverrides?: Map<string, ProgramCppOverride>,
 ): { value: number | null; range: [number, number] | null } {
   const v = play.value_model;
   switch (v.kind) {
     case "multiplier_on_category": {
       const programId = cardCurrencyId;
-      const program = programId ? db.programById.get(programId) : undefined;
+      const rawProgram = programId ? db.programById.get(programId) : undefined;
+      // Apply user's per-program cpp overrides before reading cpp
+      // fields. No-op when overrides is undefined or empty.
+      const program = rawProgram
+        ? getEffectiveProgram(rawProgram, programOverrides)
+        : undefined;
       const cpp =
         program?.median_redemption_cpp ??
         program?.portal_redemption_cpp ??
@@ -302,6 +312,11 @@ export function scoreFinds(
   playState: CardPlayState[],
   db: CardDatabase,
   _today: string,
+  // CLAUDE.md User-driven cpp: per-program cpp overrides flow into
+  // computeValue so per-play dollar figures (the Earning section)
+  // reflect the user's edited transfer/portal/cash values. Empty
+  // default = program shipped values.
+  programOverrides?: Map<string, ProgramCppOverride>,
 ): ScoredFind[] {
   const plays = card.card_plays ?? [];
   const coldPrompts = card.cold_prompts ?? [];
@@ -326,6 +341,7 @@ export function scoreFinds(
       profile,
       db,
       card.currency_earned ?? null,
+      programOverrides,
     );
 
     // Build personalization context with derived values for tokens.

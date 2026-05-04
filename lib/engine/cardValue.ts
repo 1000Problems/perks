@@ -14,7 +14,7 @@
 //
 // Pure function. No I/O, no Date.now. The engine module discipline.
 
-import type { Card, CardDatabase, Play } from "@/lib/data/loader";
+import type { Card, CardDatabase, Play, PlayGroupId } from "@/lib/data/loader";
 import type { UserProfile, WalletCardHeld } from "./types";
 import type { SignalState } from "@/lib/profile/server";
 import { derivePerkCapture } from "./perkSignals";
@@ -167,8 +167,9 @@ export function signalsFilledOnHeld(card: Card, held: WalletCardHeld): number {
 // Returns the conservative cash equivalent for transfer/niche plays;
 // face value for credits; spend × multiplier × cpp for category
 // multipliers. Protections and mechanics return 0 (they're not yearly
-// dollars).
-function basePlayValue(
+// dollars). Exported for Phase 5 (/wallet/list page renders the same
+// per-play value the engine uses).
+export function basePlayValue(
   play: Play,
   profile: UserProfile,
   db: CardDatabase,
@@ -210,7 +211,7 @@ function basePlayValue(
   }
 }
 
-type AggregatedState = "confirmed" | "interested" | "dismissed" | "unknown";
+export type AggregatedState = "confirmed" | "interested" | "dismissed" | "unknown";
 
 // Walk the play's reveals_signals against the user's signal map and
 // reduce to a single state. Latest-wins matches the Phase 3 storage
@@ -219,7 +220,11 @@ type AggregatedState = "confirmed" | "interested" | "dismissed" | "unknown";
 //   - all reveals confirmed → confirmed
 //   - all reveals confirmed-or-interested with at least one interested → interested
 //   - otherwise (some unset / no signals revealed) → unknown
-function aggregateRevealState(
+//
+// Exported for Phase 5 (the /wallet/list page filters on this state
+// directly, the /signals dashboard uses it indirectly via the helpers
+// below).
+export function aggregateRevealState(
   reveals: string[],
   signals: Map<string, SignalState>,
 ): AggregatedState {
@@ -406,4 +411,51 @@ export function computeCardValue(
     return computePlaysCardValue(card, held, profile, signals, db);
   }
   return computeLegacyCardValue(card, held, profile, db);
+}
+
+// ── Phase 5: cross-card aggregation of "On my list" plays ──────────────
+
+export interface OnMyListItem {
+  cardId: string;
+  play: Play;
+  valueUsd: number;   // basePlayValue, no haircuts
+  group: PlayGroupId; // copied from play.group for filter convenience
+}
+
+// Walks every held card, finds plays whose reveals_signals aggregate
+// to "interested", and returns them as a flat sorted list. Used by the
+// /wallet/list page and as the basis for the navigation hook on
+// /wallet/edit (link visible when this list is non-empty). Pure
+// function — no DB calls, just the loaded catalog plus the user's
+// merged signal map.
+export function getOnMyListItems(
+  profile: UserProfile,
+  signals: Map<string, SignalState>,
+  db: CardDatabase,
+): OnMyListItem[] {
+  const out: OnMyListItem[] = [];
+  for (const held of profile.cards_held ?? []) {
+    const card = db.cardById.get(held.card_id);
+    if (!card) continue;
+    for (const play of card.card_plays ?? []) {
+      if (play.reveals_signals.length === 0) continue;
+      const state = aggregateRevealState(play.reveals_signals, signals);
+      if (state !== "interested") continue;
+      const value = basePlayValue(
+        play,
+        profile,
+        db,
+        card.currency_earned ?? null,
+      );
+      if (value <= 0) continue;
+      out.push({
+        cardId: card.id,
+        play,
+        valueUsd: Math.round(value),
+        group: play.group,
+      });
+    }
+  }
+  out.sort((a, b) => b.valueUsd - a.valueUsd);
+  return out;
 }

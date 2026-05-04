@@ -53,6 +53,171 @@
   font-variant-numeric: tabular-nums;
 }
 .wallet-stats .t-pos { color: var(--pos-ink); }
+.wallet-stats .t-warn { color: var(--warn-ink); }
+
+/* Phase 5: link from list-head to /wallet/list when on-list > 0 */
+.list-head-link {
+  font-size: 11.5px;
+  color: var(--warn-ink);
+  text-decoration: none;
+  font-weight: 500;
+}
+.list-head-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Phase 5: /wallet/list rows. Different proportions than wallet-row
+   (slimmer card art, headline-first body), shares hover/border idiom. */
+.onlist-sort {
+  display: flex;
+  gap: 6px;
+}
+.onlist-row {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  transition: border-color 80ms, background 80ms;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  text-decoration: none;
+  width: 100%;
+}
+.onlist-row:hover { border-color: var(--rule-2); }
+.onlist-row-body { min-width: 0; }
+.onlist-row-card {
+  font-size: 11.5px;
+  color: var(--ink-3);
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+.onlist-row-card .card-name { font-weight: 600; color: var(--ink-2); }
+.onlist-row-card .dot { color: var(--ink-4); }
+.onlist-row-headline {
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  line-height: 1.35;
+}
+.onlist-row-group {
+  margin-top: 4px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  font-weight: 500;
+}
+.onlist-row-right { text-align: right; min-width: 92px; }
+
+/* Phase 5: /signals dashboard. Sectioned read-only view of catalog
+   signals. Density beats prettiness — this is a transparency surface. */
+.signals-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.signals-group-title {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+.signals-group-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.signal-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+}
+.signal-row-body { min-width: 0; }
+.signal-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+.signal-prompt {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--ink-2);
+  line-height: 1.45;
+}
+.signal-meta {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--ink-4);
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+.signal-meta .dot { color: var(--ink-4); }
+.signal-id { color: var(--ink-4); }
+.signal-source-link {
+  color: var(--ink-3);
+  text-decoration: none;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+.signal-source-link:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+.signal-source-auto {
+  color: var(--pos-ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.signal-state-chip {
+  font-size: 11.5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--rule-2);
+  background: var(--paper);
+  color: var(--ink-2);
+  white-space: nowrap;
+  font-weight: 500;
+}
+.signal-state-confirmed {
+  background: var(--pos-bg);
+  color: var(--pos-ink);
+  border-color: oklch(0.85 0.10 155 / 0.4);
+}
+.signal-state-interested {
+  background: var(--warn-bg);
+  color: var(--warn-ink);
+  border-color: oklch(0.85 0.10 75 / 0.4);
+}
+.signal-state-dismissed {
+  background: var(--paper-2);
+  color: var(--ink-4);
+  border-color: var(--rule-2);
+}
+.signal-state-auto {
+  background: var(--pos-bg);
+  color: var(--pos-ink);
+  border-color: oklch(0.85 0.10 155 / 0.3);
+  border-style: dashed;
+}
+.signal-state-neutral {
+  background: var(--paper);
+  color: var(--ink-3);
+  border-style: dashed;
+}
 
 /* ── two-pane layout ───────────────────────────────────────────────── */
 
@@ -147,6 +312,21 @@
   font-weight: 500;
 }
 .found-chip .amt { font-size: 14px; font-weight: 600; }
+
+/* Phase 5: secondary chip showing this card's "On my list" total. */
+.onlist-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: var(--r-sm);
+  background: var(--warn-bg);
+  color: var(--warn-ink);
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+.onlist-chip .amt { font-size: 13px; font-weight: 600; }
 .af-line {
   margin-top: 4px;
   font-size: 10.5px;

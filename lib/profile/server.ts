@@ -275,3 +275,44 @@ export const getUserSignals = cache(
     }
   },
 );
+
+// Phase 5: signals dashboard variant. Returns the same per-user signal
+// state plus source_card_id / source_play_id so the dashboard can
+// render "Edit on Strata Premier →" links back to the card hero where
+// the chip click happened. Kept separate from getUserSignals so the
+// engine path stays minimal (engine doesn't need source attribution).
+export interface UserSignalRow {
+  state: SignalState;
+  source_card_id: string | null;
+  source_play_id: string | null;
+}
+
+export const getUserSignalsWithSource = cache(
+  async (userId: string): Promise<Map<string, UserSignalRow>> => {
+    try {
+      const rows = await sql<{
+        signal_id: string;
+        state: SignalState;
+        source_card_id: string | null;
+        source_play_id: string | null;
+      }[]>`
+        select signal_id, state, source_card_id, source_play_id
+          from perks_user_signals
+         where user_id = ${userId}
+      `;
+      return new Map(
+        rows.map((r) => [
+          r.signal_id,
+          {
+            state: r.state,
+            source_card_id: r.source_card_id,
+            source_play_id: r.source_play_id,
+          },
+        ]),
+      );
+    } catch (e) {
+      if (isUndefinedTableError(e)) return new Map();
+      throw e;
+    }
+  },
+);

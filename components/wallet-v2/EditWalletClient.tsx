@@ -14,7 +14,7 @@ import { fromSerialized, type SerializedDb } from "@/lib/data/serialized";
 import type { Card } from "@/lib/data/loader";
 import type { UserProfile, WalletCardHeld } from "@/lib/profile/types";
 import type { SignalState } from "@/lib/profile/server";
-import { computeFoundMoneyV2 } from "@/lib/engine/foundMoney";
+import { computeCardValue } from "@/lib/engine/cardValue";
 import { fmt } from "@/lib/utils/format";
 import { CardArt } from "@/components/perks/CardArt";
 import { variantForCard } from "@/lib/cardArt";
@@ -58,6 +58,19 @@ export function EditWalletClient({
     [userSignalsProp],
   );
 
+  // Phase 5: dual-gauge totals. computeCardValue is called once per
+  // row and the result drives both the page-head stats and the per-row
+  // "On your list" sub-number.
+  const cardValues = useMemo(() => {
+    const m = new Map<string, ReturnType<typeof computeCardValue>>();
+    for (const h of held) {
+      const c = db.cardById.get(h.card_id);
+      if (!c) continue;
+      m.set(h.card_id, computeCardValue(c, h, initialProfile, signals, db));
+    }
+    return m;
+  }, [held, db, initialProfile, signals]);
+
   const totalFound = useMemo(() => {
     let s = 0;
     for (const h of held) {
@@ -65,12 +78,20 @@ export function EditWalletClient({
         s += h.found_money_cached_usd;
         continue;
       }
-      const c = db.cardById.get(h.card_id);
-      if (!c) continue;
-      s += computeFoundMoneyV2(c, h, initialProfile, db, signals).point;
+      const cv = cardValues.get(h.card_id);
+      if (cv) s += cv.confirmed_usd;
     }
     return s;
-  }, [held, db, initialProfile, signals]);
+  }, [held, cardValues]);
+
+  const totalOnList = useMemo(() => {
+    let s = 0;
+    for (const h of held) {
+      const cv = cardValues.get(h.card_id);
+      if (cv) s += cv.projected_usd;
+    }
+    return s;
+  }, [held, cardValues]);
 
   const totalFee = useMemo(() => {
     let s = 0;
@@ -94,13 +115,16 @@ export function EditWalletClient({
 
   return (
     <div className="wallet-edit-page">
-      <div className="page-head">
+<div className="page-head">
         <h1>Edit your wallet</h1>
         <p className="sub">
           Click any card to open its page — every signal you fill in
           tightens the audit math and surfaces more of what the card
           can do for you.
         </p>
+        <Link href={"/signals" as Route} className="back-link">
+          What we know about you →
+        </Link>
       </div>
 
       {showEmpty ? (
@@ -118,12 +142,23 @@ export function EditWalletClient({
                 Wallet · {held.length} card{held.length === 1 ? "" : "s"}
               </span>
               <span className="list-head-hint">tap to open card page</span>
+              {totalOnList > 0 && (
+                <Link href={"/wallet/list" as Route} className="list-head-link">
+                  Open list →
+                </Link>
+              )}
             </div>
             <div className="wallet-stats">
               <div>
                 <div className="stat">Found this year</div>
                 <div className="val t-pos num">+{fmt.usd(totalFound)}</div>
               </div>
+              {totalOnList > 0 && (
+                <div>
+                  <div className="stat">On your list</div>
+                  <div className="val t-warn num">+{fmt.usd(totalOnList)}</div>
+                </div>
+              )}
               <div>
                 <div className="stat">Annual fees</div>
                 <div className="val num">−{fmt.usd(totalFee)}</div>
@@ -134,15 +169,16 @@ export function EditWalletClient({
             {held.map((h) => {
               const c = db.cardById.get(h.card_id);
               if (!c) return null;
-              const fm = computeFoundMoneyV2(c, h, initialProfile, db, signals);
+              const cv = cardValues.get(h.card_id);
               return (
                 <WalletLinkRow
                   key={h.card_id}
                   card={c}
                   held={h}
-                  found={fm.point}
-                  signalsFilled={fm.signalsFilled}
-                  signalsTotal={fm.signalsTotal}
+                  found={cv?.confirmed_usd ?? 0}
+                  onList={cv?.projected_usd ?? 0}
+                  signalsFilled={cv?.signalsFilled ?? 0}
+                  signalsTotal={cv?.signalsTotal ?? 0}
                 />
               );
             })}
@@ -157,12 +193,14 @@ function WalletLinkRow({
   card,
   held,
   found,
+  onList,
   signalsFilled,
   signalsTotal,
 }: {
   card: Card;
   held: WalletCardHeld;
   found: number;
+  onList: number;
   signalsFilled: number;
   signalsTotal: number;
 }) {
@@ -194,6 +232,12 @@ function WalletLinkRow({
           <span className="amt num">{fmt.usd(found)}</span>
           <span>found</span>
         </div>
+        {onList > 0 && (
+          <div className="onlist-chip">
+            <span className="amt num">{fmt.usd(onList)}</span>
+            <span>on list</span>
+          </div>
+        )}
         <div className="af-line">
           {signalsFilled}/{signalsTotal} signals
         </div>

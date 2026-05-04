@@ -76,9 +76,9 @@
   "value_thesis": {
     "headline": "Why this card earns its keep",
     "net_af_line": "$95 annual fee minus the $100 hotel credit = effectively pays for itself.",
-    "structural_edge": "One of two cards in America that transfers points 1:1 to American AAdvantage — turning 60,000 points into a JAL business seat to Tokyo that retails for $4,000+.",
+    "structural_edge": "One of two cards in America that transfers points 1:1 to American AAdvantage — 60,000 points clears a JAL business class seat that retails for $4,000+.",
     "ecosystem_line": {
-      "text": "Pool points from your Double Cash and Custom Cash into this card and your 2% / 5% cashback becomes 1:1 transferable points — about a 30% value boost on every dollar.",
+      "text": "Holding a Citi 2% or 5% cashback card alongside this one converts that cashback into 1:1 transferable points — about a 30% value boost on every dollar.",
       "show_if_holds_any": ["citi_double_cash", "citi_custom_cash"]
     }
   },

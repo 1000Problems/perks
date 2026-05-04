@@ -246,3 +246,32 @@ export async function getCurrentUserId(): Promise<string> {
   if (!user) throw new Error("not_authenticated");
   return user.id;
 }
+
+// Phase 3 of signal-first architecture. Returns the user's full signal
+// state as a Map<signal_id, state>. Cached per-request via React.cache,
+// matching the pattern of getCurrentProfile so multiple Server Components
+// can call it without compounding DB hits.
+//
+// Phase 4 will wire this into the engine. Phase 3 ships the helper and
+// leaves it cold so the cutover is one focused change.
+export type SignalStateValue = "confirmed" | "interested" | "dismissed";
+
+export const getUserSignals = cache(
+  async (userId: string): Promise<Map<string, SignalStateValue>> => {
+    try {
+      const rows = await sql<{ signal_id: string; state: SignalStateValue }[]>`
+        select signal_id, state
+          from perks_user_signals
+         where user_id = ${userId}
+      `;
+      return new Map(rows.map((r) => [r.signal_id, r.state]));
+    } catch (e) {
+      if (isUndefinedTableError(e)) {
+        // Migration 0006 not applied — empty map. Engine sees no
+        // signals; behavior matches the pre-Phase-3 world.
+        return new Map();
+      }
+      throw e;
+    }
+  },
+);

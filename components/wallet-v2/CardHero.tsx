@@ -32,6 +32,7 @@ import type {
 import {
   updateUserCard,
   updateCardPlayState,
+  updateUserSignalsForPlay,
 } from "@/lib/profile/actions";
 import { fmt } from "@/lib/utils/format";
 import {
@@ -161,11 +162,16 @@ export function CardHero({
         : [...prev, next];
     });
     if (!isNew) {
+      // Phase 3 dual-write: legacy per-play row PLUS global signal upsert
+      // via the play's reveals_signals. updateUserSignalsForPlay is a
+      // no-op for synthetic ids (group:*, cold:*) and for plays whose
+      // reveals_signals is empty.
       void updateCardPlayState(cardId, playId, {
         state,
         claimed_at: extras.claimed_at ?? undefined,
         notes: extras.notes ?? undefined,
       });
+      void updateUserSignalsForPlay(cardId, playId, state);
     }
   }
 
@@ -215,14 +221,18 @@ export function CardHero({
         ...(held.activity_threshold_met != null ? { activity_threshold_met: held.activity_threshold_met } : {}),
         ...(held.card_status_v2 != null ? { card_status_v2: held.card_status_v2 } : {}),
       });
+      // Phase 3 dual-write across the bulk save path used when a brand
+      // new card is being added. Same play state lands in both tables
+      // so the engine cutover in Phase 4 already has the data.
       await Promise.all(
-        playState.map((p) =>
+        playState.flatMap((p) => [
           updateCardPlayState(cardId, p.play_id, {
             state: p.state,
             claimed_at: p.claimed_at,
             notes: p.notes,
           }),
-        ),
+          updateUserSignalsForPlay(cardId, p.play_id, p.state),
+        ]),
       );
     } else {
       await flushPatch();

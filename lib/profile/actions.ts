@@ -16,12 +16,29 @@
 import { sql, isUndefinedTableError } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getCurrentProfile } from "./server";
+import { loadCardDatabase } from "@/lib/data/loader";
 import type {
   CardPlayState,
   CreditScoreBand,
   UserProfile,
   WalletCardHeld,
 } from "./types";
+
+// Phase 3 of signal-first architecture. UI tristate maps onto the
+// persisted play_state enum, which in turn maps onto the new
+// signal_state enum. Keep both translations in one file so the wire
+// behavior is auditable in one read.
+export type SignalState = "confirmed" | "interested" | "dismissed";
+
+const PLAY_STATE_TO_SIGNAL_STATE: Record<
+  CardPlayState["state"],
+  SignalState | null
+> = {
+  got_it: "confirmed",
+  want_it: "interested",
+  skip: "dismissed",
+  unset: null, // signal row deleted; no opinion captured
+};
 
 const VALID_CREDIT_BANDS: ReadonlyArray<CreditScoreBand> = [
   "building",
@@ -308,6 +325,90 @@ export async function updateCardPlayState(
     }
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[profile:update_card_play_state] failed:", msg);
+    return { ok: false, error: classifyDbError(e), detail: msg };
+  }
+}
+
+// Phase 3 of signal-first architecture: dual-write target alongside
+// updateCardPlayState. Translates a per-play tristate click into global
+// signal state via the play's reveals_signals declarations (Phase 2).
+//
+//   got_it  → confirmed   (UPSERT, latest-click wins)
+//   want_it → interested  (UPSERT)
+//   skip    → dismissed   (UPSERT)
+//   unset   → DELETE the (user, signal) row (toggle-off semantics)
+//
+// No-ops in three cases:
+//   - playId is a synthetic key ("group:*" or "cold:*"): not a real play
+//   - card or play not found in the catalog (defensive; should not
+//     happen during normal flows)
+//   - play.reveals_signals is empty (most plays today, until Phase 2.5
+//     catalog growth)
+//
+// Soft-fails on missing perks_user_signals table (migration 0006 not
+// applied) — same tolerance pattern as updateCardPlayState. The legacy
+// user_card_play_state path still persists in that case.
+export async function updateUserSignalsForPlay(
+  cardId: string,
+  playId: string,
+  state: CardPlayState["state"],
+): Promise<UpdateResult> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "not_authenticated" };
+
+  // Synthetic play ids never reveal real signals.
+  if (playId.startsWith("group:") || playId.startsWith("cold:")) {
+    return { ok: true };
+  }
+
+  const db = loadCardDatabase();
+  const card = db.cardById.get(cardId);
+  if (!card) return { ok: true };
+  const play = (card.card_plays ?? []).find((p) => p.id === playId);
+  if (!play) return { ok: true };
+  const signals = play.reveals_signals;
+  if (signals.length === 0) return { ok: true };
+
+  const target = PLAY_STATE_TO_SIGNAL_STATE[state];
+
+  try {
+    if (target === null) {
+      // Toggle-off — delete the rows for this user + these signals.
+      await sql`
+        delete from perks_user_signals
+        where user_id = ${user.id}
+          and signal_id = any(${signals})
+      `;
+    } else {
+      // postgres-js doesn't bulk-upsert with per-row source attribution
+      // cleanly, so loop. Signal counts per play are tiny (typically 1-3),
+      // so this is fine.
+      for (const sig of signals) {
+        await sql`
+          insert into perks_user_signals (
+            user_id, signal_id, state, source_card_id, source_play_id
+          ) values (
+            ${user.id}, ${sig}, ${target}::signal_state, ${cardId}, ${playId}
+          )
+          on conflict (user_id, signal_id) do update set
+            state = excluded.state,
+            source_card_id = excluded.source_card_id,
+            source_play_id = excluded.source_play_id,
+            updated_at = now()
+        `;
+      }
+    }
+    return { ok: true };
+  } catch (e) {
+    if (isUndefinedTableError(e)) {
+      // Migration 0006 not applied — no-op. updateCardPlayState still
+      // persisted on its own table.
+      const msg = e instanceof Error ? e.message : String(e);
+      console.warn("[profile:update_user_signals_for_play] table missing — skipping persist:", msg);
+      return { ok: true };
+    }
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[profile:update_user_signals_for_play] failed:", msg);
     return { ok: false, error: classifyDbError(e), detail: msg };
   }
 }

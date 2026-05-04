@@ -18,6 +18,7 @@
     "db:migrate-cards:dry-run": "tsx scripts/migrate-cards-to-db.ts -- --dry-run",
     "db:migrate-cards:report": "tsx scripts/migrate-cards-to-db.ts -- --report",
     "db:backfill-user-cards": "tsx scripts/backfill-user-cards-from-jsonb.ts",
+    "db:backfill-user-signals": "tsx scripts/backfill-user-signals.ts",
     "db:verify-user-cards": "tsx scripts/verify-cards-held-parity.ts",
     "db:verify-cards-soul": "tsx scripts/verify-cards-soul-parity.ts",
     "cards:soul-status": "tsx scripts/soul-status.ts",

@@ -77,26 +77,12 @@ export function EditWalletClient({ initialProfile, serializedDb }: Props) {
   return (
     <div className="wallet-edit-page">
       <div className="page-head">
-        <div>
-          <h1>Edit your wallet</h1>
-          <p className="sub">
-            Click any card to open its page — every signal you fill in
-            tightens the audit math and surfaces more of what the card
-            can do for you.
-          </p>
-        </div>
-        {!showEmpty && (
-          <div className="wallet-stats">
-            <div>
-              <div className="stat">Found this year</div>
-              <div className="val t-pos num">+{fmt.usd(totalFound)}</div>
-            </div>
-            <div>
-              <div className="stat">Annual fees</div>
-              <div className="val num">−{fmt.usd(totalFee)}</div>
-            </div>
-          </div>
-        )}
+        <h1>Edit your wallet</h1>
+        <p className="sub">
+          Click any card to open its page — every signal you fill in
+          tightens the audit math and surfaces more of what the card
+          can do for you.
+        </p>
       </div>
 
       {showEmpty ? (
@@ -109,10 +95,22 @@ export function EditWalletClient({ initialProfile, serializedDb }: Props) {
             onPick={handlePick}
           />
           <div className="list-head">
-            <span className="eyebrow">
-              Wallet · {held.length} card{held.length === 1 ? "" : "s"}
-            </span>
-            <span className="list-head-hint">tap to open card page</span>
+            <div className="list-head-left">
+              <span className="eyebrow">
+                Wallet · {held.length} card{held.length === 1 ? "" : "s"}
+              </span>
+              <span className="list-head-hint">tap to open card page</span>
+            </div>
+            <div className="wallet-stats">
+              <div>
+                <div className="stat">Found this year</div>
+                <div className="val t-pos num">+{fmt.usd(totalFound)}</div>
+              </div>
+              <div>
+                <div className="stat">Annual fees</div>
+                <div className="val num">−{fmt.usd(totalFee)}</div>
+              </div>
+            </div>
           </div>
           <div className="list-rows">
             {held.map((h) => {

@@ -18,10 +18,6 @@
 }
 
 .wallet-edit-page .page-head {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 24px;
-  align-items: end;
   margin-bottom: 28px;
 }
 .wallet-edit-page .page-head h1 {
@@ -41,19 +37,20 @@
 .wallet-stats {
   display: flex;
   gap: 22px;
-  align-items: end;
+  align-items: baseline;
 }
 .wallet-stats .stat {
-  font-size: 11px;
+  font-size: 10.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-3);
   font-weight: 500;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 .wallet-stats .val {
-  font-size: 22px;
+  font-size: 17px;
   font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
 .wallet-stats .t-pos { color: var(--pos-ink); }
 
@@ -79,8 +76,16 @@
 .list-head {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: end;
+  gap: 16px;
   margin-top: 4px;
+}
+.list-head-left {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 .list-head-hint {
   font-size: 11.5px;
@@ -94,7 +99,7 @@
 
 .wallet-row {
   display: grid;
-  grid-template-columns: 64px 1fr auto;
+  grid-template-columns: 96px 1fr auto;
   gap: 14px;
   align-items: center;
   padding: 12px 14px;

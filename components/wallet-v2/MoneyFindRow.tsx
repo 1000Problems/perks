@@ -61,30 +61,38 @@ export function MoneyFindRow({
       data-play-id={play.id}
       data-status={status}
       data-skipped={find.groupSkipped ? "true" : "false"}
+      data-expanded={expanded ? "true" : "false"}
     >
       <header className="money-find-head" onClick={() => setExpanded((v) => !v)}>
         <div className="money-find-headline-wrap">
-          <h3 className="money-find-headline">
-            {play.headline}
-            {resolvedSource && (
-              <PerkSourceLink
-                source={resolvedSource.source}
-                cardId={cardId}
-                perkKind={resolvedSource.perkKind}
-                perkName={resolvedSource.perkName}
-                myFlag={myFlag}
-              />
-            )}
-          </h3>
+          <h3 className="money-find-headline">{play.headline}</h3>
           {personalSentence && (
             <p className="money-find-personal">{personalSentence}</p>
           )}
+          {resolvedSource && (
+            <PerkSourceLink
+              source={resolvedSource.source}
+              cardId={cardId}
+              perkKind={resolvedSource.perkKind}
+              perkName={resolvedSource.perkName}
+              myFlag={myFlag}
+            />
+          )}
         </div>
-        <ValueChip
-          valueUsd={valueUsd}
-          valueRange={valueRange}
-          needsProbe={needsProbe}
-        />
+        <div className="money-find-tail">
+          <ValueChip
+            valueUsd={valueUsd}
+            valueRange={valueRange}
+            needsProbe={needsProbe}
+          />
+          <span
+            className="money-find-caret"
+            aria-hidden="true"
+            data-expanded={expanded ? "true" : "false"}
+          >
+            ⌄
+          </span>
+        </div>
       </header>
 
       {needsProbe && probeQuestion && (

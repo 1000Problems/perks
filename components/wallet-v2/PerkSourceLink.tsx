@@ -1,18 +1,26 @@
 "use client";
 
-// PerkSourceLink — the inline ⓘ next to each perk row's title, plus
-// the popover that opens on click. Three states managed locally:
+// PerkSourceLink — always-visible source row beneath each perk's
+// personal sentence. Renders the canonical citation link, the
+// human-stamped verified date, and a small ⚑ button that opens a
+// popover for the report-a-problem form.
 //
-//   1. Closed:  just the ⓘ trigger.
-//   2. Default: link to source URL + verified date + "Report" button.
-//               When the user already has an open flag, "Report"
-//               swaps to "You flagged this — undo".
-//   3. Form:    reason radios + optional note + Submit/Cancel.
+// Layout, left to right:
+//   1. "Source: {label} →"   — direct link to the citation URL.
+//   2. "verified May 2026"    — muted static text.
+//   3. ⚑ trigger              — opens the popover.
 //
-// Outside-click and Escape close the popover. The trigger toggles.
-// When a flag is submitted, we collapse back to the default state
-// with the user's flag visible. router.refresh() reloads server
-// state so myFlag survives the next render.
+// Popover state machine:
+//   - User has no flag yet:                         show form
+//   - User has an open flag, hasn't asked to edit:  show "You flagged
+//                                                    this" + Undo /
+//                                                    Edit reason
+//   - User has a flag, clicked "Edit reason":       show form
+//                                                    (pre-populated)
+//
+// Source link + verified date stay outside the popover because
+// they're the trust signal users care about most. The popover is
+// reserved for the lower-volume report action.
 
 import {
   useCallback,
@@ -38,8 +46,6 @@ interface Props {
   myFlag: PerkFlag | null;
 }
 
-type Pane = "default" | "form";
-
 const REASON_OPTIONS: { value: PerkFlagReason; label: string }[] = [
   { value: "link_broken", label: "Link doesn't work" },
   { value: "info_outdated", label: "Page says something different" },
@@ -55,13 +61,13 @@ export function PerkSourceLink({
   myFlag,
 }: Props) {
   const [open, setOpen] = useState(false);
-  const [pane, setPane] = useState<Pane>("default");
+  const [editing, setEditing] = useState(false);
   const containerRef = useRef<HTMLSpanElement>(null);
   const router = useRouter();
 
   const close = useCallback(() => {
     setOpen(false);
-    setPane("default");
+    setEditing(false);
   }, []);
 
   // Outside-click closes.
@@ -90,99 +96,102 @@ export function PerkSourceLink({
     return () => document.removeEventListener("keydown", onKey);
   }, [open, close]);
 
-  const verifiedSuffix = source.verified_at
-    ? ` — verified ${formatVerifiedDate(source.verified_at)}`
-    : "";
+  const label = source.label ?? hostnameOf(source.url);
+  const verifiedText = source.verified_at
+    ? formatVerifiedDate(source.verified_at)
+    : null;
+
+  const showForm = !myFlag || editing;
 
   return (
-    <span ref={containerRef} className="perk-source-wrap">
-      <button
-        type="button"
-        className="perk-source-trigger"
-        aria-expanded={open}
-        aria-haspopup="dialog"
-        title={`Source: ${source.label ?? hostnameOf(source.url)}${verifiedSuffix}`}
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpen((v) => !v);
-          setPane("default");
-        }}
-      >
-        ⓘ
-      </button>
-      {open && (
-        <div
-          role="dialog"
-          aria-label={`Source for ${perkName}`}
-          className="perk-source-popover"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {pane === "default" ? (
-            <DefaultPane
-              source={source}
-              cardId={cardId}
-              perkName={perkName}
-              myFlag={myFlag}
-              onReport={() => setPane("form")}
-              onUndo={async () => {
-                await unflagPerkSource(cardId, perkName);
-                router.refresh();
-                close();
-              }}
-            />
-          ) : (
-            <FormPane
-              cardId={cardId}
-              perkKind={perkKind}
-              perkName={perkName}
-              initial={myFlag}
-              onSubmitted={() => {
-                router.refresh();
-                setPane("default");
-              }}
-              onCancel={() => setPane("default")}
-            />
-          )}
-        </div>
-      )}
-    </span>
-  );
-}
-
-function DefaultPane({
-  source,
-  cardId: _cardId,
-  perkName: _perkName,
-  myFlag,
-  onReport,
-  onUndo,
-}: {
-  source: PerkSource;
-  cardId: string;
-  perkName: string;
-  myFlag: PerkFlag | null;
-  onReport: () => void;
-  onUndo: () => void | Promise<void>;
-}) {
-  const [pending, startTransition] = useTransition();
-  return (
-    <div className="perk-source-pane">
-      <div className="perk-source-eyebrow">Source</div>
+    <div className="perk-source-row" onClick={(e) => e.stopPropagation()}>
       <a
         href={source.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="perk-source-link-row"
+        className="perk-source-link-inline"
       >
-        {source.label ?? hostnameOf(source.url)} →
+        Source: {label} →
       </a>
-      {source.verified_at && (
-        <div className="perk-source-verified">
-          Verified {formatVerifiedDate(source.verified_at)}
-        </div>
+      {verifiedText && (
+        <span className="perk-source-verified-inline">
+          verified {verifiedText}
+        </span>
       )}
-      <div className="perk-source-divider" />
-      {myFlag ? (
+      <span ref={containerRef} className="perk-source-flag-wrap">
+        <button
+          type="button"
+          className="perk-source-flag-trigger"
+          aria-expanded={open}
+          aria-haspopup="dialog"
+          aria-label={
+            myFlag
+              ? "You flagged this perk — click to manage"
+              : "Report a problem with this source"
+          }
+          data-flagged={myFlag ? "true" : "false"}
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpen((v) => !v);
+            setEditing(false);
+          }}
+        >
+          ⚑{myFlag ? " flagged" : ""}
+        </button>
+        {open && (
+          <div
+            role="dialog"
+            aria-label={`Report a problem with ${perkName}`}
+            className="perk-source-popover"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {!showForm && myFlag ? (
+              <FlaggedPane
+                onUndo={async () => {
+                  await unflagPerkSource(cardId, perkName);
+                  router.refresh();
+                  close();
+                }}
+                onEdit={() => setEditing(true)}
+              />
+            ) : (
+              <FormPane
+                cardId={cardId}
+                perkKind={perkKind}
+                perkName={perkName}
+                initial={myFlag}
+                onSubmitted={() => {
+                  router.refresh();
+                  close();
+                }}
+                onCancel={() => {
+                  if (myFlag) {
+                    setEditing(false);
+                  } else {
+                    close();
+                  }
+                }}
+              />
+            )}
+          </div>
+        )}
+      </span>
+    </div>
+  );
+}
+
+function FlaggedPane({
+  onUndo,
+  onEdit,
+}: {
+  onUndo: () => void | Promise<void>;
+  onEdit: () => void;
+}) {
+  const [pending, startTransition] = useTransition();
+  return (
+    <div className="perk-source-pane">
+      <div className="perk-source-eyebrow">You flagged this</div>
+      <div className="perk-source-flagged-actions">
         <button
           type="button"
           className="perk-source-action perk-source-action-undo"
@@ -193,17 +202,16 @@ function DefaultPane({
             })
           }
         >
-          ⚑ You flagged this — undo
+          Undo flag
         </button>
-      ) : (
         <button
           type="button"
           className="perk-source-action"
-          onClick={onReport}
+          onClick={onEdit}
         >
-          ⚑ Report a problem
+          Edit reason
         </button>
-      )}
+      </div>
     </div>
   );
 }
@@ -258,7 +266,7 @@ function FormPane({
   return (
     <div className="perk-source-pane">
       <div className="perk-source-eyebrow" id={reasonGroupId}>
-        What's wrong?
+        What&apos;s wrong?
       </div>
       <div
         role="radiogroup"

@@ -1035,35 +1035,63 @@
   max-width: 60ch;
 }
 
-/* Inline source citation link + popover next to a perk row's title. */
+/* Always-visible source row beneath each perk's personal sentence. */
 /* See TASK-per-perk-source-urls, TASK-perk-source-flags, and */
 /* components/wallet-v2/PerkSourceLink.tsx. */
-.perk-source-wrap {
+.perk-source-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+.perk-source-link-inline {
+  color: var(--ink-2);
+  text-decoration: none;
+  font-weight: 500;
+  border-bottom: 1px dotted var(--ink-3);
+  padding-bottom: 1px;
+}
+.perk-source-link-inline:hover,
+.perk-source-link-inline:focus-visible {
+  color: var(--ink-1);
+  border-bottom-style: solid;
+}
+.perk-source-verified-inline {
+  font-size: 11px;
+  color: var(--ink-3);
+  font-style: italic;
+}
+.perk-source-flag-wrap {
   position: relative;
   display: inline-flex;
   align-items: center;
-  margin-left: 8px;
-  vertical-align: middle;
-  line-height: 1;
 }
-.perk-source-trigger {
+.perk-source-flag-trigger {
   background: transparent;
   border: 0;
-  padding: 0;
-  font-size: 13px;
-  font-weight: normal;
+  padding: 2px 6px;
+  font-size: 11.5px;
   color: var(--ink-3);
   cursor: pointer;
-  line-height: 1;
+  border-radius: 4px;
+  line-height: 1.2;
 }
-.perk-source-trigger:hover,
-.perk-source-trigger:focus-visible {
+.perk-source-flag-trigger:hover,
+.perk-source-flag-trigger:focus-visible {
   color: var(--ink-1);
+  background: var(--bg-1, transparent);
 }
-.perk-source-trigger:focus-visible {
+.perk-source-flag-trigger[data-flagged="true"] {
+  color: var(--neg-ink, #b00020);
+  font-weight: 500;
+}
+.perk-source-flag-trigger:focus-visible {
   outline: 2px solid var(--pos-ink, var(--ink-1));
-  outline-offset: 2px;
-  border-radius: 2px;
+  outline-offset: 1px;
 }
 .perk-source-popover {
   position: absolute;
@@ -1093,22 +1121,10 @@
   color: var(--ink-3);
   font-weight: 500;
 }
-.perk-source-link-row {
-  color: var(--ink-1);
-  text-decoration: none;
-  font-weight: 500;
-  word-break: break-word;
-}
-.perk-source-link-row:hover {
-  text-decoration: underline;
-}
-.perk-source-verified {
-  font-size: 11.5px;
-  color: var(--ink-3);
-}
-.perk-source-divider {
-  border-top: 1px solid var(--rule);
-  margin: 4px 0;
+.perk-source-flagged-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
 }
 .perk-source-action {
   background: transparent;
@@ -1818,6 +1834,30 @@
   cursor: pointer;
 }
 .money-find-headline-wrap { min-width: 0; }
+.money-find-tail {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.money-find-caret {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 14px;
+  color: var(--ink-3);
+  transition: transform 150ms ease;
+  user-select: none;
+  margin-top: 2px;
+}
+.money-find-caret[data-expanded="true"] {
+  transform: rotate(180deg);
+  color: var(--ink-1);
+}
+.money-find-row:hover .money-find-caret {
+  color: var(--ink-1);
+}
 .money-find-headline {
   margin: 0;
   font-size: 14.5px;

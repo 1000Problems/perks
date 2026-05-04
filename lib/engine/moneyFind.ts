@@ -71,16 +71,30 @@ export function getPlayStatus(
 
 // ── personalization template renderer ─────────────────────────────────
 //
-// Supports a small mustache-ish syntax. Tokens:
-//   {spend.<category>}           → user's annual spend in that category, formatted "$X,XXX"
-//   {value.<id>}                 → derived value the engine computed for this row
-//   {cold:<prompt_id>}           → user's cold-prompt answer label, or empty
-//   {destinations.contains:<x>}  → "yes" if user has destination x, "no" otherwise
+// Supports a small mustache-ish syntax. Two passes — block first, then
+// substitution. Tokens:
 //
-// Any unresolved token returns "" (the sentence still renders, just
-// missing that fragment). The engine sets needsProbe=true when a
-// {cold:...} token is missing AND the row's prerequisites point at a
-// matching cold prompt.
+//   Block (rendered first):
+//     {when_trip:<dest>|<text>}
+//       Render <text> (with sub-tokens) only when the user has a trip
+//       whose destination contains <dest> (case-insensitive). When no
+//       match, expands to empty string. <text> may not contain { or }
+//       (single-level nesting only — keeps the regex tractable).
+//
+//   Substitution (rendered second):
+//     {spend.<category>}        → user's annual spend, formatted "$X,XXX"
+//     {value.<id>}              → derived value the engine computed
+//     {trip:<dest>}             → "in <month>" if user has the trip with
+//                                  a month set; "soon" if trip exists with
+//                                  no month; empty string otherwise
+//     {cold:<prompt_id>}        → legacy cold-prompt answer label.
+//                                  Always empty after the cold-prompt
+//                                  panel was removed; kept to avoid
+//                                  breaking templates not yet migrated.
+//     {destinations.contains:<x>} → "yes" / "no" (kept for back-compat)
+//
+// Any unresolved token returns "" — the sentence still renders, just
+// missing that fragment.
 
 interface PersonalizationContext {
   profile: UserProfile;
@@ -88,8 +102,31 @@ interface PersonalizationContext {
   derivedValues: Record<string, string>;
 }
 
-function renderTemplate(tpl: string, ctx: PersonalizationContext): string {
-  return tpl.replace(/\{([^}]+)\}/g, (_, raw) => {
+function hasTripMatching(profile: UserProfile, dest: string): boolean {
+  const target = dest.trim().toLowerCase();
+  if (!target) return false;
+  return (
+    profile.trips_planned?.some((t) =>
+      (t.destination ?? "").toLowerCase().includes(target),
+    ) ?? false
+  );
+}
+
+function findTripMatching(
+  profile: UserProfile,
+  dest: string,
+): { destination: string; month?: string } | null {
+  const target = dest.trim().toLowerCase();
+  if (!target) return null;
+  return (
+    profile.trips_planned?.find((t) =>
+      (t.destination ?? "").toLowerCase().includes(target),
+    ) ?? null
+  );
+}
+
+function expandSubstitutions(tpl: string, ctx: PersonalizationContext): string {
+  return tpl.replace(/\{([^}|]+)\}/g, (_, raw) => {
     const token = String(raw).trim();
     if (token.startsWith("spend.")) {
       const cat = token.slice("spend.".length) as SpendCategoryId;
@@ -101,20 +138,41 @@ function renderTemplate(tpl: string, ctx: PersonalizationContext): string {
       const key = token.slice("value.".length);
       return ctx.derivedValues[key] ?? "";
     }
+    if (token.startsWith("trip:")) {
+      const dest = token.slice("trip:".length);
+      const trip = findTripMatching(ctx.profile, dest);
+      if (!trip) return "";
+      if (trip.month && trip.month.trim().length > 0) {
+        return `in ${trip.month}`;
+      }
+      return "soon";
+    }
     if (token.startsWith("cold:")) {
       const id = token.slice("cold:".length);
       return ctx.coldAnswers[id] ?? "";
     }
     if (token.startsWith("destinations.contains:")) {
-      const dest = token.slice("destinations.contains:".length).toLowerCase();
-      const matches =
-        ctx.profile.trips_planned?.some((t) =>
-          (t.destination ?? "").toLowerCase().includes(dest),
-        ) ?? false;
-      return matches ? "yes" : "no";
+      const dest = token.slice("destinations.contains:".length);
+      return hasTripMatching(ctx.profile, dest) ? "yes" : "no";
     }
     return "";
   });
+}
+
+function renderTemplate(tpl: string, ctx: PersonalizationContext): string {
+  // Pass 1 — substitute scalar tokens. Their regex excludes "|", so
+  // it skips block tokens; it only resolves the simple {trip:X},
+  // {spend.x}, {cold:x}, etc. Doing scalars first means block-inner
+  // text is already rendered by the time pass 2 looks at it.
+  const afterScalars = expandSubstitutions(tpl, ctx);
+  // Pass 2 — expand block tokens. Inner text now has no more `{...}`
+  // children, so the simple `[^{}]*` inner pattern matches cleanly.
+  return afterScalars.replace(
+    /\{when_trip:([^|}]+)\|([^{}]*)\}/g,
+    (_, dest: string, inner: string) => {
+      return hasTripMatching(ctx.profile, dest) ? inner : "";
+    },
+  );
 }
 
 function formatUsd(n: number): string {
@@ -348,19 +406,16 @@ export function findsByGroup(
     arr.push(f);
     m.set(f.play.group, arr);
   }
-  // Sort within each group by score desc, then status (unset last).
+  // Sort within each group by score desc only. Sort is stable, so
+  // ties (very common — most plays in a group share a score) preserve
+  // the markdown insertion order. Status is intentionally NOT a sort
+  // key: clicking "Got it" / "On my list" / "Not for me" must not
+  // reorder rows around the user's cursor — that's visually jarring
+  // and was reported as a bug. Status drives styling (chip state,
+  // muting) via the row's `data-status` attribute instead.
   for (const g of ALL_GROUPS) {
     const arr = m.get(g)!;
-    arr.sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      const order: Record<FindStatus, number> = {
-        going_to: 0,
-        using: 1,
-        unset: 2,
-        skip: 3,
-      };
-      return order[a.status] - order[b.status];
-    });
+    arr.sort((a, b) => b.score - a.score);
   }
   return m;
 }

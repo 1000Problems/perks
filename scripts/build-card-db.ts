@@ -109,6 +109,32 @@ function loadSignals(db: DB): void {
   db.signals.sort((a, b) => a.id.localeCompare(b.id));
 }
 
+// Phase 2: every reveals_signals / requires_signals id on every play
+// must reference a signal that exists in the Phase 1 catalog. Run
+// after both cards and signals are loaded.
+function validateSignalReferences(db: DB): void {
+  const known = new Set(db.signals.map((s) => s.id));
+  for (const card of db.cards) {
+    const plays = card.card_plays ?? [];
+    for (const play of plays) {
+      for (const sig of play.reveals_signals) {
+        if (!known.has(sig)) {
+          err(
+            `cards/${card.id}.md: play "${play.id}" reveals_signals references unknown signal "${sig}"`,
+          );
+        }
+      }
+      for (const sig of play.requires_signals) {
+        if (!known.has(sig)) {
+          err(
+            `cards/${card.id}.md: play "${play.id}" requires_signals references unknown signal "${sig}"`,
+          );
+        }
+      }
+    }
+  }
+}
+
 // ── merge ──────────────────────────────────────────────────────────────
 
 interface DB {
@@ -514,6 +540,8 @@ function main(): void {
 
   loadSignals(db);
   log(`reading ${db.signals.length} signal files from signals/`);
+
+  validateSignalReferences(db);
 
   deriveEarningCards(db);
   defaultCashMedianCpp(db);

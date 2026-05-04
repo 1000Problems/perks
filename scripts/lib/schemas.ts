@@ -150,6 +150,15 @@ export const PlaySchema = z.object({
   conditions_md: z.string().optional(),
   expires_at: IsoDate.optional(),
   source_urls: z.array(Url).default([]),
+  // Phase 2 of signal-first architecture (TASK-signals-catalog-phase2.md).
+  // reveals_signals: catalog ids the user implicitly confirms by marking
+  //   this play "Got it" (also "On my list" → interested, "Not for me" →
+  //   dismissed). Validated against signals/*.md in the build step.
+  // requires_signals: catalog ids that must be `confirmed` for this
+  //   play's value to count in the engine. Empty = unconditional.
+  // Engine ignores both fields in Phase 2 — Phase 4 wires them in.
+  reveals_signals: z.array(z.string()).default([]),
+  requires_signals: z.array(z.string()).default([]),
 });
 
 export type Play = z.infer<typeof PlaySchema>;

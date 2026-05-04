@@ -371,3 +371,87 @@ export const getProgramCppOverrides = cache(
     }
   },
 );
+
+// Per-user perk-source flags. TASK-perk-source-flags. Powers the
+// inline ⓘ popover's "Report a problem" form: shows the user's own
+// open flag (so we can render "You flagged this — undo") and an
+// open-flag count per perk for future analytics surfaces.
+//
+// Soft-fails on missing table the same way getProgramCppOverrides
+// does — pre-0008 dbs see empty maps and the popover just renders
+// the report form with no prior state.
+export type PerkFlagReason =
+  | "link_broken"
+  | "info_outdated"
+  | "perk_removed"
+  | "other";
+
+export interface PerkFlag {
+  card_id: string;
+  perk_kind: "annual_credit" | "ongoing_perk";
+  perk_name: string;
+  reason: PerkFlagReason;
+  note: string | null;
+  created_at: string;
+  resolved_at: string | null;
+}
+
+export interface PerkFlagsForCard {
+  /** Current user's open flag for each perk on the card, keyed by perk_name. */
+  myFlags: Map<string, PerkFlag>;
+  /** Open flag count per perk_name across all users (any user, any reason). */
+  openFlagCounts: Map<string, number>;
+}
+
+export const getPerkFlagsForCard = cache(
+  async (userId: string, cardId: string): Promise<PerkFlagsForCard> => {
+    try {
+      const [myRows, countRows] = await Promise.all([
+        sql<{
+          card_id: string;
+          perk_kind: "annual_credit" | "ongoing_perk";
+          perk_name: string;
+          reason: PerkFlagReason;
+          note: string | null;
+          created_at: Date;
+          resolved_at: Date | null;
+        }[]>`
+          select card_id, perk_kind, perk_name, reason, note,
+                 created_at, resolved_at
+            from perks_source_flags
+           where user_id = ${userId}
+             and card_id = ${cardId}
+             and resolved_at is null
+        `,
+        sql<{ perk_name: string; n: number }[]>`
+          select perk_name, count(*)::int as n
+            from perks_source_flags
+           where card_id = ${cardId}
+             and resolved_at is null
+           group by perk_name
+        `,
+      ]);
+      const myFlags = new Map<string, PerkFlag>(
+        myRows.map((r) => [
+          r.perk_name,
+          {
+            card_id: r.card_id,
+            perk_kind: r.perk_kind,
+            perk_name: r.perk_name,
+            reason: r.reason,
+            note: r.note,
+            created_at: r.created_at.toISOString(),
+            resolved_at: r.resolved_at ? r.resolved_at.toISOString() : null,
+          },
+        ]),
+      );
+      const openFlagCounts = new Map(countRows.map((r) => [r.perk_name, r.n]));
+      return { myFlags, openFlagCounts };
+    } catch (e) {
+      if (isUndefinedTableError(e)) {
+        return { myFlags: new Map(), openFlagCounts: new Map() };
+      }
+      throw e;
+    }
+  },
+);

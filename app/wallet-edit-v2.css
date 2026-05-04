@@ -1035,28 +1035,148 @@
   max-width: 60ch;
 }
 
-/* Inline source citation link next to a perk row's title. */
-/* See TASK-per-perk-source-urls and components/wallet-v2/perkSource.ts. */
-.perk-source-link {
+/* Inline source citation link + popover next to a perk row's title. */
+/* See TASK-per-perk-source-urls, TASK-perk-source-flags, and */
+/* components/wallet-v2/PerkSourceLink.tsx. */
+.perk-source-wrap {
+  position: relative;
   display: inline-flex;
   align-items: center;
   margin-left: 8px;
+  vertical-align: middle;
+  line-height: 1;
+}
+.perk-source-trigger {
+  background: transparent;
+  border: 0;
+  padding: 0;
   font-size: 13px;
   font-weight: normal;
   color: var(--ink-3);
-  text-decoration: none;
-  vertical-align: middle;
-  cursor: help;
+  cursor: pointer;
   line-height: 1;
 }
-.perk-source-link:hover,
-.perk-source-link:focus-visible {
+.perk-source-trigger:hover,
+.perk-source-trigger:focus-visible {
   color: var(--ink-1);
 }
-.perk-source-link:focus-visible {
+.perk-source-trigger:focus-visible {
   outline: 2px solid var(--pos-ink, var(--ink-1));
   outline-offset: 2px;
   border-radius: 2px;
+}
+.perk-source-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 50;
+  min-width: 260px;
+  max-width: 320px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px oklch(0 0 0 / 0.12);
+  padding: 14px 16px;
+  text-align: left;
+}
+.perk-source-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.perk-source-eyebrow {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+.perk-source-link-row {
+  color: var(--ink-1);
+  text-decoration: none;
+  font-weight: 500;
+  word-break: break-word;
+}
+.perk-source-link-row:hover {
+  text-decoration: underline;
+}
+.perk-source-verified {
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+.perk-source-divider {
+  border-top: 1px solid var(--rule);
+  margin: 4px 0;
+}
+.perk-source-action {
+  background: transparent;
+  border: 0;
+  padding: 6px 0;
+  text-align: left;
+  font-size: 13px;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-weight: 500;
+}
+.perk-source-action:hover {
+  color: var(--ink-1);
+}
+.perk-source-action-undo {
+  color: var(--neg-ink, #b00020);
+}
+.perk-source-reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.perk-source-reason {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-1);
+  cursor: pointer;
+}
+.perk-source-reason input[type="radio"] {
+  margin: 0;
+}
+.perk-source-note-label {
+  font-size: 11.5px;
+  color: var(--ink-3);
+  margin-top: 2px;
+}
+.perk-source-note {
+  width: 100%;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink-1);
+  resize: vertical;
+}
+.perk-source-error {
+  font-size: 12px;
+  color: var(--neg-ink, #b00020);
+}
+.perk-source-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+@media (max-width: 600px) {
+  .perk-source-popover {
+    position: fixed;
+    inset: auto 12px 12px 12px;
+    top: auto;
+    left: 12px;
+    right: 12px;
+    min-width: 0;
+    max-width: none;
+  }
 }
 .hero-new-badge {
   display: inline-block;

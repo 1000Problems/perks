@@ -61,7 +61,8 @@ import { OpenedAtPill } from "./OpenedAtPill";
 import { CurrencyPanel } from "./CurrencyPanel";
 import { ValueThesisHero } from "./ValueThesisHero";
 import { CatalogGroup } from "./CatalogGroup";
-import { buildPlaySourceMap, type PerkSource } from "./perkSource";
+import { buildPlaySourceMap, type ResolvedSource } from "./perkSource";
+import type { PerkFlag } from "@/lib/profile/server";
 import { MechanicsZone } from "./MechanicsZone";
 import { ManageCardDisclosure } from "./ManageCardDisclosure";
 import { SignalsEditor, type CardPatch } from "./SignalsEditor";
@@ -84,6 +85,10 @@ interface Props {
   // so the per-play Earning numbers reflect the user's edits. Also
   // handed to CurrencyPanel for the editable input values.
   programOverrides?: Record<string, ProgramCppOverride>;
+  // TASK-perk-source-flags: user's open flags keyed by perk_name.
+  // Renders "You flagged this — undo" in the ⓘ popover on perks the
+  // user has already reported. Empty when migration 0008 isn't applied.
+  perkFlags?: Record<string, PerkFlag>;
 }
 
 const DEBOUNCE_MS = 500;
@@ -104,6 +109,7 @@ export function CardHero({
   isNew,
   userSignals: userSignalsProp,
   programOverrides: programOverridesProp,
+  perkFlags: perkFlagsProp,
 }: Props) {
   const router = useRouter();
   const db = useMemo(() => fromSerialized(serializedDb), [serializedDb]);
@@ -320,9 +326,16 @@ export function CardHero({
   // once per render. Drives the inline ⓘ link next to each perk row.
   // Empty Map for cards that haven't been backfilled yet — graceful
   // degradation, no icons render.
-  const playSourceMap = useMemo<Map<string, PerkSource>>(
+  const playSourceMap = useMemo<Map<string, ResolvedSource>>(
     () => (card ? buildPlaySourceMap(card) : new Map()),
     [card],
+  );
+
+  // TASK-perk-source-flags: rebuild flag map from the serialized prop.
+  // Updated by router.refresh() after a flag/unflag action.
+  const perkFlags = useMemo<Map<string, PerkFlag>>(
+    () => new Map(Object.entries(perkFlagsProp ?? {})),
+    [perkFlagsProp],
   );
 
   // ── render ─────────────────────────────────────────────────────────
@@ -426,7 +439,9 @@ export function CardHero({
             onToggleGroupSkip={() => handleToggleGroupSkip(group)}
             onMarkFind={handleMarkFind}
             onProbeClick={handleProbeClick}
+            cardId={cardId}
             playSourceMap={playSourceMap}
+            perkFlags={perkFlags}
           />
         );
       })}

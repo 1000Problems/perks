@@ -25,6 +25,14 @@ export interface PerkSource {
   verified_at?: string;
 }
 
+// Carries the source plus the perk identity (kind + name) so the UI
+// can pass it straight to flag actions without re-resolving.
+export interface ResolvedSource {
+  source: PerkSource;
+  perkKind: "annual_credit" | "ongoing_perk";
+  perkName: string;
+}
+
 // Explicit overrides for plays whose id doesn't tokenize cleanly to
 // the perk name. Add entries here as new edge cases surface across
 // the catalog rollout. Per-card prefixed (`{card_id}::{play_id}`) so
@@ -81,11 +89,15 @@ function getRequiresSignal(play: Play): string | null {
 
 interface CatalogEntry {
   name: string;
+  kind: "annual_credit" | "ongoing_perk";
   signal_id?: string | null;
   source?: PerkSource;
 }
 
-export function findSourceForPlay(card: Card, play: Play): PerkSource | undefined {
+export function findSourceForPlay(
+  card: Card,
+  play: Play,
+): ResolvedSource | undefined {
   // 1. Explicit override.
   const overrideKey = `${card.id}::${play.id}`;
   const overrideName = EXPLICIT_OVERRIDES[overrideKey];
@@ -93,18 +105,22 @@ export function findSourceForPlay(card: Card, play: Play): PerkSource | undefine
   const entries: CatalogEntry[] = [
     ...card.annual_credits.map((c) => ({
       name: c.name,
+      kind: "annual_credit" as const,
       signal_id: c.signal_id,
       source: c.source as PerkSource | undefined,
     })),
     ...card.ongoing_perks.map((p) => ({
       name: p.name,
+      kind: "ongoing_perk" as const,
       signal_id: p.signal_id,
       source: p.source as PerkSource | undefined,
     })),
   ];
   if (overrideName) {
     const hit = entries.find((e) => e.name === overrideName);
-    if (hit?.source) return hit.source;
+    if (hit?.source) {
+      return { source: hit.source, perkKind: hit.kind, perkName: hit.name };
+    }
   }
 
   // 2. Signal ID match.
@@ -113,32 +129,43 @@ export function findSourceForPlay(card: Card, play: Play): PerkSource | undefine
     const hit = entries.find(
       (e) => e.signal_id === requiresSignal && e.source != null,
     );
-    if (hit?.source) return hit.source;
+    if (hit?.source) {
+      return { source: hit.source, perkKind: hit.kind, perkName: hit.name };
+    }
   }
 
   // 3. Token + substring match. Score every entry, return highest
   // above a small threshold.
   const playTokens = tokenize(play.id);
-  let best: { score: number; source: PerkSource } | null = null;
+  let best: { score: number; entry: CatalogEntry } | null = null;
   for (const e of entries) {
     if (!e.source) continue;
     const tokens = tokenize(e.name);
     const score =
       jaccard(playTokens, tokens) + substringScore(play.id, e.name);
     if (score > 0.25 && (best == null || score > best.score)) {
-      best = { score, source: e.source };
+      best = { score, entry: e };
     }
   }
-  return best?.source;
+  if (best && best.entry.source) {
+    return {
+      source: best.entry.source,
+      perkKind: best.entry.kind,
+      perkName: best.entry.name,
+    };
+  }
+  return undefined;
 }
 
-// Build a Map<play_id, PerkSource> for every play in a card. Used by
-// CardHero to precompute once per render and thread to CatalogGroup.
-export function buildPlaySourceMap(card: Card): Map<string, PerkSource> {
-  const out = new Map<string, PerkSource>();
+// Build a Map<play_id, ResolvedSource> for every play in a card. Used
+// by CardHero to precompute once per render and thread to
+// CatalogGroup. The richer shape (source + perkKind + perkName) lets
+// the UI pass identifying info to flag actions without re-resolving.
+export function buildPlaySourceMap(card: Card): Map<string, ResolvedSource> {
+  const out = new Map<string, ResolvedSource>();
   for (const play of card.card_plays ?? []) {
-    const s = findSourceForPlay(card, play);
-    if (s) out.set(play.id, s);
+    const r = findSourceForPlay(card, play);
+    if (r) out.set(play.id, r);
   }
   return out;
 }

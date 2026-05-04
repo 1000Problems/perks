@@ -12,7 +12,8 @@ import { GROUP_LABELS } from "@/lib/engine/moneyFind";
 import type { PlayGroupId } from "@/lib/data/loader";
 import { fmt } from "@/lib/utils/format";
 import { MoneyFindRow } from "./MoneyFindRow";
-import type { PerkSource } from "./perkSource";
+import type { ResolvedSource } from "./perkSource";
+import type { PerkFlag } from "@/lib/profile/server";
 
 interface Props {
   group: PlayGroupId;
@@ -21,9 +22,13 @@ interface Props {
   onToggleGroupSkip: () => void;
   onMarkFind: (playId: string, status: FindStatus) => void;
   onProbeClick: (promptId: string) => void;
-  /** Optional per-card map of play.id → source citation. */
-  /** Renders an inline ⓘ link next to the row's title when present. */
-  playSourceMap?: Map<string, PerkSource>;
+  /** Card id needed by the perk-flag actions inside MoneyFindRow's */
+  /** ⓘ popover. */
+  cardId: string;
+  /** Optional per-card map of play.id → resolved source + perk identity. */
+  playSourceMap?: Map<string, ResolvedSource>;
+  /** Optional per-card map of perk_name → user's open flag. */
+  perkFlags?: Map<string, PerkFlag>;
 }
 
 export function CatalogGroup({
@@ -33,7 +38,9 @@ export function CatalogGroup({
   onToggleGroupSkip,
   onMarkFind,
   onProbeClick,
+  cardId,
   playSourceMap,
+  perkFlags,
 }: Props) {
   const [showHidden, setShowHidden] = useState(false);
   const visibleFinds = finds.filter((f) => f.visible);
@@ -89,15 +96,22 @@ export function CatalogGroup({
                 <div className="catalog-group-kept-label">
                   But you said yes to these:
                 </div>
-                {explicitlyKept.map((f) => (
-                  <MoneyFindRow
-                    key={f.play.id}
-                    find={f}
-                    onMark={(s) => onMarkFind(f.play.id, s)}
-                    onProbeClick={onProbeClick}
-                    source={playSourceMap?.get(f.play.id)}
-                  />
-                ))}
+                {explicitlyKept.map((f) => {
+                  const rs = playSourceMap?.get(f.play.id);
+                  return (
+                    <MoneyFindRow
+                      key={f.play.id}
+                      find={f}
+                      onMark={(s) => onMarkFind(f.play.id, s)}
+                      onProbeClick={onProbeClick}
+                      cardId={cardId}
+                      resolvedSource={rs}
+                      myFlag={
+                        rs ? (perkFlags?.get(rs.perkName) ?? null) : null
+                      }
+                    />
+                  );
+                })}
               </>
             )}
             {otherFinds.length > 0 && (
@@ -112,26 +126,40 @@ export function CatalogGroup({
               </button>
             )}
             {showHidden &&
-              otherFinds.map((f) => (
-                <MoneyFindRow
-                  key={f.play.id}
-                  find={f}
-                  onMark={(s) => onMarkFind(f.play.id, s)}
-                  onProbeClick={onProbeClick}
-                  source={playSourceMap?.get(f.play.id)}
-                />
-              ))}
+              otherFinds.map((f) => {
+                const rs = playSourceMap?.get(f.play.id);
+                return (
+                  <MoneyFindRow
+                    key={f.play.id}
+                    find={f}
+                    onMark={(s) => onMarkFind(f.play.id, s)}
+                    onProbeClick={onProbeClick}
+                    cardId={cardId}
+                    resolvedSource={rs}
+                    myFlag={
+                      rs ? (perkFlags?.get(rs.perkName) ?? null) : null
+                    }
+                  />
+                );
+              })}
           </>
         ) : (
-          visibleFinds.map((f) => (
-            <MoneyFindRow
-              key={f.play.id}
-              find={f}
-              onMark={(s) => onMarkFind(f.play.id, s)}
-              onProbeClick={onProbeClick}
-              source={playSourceMap?.get(f.play.id)}
-            />
-          ))
+          visibleFinds.map((f) => {
+            const rs = playSourceMap?.get(f.play.id);
+            return (
+              <MoneyFindRow
+                key={f.play.id}
+                find={f}
+                onMark={(s) => onMarkFind(f.play.id, s)}
+                onProbeClick={onProbeClick}
+                cardId={cardId}
+                resolvedSource={rs}
+                myFlag={
+                  rs ? (perkFlags?.get(rs.perkName) ?? null) : null
+                }
+              />
+            );
+          })
         )}
       </div>
     </section>

@@ -12,6 +12,8 @@
     "typecheck": "tsc --noEmit",
     "cards:build": "tsx scripts/build-card-db.ts",
     "cards:check-sources": "tsx scripts/check-sources.ts",
+    "flags:list": "tsx scripts/flags-list.ts",
+    "flags:resolve": "tsx scripts/flags-resolve.ts",
     "db:migrate": "tsx scripts/db-migrate.ts",
     "db:migrate-status": "tsx scripts/db-migrate.ts -- --status",
     "db:migrate-reset": "tsx scripts/db-migrate.ts -- --reset",

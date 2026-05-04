@@ -14,6 +14,7 @@ import {
   getCurrentUserId,
   getUserSignals,
   getProgramCppOverrides,
+  getPerkFlagsForCard,
 } from "@/lib/profile/server";
 import { loadCardDatabase } from "@/lib/data/loader";
 import { toSerialized } from "@/lib/data/serialized";
@@ -82,6 +83,11 @@ export default async function CardHeroPage({
   // missing table).
   const programOverrides = await getProgramCppOverrides(userId);
 
+  // TASK-perk-source-flags: user's open flags on this card's perks.
+  // Drives the "You flagged this — undo" state in the inline ⓘ
+  // popover. Empty on pre-0008 DBs.
+  const { myFlags: perkFlags } = await getPerkFlagsForCard(userId, id);
+
   return (
     <CardHero
       cardId={id}
@@ -92,6 +98,7 @@ export default async function CardHeroPage({
       isNew={effectiveIsNew}
       userSignals={Object.fromEntries(merged)}
       programOverrides={Object.fromEntries(programOverrides)}
+      perkFlags={Object.fromEntries(perkFlags)}
     />
   );
 }

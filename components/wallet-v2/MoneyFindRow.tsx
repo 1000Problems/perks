@@ -8,7 +8,9 @@
 import { useState } from "react";
 import type { ScoredFind, FindStatus } from "@/lib/engine/moneyFind";
 import { fmt } from "@/lib/utils/format";
-import { hostnameOf, type PerkSource } from "./perkSource";
+import type { ResolvedSource } from "./perkSource";
+import type { PerkFlag } from "@/lib/profile/server";
+import { PerkSourceLink } from "./PerkSourceLink";
 
 interface Props {
   find: ScoredFind;
@@ -16,7 +18,11 @@ interface Props {
   onProbeClick?: (promptId: string) => void; // open the cold prompt inline
   /** TASK-per-perk-source-urls — when set, renders an inline ⓘ link */
   /** next to the row's title that opens the perk's source citation. */
-  source?: PerkSource;
+  resolvedSource?: ResolvedSource;
+  /** Card id needed by the flag actions inside the popover. */
+  cardId: string;
+  /** Current user's flag on this perk, if any. */
+  myFlag: PerkFlag | null;
 }
 
 // Single chip vocabulary across every question type. The row's
@@ -37,7 +43,14 @@ const QUESTION_PROMPT: Record<string, string> = {
   set_up: "Set up?",
 };
 
-export function MoneyFindRow({ find, onMark, onProbeClick, source }: Props) {
+export function MoneyFindRow({
+  find,
+  onMark,
+  onProbeClick,
+  resolvedSource,
+  cardId,
+  myFlag,
+}: Props) {
   const [expanded, setExpanded] = useState(false);
   const { play, status, valueUsd, valueRange, personalSentence, needsProbe, probeQuestion } = find;
   const questionText = QUESTION_PROMPT[play.question] ?? QUESTION_PROMPT.set_up;
@@ -53,7 +66,15 @@ export function MoneyFindRow({ find, onMark, onProbeClick, source }: Props) {
         <div className="money-find-headline-wrap">
           <h3 className="money-find-headline">
             {play.headline}
-            {source && <PerkSourceLink source={source} perkName={play.headline} />}
+            {resolvedSource && (
+              <PerkSourceLink
+                source={resolvedSource.source}
+                cardId={cardId}
+                perkKind={resolvedSource.perkKind}
+                perkName={resolvedSource.perkName}
+                myFlag={myFlag}
+              />
+            )}
           </h3>
           {personalSentence && (
             <p className="money-find-personal">{personalSentence}</p>
@@ -123,47 +144,6 @@ export function MoneyFindRow({ find, onMark, onProbeClick, source }: Props) {
       )}
     </article>
   );
-}
-
-function PerkSourceLink({
-  source,
-  perkName,
-}: {
-  source: PerkSource;
-  perkName: string;
-}) {
-  const label = source.label ?? hostnameOf(source.url);
-  const verifiedSuffix = source.verified_at
-    ? ` — verified ${formatVerifiedDate(source.verified_at)}`
-    : "";
-  return (
-    <a
-      href={source.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="perk-source-link"
-      title={`Source: ${label}${verifiedSuffix}`}
-      aria-label={`Source for ${perkName} (opens in new tab)`}
-      onClick={(e) => {
-        // Don't toggle the row's expand state when clicking the link.
-        e.stopPropagation();
-      }}
-    >
-      ⓘ
-    </a>
-  );
-}
-
-function formatVerifiedDate(iso: string): string {
-  // "2026-05-04" → "May 2026". Plain English, single word + year.
-  const m = iso.match(/^(\d{4})-(\d{2})-\d{2}$/);
-  if (!m) return iso;
-  const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-  ];
-  const monthIdx = parseInt(m[2], 10) - 1;
-  return `${months[monthIdx] ?? ""} ${m[1]}`;
 }
 
 function ValueChip({

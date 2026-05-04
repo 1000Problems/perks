@@ -512,6 +512,110 @@ export async function setProgramCppOverride(
   }
 }
 
+// Per-user perk-source flags (TASK-perk-source-flags). Both actions
+// soft-fail on missing perks_source_flags table so the popover stays
+// functional on a database that hasn't applied migration 0008 yet.
+//
+// Server validates: reason must be in the enum (the type guard makes
+// invalid reason errors at compile time for the typed callers; the
+// runtime check catches stale clients on a deployed server). When
+// reason === "other", note is required (≥ 3 chars after trim).
+
+const PERK_FLAG_REASONS = [
+  "link_broken",
+  "info_outdated",
+  "perk_removed",
+  "other",
+] as const;
+type PerkFlagReason = (typeof PERK_FLAG_REASONS)[number];
+
+export async function flagPerkSource(input: {
+  cardId: string;
+  perkKind: "annual_credit" | "ongoing_perk";
+  perkName: string;
+  reason: PerkFlagReason;
+  note?: string;
+}): Promise<UpdateResult> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "not_authenticated" };
+  if (!PERK_FLAG_REASONS.includes(input.reason)) {
+    return { ok: false, error: "update_failed", detail: "invalid reason" };
+  }
+  const note = (input.note ?? "").trim();
+  if (input.reason === "other" && note.length < 3) {
+    return {
+      ok: false,
+      error: "update_failed",
+      detail: "note required when reason is 'other'",
+    };
+  }
+  if (input.perkKind !== "annual_credit" && input.perkKind !== "ongoing_perk") {
+    return { ok: false, error: "update_failed", detail: "invalid perk_kind" };
+  }
+
+  try {
+    await sql`
+      insert into perks_source_flags (
+        user_id, card_id, perk_kind, perk_name, reason, note
+      ) values (
+        ${user.id}, ${input.cardId}, ${input.perkKind}, ${input.perkName},
+        ${input.reason}::perk_flag_reason, ${note ? note : null}
+      )
+      on conflict (user_id, card_id, perk_name) do update set
+        perk_kind = excluded.perk_kind,
+        reason = excluded.reason,
+        note = excluded.note,
+        -- Re-flagging an already-resolved perk re-opens the flag so
+        -- the team triage queue picks it up again.
+        resolved_at = null,
+        resolution_note = null,
+        updated_at = now()
+    `;
+    return { ok: true };
+  } catch (e) {
+    if (isUndefinedTableError(e)) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.warn(
+        "[profile:flag_perk_source] table missing — skipping persist:",
+        msg,
+      );
+      return { ok: true };
+    }
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[profile:flag_perk_source] failed:", msg);
+    return { ok: false, error: classifyDbError(e), detail: msg };
+  }
+}
+
+export async function unflagPerkSource(
+  cardId: string,
+  perkName: string,
+): Promise<UpdateResult> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "not_authenticated" };
+  try {
+    await sql`
+      delete from perks_source_flags
+       where user_id = ${user.id}
+         and card_id = ${cardId}
+         and perk_name = ${perkName}
+    `;
+    return { ok: true };
+  } catch (e) {
+    if (isUndefinedTableError(e)) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.warn(
+        "[profile:unflag_perk_source] table missing — skipping persist:",
+        msg,
+      );
+      return { ok: true };
+    }
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[profile:unflag_perk_source] failed:", msg);
+    return { ok: false, error: classifyDbError(e), detail: msg };
+  }
+}
+
 export async function resetProgramCppOverrides(
   programId: string,
 ): Promise<UpdateResult> {

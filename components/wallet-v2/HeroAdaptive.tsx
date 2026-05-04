@@ -1,98 +1,83 @@
 "use client";
 
-// Adaptive Hero region. Three states based on data depth:
-//   cold — render up to 3 cold-prompt question chips
-//   warm — running progress + 1-2 quick wins
-//   hot  — top 3 ranked money-finds with primary actions
+// Adaptive Hero region.
+//
+// Render priority (top → bottom):
+//   1. ValueThesisHero — when the card has a `value_thesis` block. Always
+//      wins; this is the celebration / orientation block the redesign
+//      anchored on (TASK-card-page-redesign).
+//   2. HotHero — high data depth: top 3 ranked money-finds with primary
+//      action tiles. Only rendered when no value_thesis exists.
+//   3. WarmHero — partial data depth: progress bar + 1-2 quick wins.
+//      Only rendered when no value_thesis exists.
+//   4. null — cold-state users with no value_thesis see no hero; the
+//      catalog groups carry the page on their own. (The legacy
+//      ColdHero "answer 3 questions" panel was removed; it duplicated
+//      the Brands & Trips settings page.)
 
-import type { ColdPrompt } from "@/lib/data/loader";
 import type { ScoredFind } from "@/lib/engine/moneyFind";
 import type { HeroSummary } from "@/lib/engine/heroState";
+import type { PlayGroupId } from "@/lib/data/loader";
+import type { WalletCardHeld } from "@/lib/profile/types";
 import { fmt } from "@/lib/utils/format";
+import { ValueThesisHero } from "./ValueThesisHero";
+
+type EcosystemLine = {
+  text: string;
+  show_if_holds_any: string[];
+};
+
+type ValueThesis = {
+  headline: string;
+  net_af_line: string;
+  structural_edge: string;
+  ecosystem_line?: EcosystemLine;
+};
 
 interface Props {
   summary: HeroSummary;
-  coldPrompts: ColdPrompt[];
-  coldAnswers: Record<string, string>;
   topFinds: ScoredFind[];
-  onAnswerColdPrompt: (promptId: string, answer: string) => void;
+  valueThesis?: ValueThesis;
+  groupedFinds: Map<PlayGroupId, ScoredFind[]>;
+  cardsHeld: WalletCardHeld[];
 }
 
 export function HeroAdaptive({
   summary,
-  coldPrompts,
-  coldAnswers,
   topFinds,
-  onAnswerColdPrompt,
+  valueThesis,
+  groupedFinds,
+  cardsHeld,
 }: Props) {
-  return (
-    <section
-      className="hero-adaptive"
-      data-state={summary.state}
-    >
-      {summary.state === "cold" && (
-        <ColdHero
-          prompts={coldPrompts}
-          coldAnswers={coldAnswers}
-          onAnswer={onAnswerColdPrompt}
-        />
-      )}
-      {summary.state === "warm" && (
-        <WarmHero summary={summary} topFinds={topFinds} />
-      )}
-      {summary.state === "hot" && <HotHero topFinds={topFinds} />}
-    </section>
-  );
-}
+  if (valueThesis) {
+    return (
+      <ValueThesisHero
+        thesis={valueThesis}
+        groupedFinds={groupedFinds}
+        cardsHeld={cardsHeld}
+      />
+    );
+  }
 
-function ColdHero({
-  prompts,
-  coldAnswers,
-  onAnswer,
-}: {
-  prompts: ColdPrompt[];
-  coldAnswers: Record<string, string>;
-  onAnswer: (promptId: string, answer: string) => void;
-}) {
-  if (prompts.length === 0) return null;
-  return (
-    <div className="hero-cold">
-      <div className="hero-headline-eyebrow">Find money on this card</div>
-      <h2 className="hero-headline">
-        Answer 3 quick questions to start finding money
-      </h2>
-      <p className="hero-sub">
-        Each answer unlocks specific opportunities for you below — usually
-        worth several hundred dollars.
-      </p>
-      <div className="cold-prompts">
-        {prompts.map((p) => {
-          const current = coldAnswers[p.id] ?? null;
-          return (
-            <div key={p.id} className="cold-prompt">
-              <div className="cold-prompt-question">{p.question}</div>
-              <div className="cold-prompt-chips">
-                {p.answer_chips.map((c) => (
-                  <button
-                    key={c.value}
-                    type="button"
-                    className="status-chip"
-                    data-active={current === c.value ? "true" : "false"}
-                    onClick={() => onAnswer(p.id, c.value)}
-                  >
-                    {c.label}
-                  </button>
-                ))}
-              </div>
-              <div className="cold-prompt-unlock">
-                Unlocks ~{fmt.usd(p.unlocks_value_estimate_usd)} of opportunities
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+  if (summary.state === "hot") {
+    return (
+      <section className="hero-adaptive" data-state="hot">
+        <HotHero topFinds={topFinds} />
+      </section>
+    );
+  }
+
+  if (summary.state === "warm") {
+    return (
+      <section className="hero-adaptive" data-state="warm">
+        <WarmHero summary={summary} topFinds={topFinds} />
+      </section>
+    );
+  }
+
+  // Cold state without a value_thesis — render no hero. The page
+  // proceeds straight to the catalog groups.
+  return null;
 }
 
 function WarmHero({

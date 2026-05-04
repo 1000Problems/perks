@@ -15,53 +15,28 @@ interface Props {
   onProbeClick?: (promptId: string) => void; // open the cold prompt inline
 }
 
-const QUESTION_LABELS: Record<string, { question: string; chips: { value: FindStatus; label: string }[] }> = {
-  spending_here: {
-    question: "Spending here regularly?",
-    chips: [
-      { value: "using", label: "Yes — already" },
-      { value: "going_to", label: "I should" },
-      { value: "skip", label: "Not me" },
-    ],
-  },
-  claimed_this_year: {
-    question: "Claimed this year?",
-    chips: [
-      { value: "using", label: "Done" },
-      { value: "going_to", label: "Going to" },
-      { value: "skip", label: "Skip it" },
-    ],
-  },
-  have_done_this: {
-    question: "Done this redemption?",
-    chips: [
-      { value: "using", label: "Done it" },
-      { value: "going_to", label: "On my list" },
-      { value: "skip", label: "Not for me" },
-    ],
-  },
-  have_filed_claim: {
-    question: "Happen to you / filed a claim?",
-    chips: [
-      { value: "using", label: "Filed" },
-      { value: "going_to", label: "Need to file" },
-      { value: "skip", label: "Hasn't happened" },
-    ],
-  },
-  set_up: {
-    question: "Set up?",
-    chips: [
-      { value: "using", label: "Set up" },
-      { value: "going_to", label: "I'll do it" },
-      { value: "skip", label: "Skip it" },
-    ],
-  },
+// Single chip vocabulary across every question type. The row's
+// per-domain context lives in the QUESTION map below ("Spending here
+// regularly?", "Filed a trip-delay claim?", etc.); the chips
+// themselves stay invariant so users only learn one vocabulary.
+const CHIPS: { value: FindStatus; label: string }[] = [
+  { value: "using", label: "Got it" },
+  { value: "going_to", label: "On my list" },
+  { value: "skip", label: "Not for me" },
+];
+
+const QUESTION_PROMPT: Record<string, string> = {
+  spending_here: "Spending here regularly?",
+  claimed_this_year: "Claimed this year?",
+  have_done_this: "Done this redemption?",
+  have_filed_claim: "Happen to you / filed a claim?",
+  set_up: "Set up?",
 };
 
 export function MoneyFindRow({ find, onMark, onProbeClick }: Props) {
   const [expanded, setExpanded] = useState(false);
   const { play, status, valueUsd, valueRange, personalSentence, needsProbe, probeQuestion } = find;
-  const q = QUESTION_LABELS[play.question] ?? QUESTION_LABELS.set_up;
+  const questionText = QUESTION_PROMPT[play.question] ?? QUESTION_PROMPT.set_up;
 
   return (
     <article
@@ -98,9 +73,9 @@ export function MoneyFindRow({ find, onMark, onProbeClick }: Props) {
       )}
 
       <div className="money-find-question">
-        <span className="question-text">{q.question}</span>
+        <span className="question-text">{questionText}</span>
         <div className="money-find-tristate">
-          {q.chips.map((c) => (
+          {CHIPS.map((c) => (
             <button
               key={c.value}
               type="button"

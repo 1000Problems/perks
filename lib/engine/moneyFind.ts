@@ -315,21 +315,26 @@ export function scoreFinds(
 
 // Group helpers for the page.
 
+// Display order, top → bottom. For an already-held card, Earning is
+// the highest-frequency value driver, then Credits (annual deadlines),
+// then per-event redemptions, then passive protections, then niche.
 export const ALL_GROUPS: PlayGroupId[] = [
+  "cash",
+  "credits",
   "hotels",
   "airlines",
   "travel_services",
   "shopping",
-  "cash",
   "niche",
 ];
 
 export const GROUP_LABELS: Record<PlayGroupId, string> = {
+  cash: "Earning",
+  credits: "Credits to burn this year",
   hotels: "Hotels",
   airlines: "Airlines",
   travel_services: "Travel services",
   shopping: "Shopping",
-  cash: "Earning",
   niche: "Niche & advanced",
 };
 

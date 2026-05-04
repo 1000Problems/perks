@@ -41,8 +41,8 @@ export function CrossCardTile({ card: _card, catalogAnswered }: Props) {
         <div className="cross-card-empty">
           <p>
             Mark {GATE_THRESHOLD - catalogAnswered} more rows above as
-            <em> using</em>, <em>going to</em>, or <em>not for me</em> — then
-            we can suggest cards that pair with your real usage.
+            <em> Got it</em>, <em>On my list</em>, or <em>Not for me</em> —
+            then we can suggest cards that pair with your real usage.
           </p>
         </div>
       )}

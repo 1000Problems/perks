@@ -74,6 +74,7 @@ const PlayGroup = z.enum([
   "travel_services",   // car rentals, lounges, trip protections, FX
   "shopping",          // online portals, gift cards, brand multipliers
   "cash",              // earning multipliers, pooling, cash-out plays
+  "credits",           // annual statement credits with calendar reset
   "niche",             // tax-payment, Curve hack, sharing-window, retention
 ]);
 
@@ -224,11 +225,32 @@ export const CardSchema = z
 
     // Money-find page content. card_plays is the canonical list of
     // value-extraction opportunities for this card; cold_prompts are
-    // the 3 priority questions the page asks when a user has no
-    // signals yet. Both optional and additive — a card with empty
-    // arrays renders mostly-empty groups in the new hero page.
+    // the legacy 3-question priming flow (no longer rendered on the
+    // hero page; kept for back-compat with stored CardPlayState rows
+    // under play_id `cold:*`). Both optional and additive — a card
+    // with empty arrays renders mostly-empty groups in the new hero
+    // page.
     card_plays: z.array(PlaySchema).default([]),
     cold_prompts: z.array(ColdPromptSchema).default([]),
+
+    // Value thesis: the celebration hero block at the top of the
+    // per-card page. Three concrete dollar-anchored lines + an
+    // optional ecosystem line that only renders when the user holds
+    // one of the listed sibling cards. Optional — when undefined,
+    // the page renders without a hero.
+    value_thesis: z
+      .object({
+        headline: z.string(),
+        net_af_line: z.string(),
+        structural_edge: z.string(),
+        ecosystem_line: z
+          .object({
+            text: z.string(),
+            show_if_holds_any: z.array(z.string()),
+          })
+          .optional(),
+      })
+      .optional(),
   });
 
 export type Card = z.infer<typeof CardSchema>;

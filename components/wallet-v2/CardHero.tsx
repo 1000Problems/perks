@@ -176,10 +176,6 @@ export function CardHero({
     writePlayState(playId, dbState, { claimed_at });
   }
 
-  function handleAnswerColdPrompt(promptId: string, answer: string) {
-    writePlayState(`cold:${promptId}`, "got_it", { notes: answer });
-  }
-
   function handleToggleGroupSkip(group: PlayGroupId) {
     const playId = `group:${group}`;
     const currentlySkipped = isGroupSkipped(playState, group);
@@ -267,16 +263,6 @@ export function CardHero({
     [finds],
   );
 
-  const coldAnswers = useMemo(() => {
-    const map: Record<string, string> = {};
-    for (const p of playState) {
-      if (p.play_id.startsWith("cold:") && p.state === "got_it") {
-        map[p.play_id.slice("cold:".length)] = p.notes ?? "";
-      }
-    }
-    return map;
-  }, [playState]);
-
   // ── render ─────────────────────────────────────────────────────────
 
   if (!card) {
@@ -335,10 +321,10 @@ export function CardHero({
       {heroSummary && (
         <HeroAdaptive
           summary={heroSummary}
-          coldPrompts={card.cold_prompts ?? []}
-          coldAnswers={coldAnswers}
           topFinds={topFinds}
-          onAnswerColdPrompt={handleAnswerColdPrompt}
+          valueThesis={card.value_thesis}
+          groupedFinds={groupedFinds}
+          cardsHeld={profile.cards_held ?? []}
         />
       )}
 

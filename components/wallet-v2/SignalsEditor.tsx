@@ -18,6 +18,7 @@ import type {
   WalletCardHeld,
 } from "@/lib/profile/types";
 import { fmt } from "@/lib/utils/format";
+import { MONTH_LABELS, parseYM } from "@/lib/utils/openedAt";
 import {
   Cluster,
   Field,
@@ -27,8 +28,6 @@ import {
   YesNo,
 } from "./primitives";
 import { CategoryPicker } from "./CategoryPicker";
-
-const MONTH = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export type CardPatch = Partial<Omit<WalletCardHeld, "card_id">>;
 
@@ -141,62 +140,11 @@ export function SignalsEditor({
       <div className="cluster-stack">
         <Cluster
           num={numbers.opening}
-          title="Opening details"
-          sub="Drives 5/24, 48-month rules"
+          title="Card details"
+          sub="Sign-up bonus and nickname. Opened date lives at the top of the page."
           defaultOpen={defaultOpen}
         >
           <div className="row-grid">
-            <Field label="Opened" hint="Month and year you opened the card.">
-              <div className="ym">
-                <select
-                  className="select-input"
-                  value={openMonth ?? ""}
-                  onChange={(e) =>
-                    onPatch({
-                      opened_at: setYM(
-                        held.opened_at,
-                        openYear ?? today.getFullYear(),
-                        Number(e.target.value),
-                      ),
-                    })
-                  }
-                >
-                  <option value="" disabled>
-                    Month
-                  </option>
-                  {MONTH.map((m, i) => (
-                    <option key={m} value={i + 1}>
-                      {m}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  className="select-input"
-                  value={openYear ?? ""}
-                  onChange={(e) =>
-                    onPatch({
-                      opened_at: setYM(
-                        held.opened_at,
-                        Number(e.target.value),
-                        openMonth ?? today.getMonth() + 1,
-                      ),
-                    })
-                  }
-                >
-                  <option value="" disabled>
-                    Year
-                  </option>
-                  {Array.from({ length: 10 }).map((_, i) => {
-                    const y = today.getFullYear() - i;
-                    return (
-                      <option key={y} value={y}>
-                        {y}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-            </Field>
             <Field
               label="Got the sign-up bonus?"
               hint="If no, we'll factor remaining welcome value into the audit."
@@ -237,7 +185,7 @@ export function SignalsEditor({
                   <div>
                     <div className="label">Next fee</div>
                     <div className="date">
-                      {MONTH[afNext.getMonth()]} {afNext.getDate()},{" "}
+                      {MONTH_LABELS[afNext.getMonth()]} {afNext.getDate()},{" "}
                       {afNext.getFullYear()}
                     </div>
                   </div>
@@ -470,17 +418,6 @@ export function SignalsEditor({
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────
-
-function parseYM(iso: string | undefined): [number | null, number | null] {
-  if (!iso) return [null, null];
-  const [y, m] = iso.split("-").map(Number);
-  return [Number.isFinite(y) ? y : null, Number.isFinite(m) ? m : null];
-}
-
-function setYM(_prev: string | undefined, year: number, month: number): string {
-  const mm = String(month).padStart(2, "0");
-  return `${year}-${mm}-01`;
-}
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);

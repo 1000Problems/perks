@@ -1,16 +1,26 @@
 "use client";
 
-// CardHero — money-find page composition.
+// CardHero — money-find page composition (v2 redesign).
 //
 // Layout (top → bottom):
 //   1. Back link to /wallet/edit
 //   2. Live deadlines strip (when applicable)
-//   3. Identity strip — card art + name + AF + currency
-//   4. HeroAdaptive — cold/warm/hot based on data depth
-//   5. CatalogGroup × N — Hotels, Airlines, Travel-services, Shopping, Cash, Niche
-//   6. MechanicsZone — calendar-driven items only
-//   7. CrossCardTile — gated until ≥5 catalog answers
-//   8. ManageCardDisclosure — wraps SignalsEditor (opening date, AU count, etc.)
+//   3. Identity strip — card art + name + AF + currency, with the
+//      opened-at pill inline under the name.
+//   4. CurrencyPanel — what the points are, what they're worth, who
+//      they transfer to. Driven by card.currency_earned.
+//   5. CardIntroBlock — three orientation sentences from card.card_intro.
+//   6. ValueThesisHero — net-AF math + structural edge + ecosystem line
+//      (when feeders are held). Chip row was removed in v2.
+//   7. FeederPairBlock — always rendered when card.feeder_pair is
+//      authored. State is derived from cards_held: held → "Set up
+//      pooling" CTA; missing → "Add {Card}" deep-links to ?new=1.
+//   8. CatalogGroup × N — Hotels, Airlines, Travel-services, Shopping,
+//      Cash, Niche.
+//   9. MechanicsZone — calendar-driven items only.
+//  10. ManageCardDisclosure — wraps SignalsEditor (AU count, status,
+//      pooling, etc.). Opening date is no longer here; the pill on the
+//      identity strip is canonical.
 //
 // Two scenarios:
 //   - Edit existing held card: hydrate from initialHeld; persist patches via debounced server actions.
@@ -23,7 +33,6 @@ import type { Route } from "next";
 import { CardArt } from "@/components/perks/CardArt";
 import { variantForCard } from "@/lib/cardArt";
 import { fromSerialized, type SerializedDb } from "@/lib/data/serialized";
-import type { PlayGroupId } from "@/lib/data/loader";
 import type {
   CardPlayState,
   UserProfile,
@@ -42,13 +51,16 @@ import {
   scoreFinds,
   type FindStatus,
 } from "@/lib/engine/moneyFind";
+import type { PlayGroupId } from "@/lib/data/loader";
 import type { SignalState } from "@/lib/profile/server";
-import { deriveHeroState } from "@/lib/engine/heroState";
 import { DeadlinesStrip } from "./DeadlinesStrip";
-import { HeroAdaptive } from "./HeroAdaptive";
+import { OpenedAtPill } from "./OpenedAtPill";
+import { CurrencyPanel } from "./CurrencyPanel";
+import { CardIntroBlock } from "./CardIntroBlock";
+import { ValueThesisHero } from "./ValueThesisHero";
+import { FeederPairBlock } from "./FeederPairBlock";
 import { CatalogGroup } from "./CatalogGroup";
 import { MechanicsZone } from "./MechanicsZone";
-import { CrossCardTile } from "./CrossCardTile";
 import { ManageCardDisclosure } from "./ManageCardDisclosure";
 import { SignalsEditor, type CardPatch } from "./SignalsEditor";
 
@@ -195,8 +207,7 @@ export function CardHero({
 
   function handleMarkFind(playId: string, status: FindStatus) {
     const dbState = FIND_STATUS_TO_PLAY[status];
-    const claimed_at =
-      status === "using" ? todayIso : null;
+    const claimed_at = status === "using" ? todayIso : null;
     writePlayState(playId, dbState, { claimed_at });
   }
 
@@ -274,22 +285,12 @@ export function CardHero({
 
   // ── derived data for rendering ─────────────────────────────────────
 
-  const heroSummary = useMemo(
-    () => (card ? deriveHeroState(card, playState) : null),
-    [card, playState],
-  );
-
   const finds = useMemo(
     () => (card ? scoreFinds(card, profile, playState, db, todayIso) : []),
     [card, profile, playState, db, todayIso],
   );
 
   const groupedFinds = useMemo(() => findsByGroup(finds), [finds]);
-
-  const topFinds = useMemo(
-    () => [...finds].filter((f) => f.visible).sort((a, b) => b.score - a.score),
-    [finds],
-  );
 
   // ── render ─────────────────────────────────────────────────────────
 
@@ -310,6 +311,10 @@ export function CardHero({
   }
 
   const fee = card.annual_fee_usd ?? 0;
+  const program = card.currency_earned
+    ? db.programById.get(card.currency_earned)
+    : undefined;
+  const ecosystemLineText = card.value_thesis?.ecosystem_line?.text;
 
   return (
     <main className="card-hero-page">
@@ -338,6 +343,10 @@ export function CardHero({
               ? ` · earns ${db.programById.get(card.currency_earned)?.name ?? card.currency_earned}`
               : ""}
           </div>
+          <OpenedAtPill
+            openedAt={held.opened_at}
+            onChange={(next) => handlePatch({ opened_at: next })}
+          />
           {isNew && (
             <div className="hero-new-badge">
               Adding to your wallet — fill in below and save.
@@ -346,13 +355,26 @@ export function CardHero({
         </div>
       </header>
 
-      {heroSummary && (
-        <HeroAdaptive
-          summary={heroSummary}
-          topFinds={topFinds}
-          valueThesis={card.value_thesis}
-          groupedFinds={groupedFinds}
+      <CurrencyPanel
+        card={card}
+        program={program}
+        ecosystemLine={ecosystemLineText}
+      />
+
+      <CardIntroBlock card={card} />
+
+      {card.value_thesis && (
+        <ValueThesisHero
+          thesis={card.value_thesis}
           cardsHeld={profile.cards_held ?? []}
+        />
+      )}
+
+      {card.feeder_pair && (
+        <FeederPairBlock
+          pair={card.feeder_pair}
+          cardsHeld={profile.cards_held ?? []}
+          db={db}
         />
       )}
 
@@ -373,11 +395,6 @@ export function CardHero({
       })}
 
       <MechanicsZone card={card} held={held} today={today} />
-
-      <CrossCardTile
-        card={card}
-        catalogAnswered={heroSummary?.catalogAnswered ?? 0}
-      />
 
       <ManageCardDisclosure>
         <SignalsEditor

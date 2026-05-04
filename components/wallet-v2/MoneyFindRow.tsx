@@ -41,6 +41,7 @@ export function MoneyFindRow({ find, onMark, onProbeClick }: Props) {
   return (
     <article
       className="money-find-row"
+      data-play-id={play.id}
       data-status={status}
       data-skipped={find.groupSkipped ? "true" : "false"}
     >

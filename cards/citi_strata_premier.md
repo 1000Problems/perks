@@ -73,6 +73,20 @@
   "synergies_with": ["citi_double_cash", "citi_custom_cash"],
   "competing_with_in_wallet": ["chase_sapphire_preferred", "amex_gold", "capital_one_venture"],
 
+  "card_intro": {
+    "positioning": "Citi's $95 mid-tier travel card with broad 3x earn across the categories most people actually spend on — groceries, gas, dining, air, and hotel.",
+    "differentiator": "One of two transferable currencies in America that transfer 1:1 to American AAdvantage.",
+    "ecosystem_role": "The card that unlocks transfer-partner access for Citi's no-AF cards. Pool Double Cash and Custom Cash points here to turn cashback into transferable miles."
+  },
+
+  "feeder_pair": {
+    "feeder_card_ids": ["citi_double_cash", "citi_custom_cash"],
+    "pair_role": "currency_pooler",
+    "value_when_held": "Pooling Double Cash and Custom Cash points into your Strata Premier converts 2% / 5% cashback into 1:1 transferable points — about a 30% value boost on every dollar.",
+    "value_when_missing": "Add Citi Double Cash or Custom Cash next. Their cashback pools into this card and converts to transferable miles — about a 30% boost on every dollar.",
+    "recommendation_priority": "first"
+  },
+
   "value_thesis": {
     "headline": "Why this card earns its keep",
     "net_af_line": "$95 annual fee minus the $100 hotel credit = effectively pays for itself.",

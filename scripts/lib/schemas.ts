@@ -260,6 +260,38 @@ export const CardSchema = z
           .optional(),
       })
       .optional(),
+
+    // Card intro: three short, declarative sentences that orient the
+    // reader before the value-thesis math. Optional during rollout —
+    // unauthored cards skip the block.
+    card_intro: z
+      .object({
+        positioning: z.string(),
+        differentiator: z.string(),
+        ecosystem_role: z.string(),
+      })
+      .optional(),
+
+    // Feeder pair: structured pairing data driving the FeederPairBlock
+    // on the per-card page. Always renders when authored, with two
+    // copy variants depending on whether the user already holds the
+    // feeders. recommendation_priority is read by the recommendations
+    // engine in a follow-up TASK; this card-level page only renders.
+    feeder_pair: z
+      .object({
+        feeder_card_ids: z.array(z.string()).min(1),
+        pair_role: z.enum([
+          "currency_pooler",
+          "category_specialist",
+          "annual_credit_stacker",
+        ]),
+        value_when_held: z.string(),
+        value_when_missing: z.string(),
+        recommendation_priority: z
+          .enum(["first", "high", "normal"])
+          .default("normal"),
+      })
+      .optional(),
   });
 
 export type Card = z.infer<typeof CardSchema>;

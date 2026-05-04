@@ -1876,3 +1876,185 @@
 }
 .manage-card-disclosure[open] .caret { transform: rotate(90deg); }
 .manage-card-body { padding-top: 14px; }
+
+/* ── card-page redesign v2 ───────────────────────────────────────────── */
+
+/* Opened-at pill — sits under the card name in the identity strip. */
+.opened-at-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 5px 11px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1.2;
+  transition: background 120ms, border-color 120ms;
+}
+.opened-at-pill:hover { background: var(--paper-hi, var(--paper)); border-color: var(--ink-3); }
+.opened-at-pill[data-state="empty"] {
+  border-style: dashed;
+  color: var(--accent-ink, var(--ink-1));
+  font-weight: 500;
+}
+.opened-at-pill[data-state="set"] {
+  border-color: var(--rule);
+}
+.opened-at-pill[data-state="editing"] {
+  cursor: default;
+  padding: 4px 6px;
+  gap: 6px;
+}
+.opened-at-label {
+  color: var(--ink-3);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.opened-at-value {
+  color: var(--ink-1);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.opened-at-edit { color: var(--ink-3); font-size: 11px; margin-left: 2px; }
+.opened-at-select {
+  appearance: none;
+  background: var(--bg-1, transparent);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 12px;
+  color: var(--ink-1);
+  font-family: inherit;
+}
+.opened-at-done {
+  background: var(--ink-1);
+  color: var(--bg-1, #fff);
+  border: 0;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Currency panel — what the points are. Sits below identity strip. */
+.currency-panel {
+  margin: 28px 0 8px;
+  padding: 22px 24px;
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  background: var(--paper);
+}
+.currency-panel-head { margin-bottom: 12px; }
+.currency-panel-head .eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 4px;
+}
+.currency-panel-name {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 500;
+  font-family: var(--font-display), serif;
+  letter-spacing: -0.012em;
+}
+.currency-panel-line {
+  margin: 6px 0;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ink-1);
+  max-width: 720px;
+}
+.currency-panel-unlock {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--rule);
+  color: var(--ink-2);
+}
+.currency-panel-partners {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.currency-partner-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: var(--bg-1, transparent);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-size: 11.5px;
+  color: var(--ink-2);
+}
+.currency-partner-tag[data-unique="true"] {
+  border-color: var(--pos-ink, var(--ink-1));
+  color: var(--pos-ink, var(--ink-1));
+  font-weight: 500;
+}
+.currency-partner-star {
+  color: var(--pos-ink, var(--ink-1));
+  font-size: 10px;
+}
+
+/* Card intro — three orientation paragraphs. */
+.card-intro-block {
+  margin: 22px 0;
+  padding: 0 4px;
+  max-width: 720px;
+}
+.card-intro-line {
+  margin: 0 0 10px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink-1);
+}
+.card-intro-line:last-child { margin-bottom: 0; color: var(--ink-2); }
+
+/* Feeder pair — held vs missing states. */
+.feeder-pair-block {
+  margin: 18px 0 6px;
+  padding: 18px 22px;
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  background: var(--paper);
+}
+.feeder-pair-block[data-state="missing"] {
+  border-color: var(--warn-line, var(--rule));
+  background: var(--warn-bg, var(--paper));
+}
+.feeder-pair-head { margin-bottom: 8px; }
+.feeder-pair-head .eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+.feeder-pair-line {
+  margin: 0 0 14px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink-1);
+  max-width: 680px;
+}
+.feeder-pair-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.feeder-pair-actions .btn {
+  font-size: 13.5px;
+  padding: 8px 16px;
+}

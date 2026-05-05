@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
-import { Inter_Tight, Fraunces, JetBrains_Mono } from "next/font/google";
+import {
+  Inter_Tight,
+  Fraunces,
+  JetBrains_Mono,
+  IBM_Plex_Sans,
+  IBM_Plex_Serif,
+  IBM_Plex_Mono,
+} from "next/font/google";
 import "./globals.css";
 
 const interTight = Inter_Tight({
@@ -23,6 +30,30 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+// Editorial type stack — used by the card-hero redesign.
+// Loaded globally so the variables are available, but only consumed
+// under .card-hero-page inside app/card-hero-redesign.css.
+const ibmPlexSans = IBM_Plex_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-plex-sans",
+  display: "swap",
+});
+
+const ibmPlexSerif = IBM_Plex_Serif({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-plex-serif",
+  display: "swap",
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-plex-mono",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "perks · the best next card to add",
   description:
@@ -37,7 +68,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${interTight.variable} ${fraunces.variable} ${jetbrainsMono.variable}`}
+      className={`${interTight.variable} ${fraunces.variable} ${jetbrainsMono.variable} ${ibmPlexSans.variable} ${ibmPlexSerif.variable} ${ibmPlexMono.variable}`}
     >
       <body>{children}</body>
     </html>

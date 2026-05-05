@@ -25,6 +25,10 @@ import {
 import { CardHero } from "@/components/wallet-v2/CardHero";
 import type { CardPlayState } from "@/lib/profile/types";
 import "@/app/wallet-edit-v2.css";
+// Editorial card-hero redesign — must import AFTER wallet-edit-v2.css so
+// scoped overrides win on equal specificity. All rules in this stylesheet
+// are nested under .card-hero-page so they don't leak into other routes.
+import "@/app/card-hero-redesign.css";
 
 export const dynamic = "force-dynamic";
 

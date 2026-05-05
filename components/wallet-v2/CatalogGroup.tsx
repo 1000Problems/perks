@@ -29,6 +29,11 @@ interface Props {
   playSourceMap?: Map<string, ResolvedSource>;
   /** Optional per-card map of perk_name → user's open flag. */
   perkFlags?: Map<string, PerkFlag>;
+  /** Optional inline source link rendered in the group head. */
+  /** Editorial layout — derived in CardHero from the first row's */
+  /** resolved source. When omitted, the head omits the link. */
+  groupSourceUrl?: string;
+  groupSourceLabel?: string;
 }
 
 export function CatalogGroup({
@@ -41,6 +46,8 @@ export function CatalogGroup({
   cardId,
   playSourceMap,
   perkFlags,
+  groupSourceUrl,
+  groupSourceLabel,
 }: Props) {
   const [showHidden, setShowHidden] = useState(false);
   const visibleFinds = finds.filter((f) => f.visible);
@@ -66,7 +73,7 @@ export function CatalogGroup({
       data-skipped={skipped ? "true" : "false"}
     >
       <header className="catalog-group-head">
-        <div>
+        <div className="catalog-group-head-l">
           <h2 className="catalog-group-label">{GROUP_LABELS[group]}</h2>
           {valueSum > 0 && !skipped && (
             <div className="catalog-group-summary">
@@ -77,6 +84,17 @@ export function CatalogGroup({
             <div className="catalog-group-summary muted">
               Skipped — {otherFinds.length} hidden
             </div>
+          )}
+          {groupSourceUrl && (
+            <a
+              className="catalog-group-source"
+              href={groupSourceUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {groupSourceLabel ?? "source"}
+              <span aria-hidden="true" style={{ marginLeft: 3 }}>↗</span>
+            </a>
           )}
         </div>
         <button

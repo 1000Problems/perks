@@ -23,6 +23,15 @@ interface Props {
   size?: Size;
   className?: string;
   style?: React.CSSProperties;
+  /** Optional last4 used by the editorial hero variant. Defaults to a
+   * stylized placeholder when omitted. Ignored when heroStyle is unset. */
+  last4?: string;
+  /** Render the editorial card-hero face (gradient + chip + issuer
+   * wordmark in Plex Serif italic + product name + last4 + network).
+   * Used only on /wallet/cards/[id]. When unset (default), the
+   * component renders exactly as before — wordmark or detail label per
+   * size. Existing call sites are unaffected. */
+  heroStyle?: "editorial";
 }
 
 // Short text mark mirroring lib/images/network-logos.ts. Kept here so the
@@ -46,11 +55,35 @@ export function CardArt({
   size = "md",
   className = "",
   style = {},
+  last4,
+  heroStyle,
 }: Props) {
   const wordmark = issuer?.toUpperCase();
   const net = networkMark(network);
   // Don't print AMEX twice on Amex's own cards.
   const showNet = !!net && net !== wordmark;
+
+  // Editorial hero face — used only on /wallet/cards/[id]. Renders the
+  // markup the card-hero-redesign.css `.cc` rules style. Width comes
+  // from CSS, not the size map, so the editorial card always renders
+  // at its design size (360 × 226 desktop, full-width mobile).
+  if (heroStyle === "editorial") {
+    return (
+      <div
+        className={`card-art card-art-editorial ${variant} ${className}`}
+        role="img"
+        aria-label={name ? `${name} card art` : "Card art"}
+        style={style}
+      >
+        {issuer && <div className="cc-issuer">{issuer.toLowerCase()}</div>}
+        <div className="cc-chip" />
+        {name && <div className="cc-name">{name}</div>}
+        <div className="cc-num">{last4 ?? "•••• ••••"}</div>
+        {network && <div className="cc-network">{network}</div>}
+      </div>
+    );
+  }
+
   // Two layouts. Compact (sm/md) shows just the issuer wordmark + network mark
   // — small thumbnails can't fit a wrapped product name. Detail (lg/xl)
   // restores the original product-name + issuer layout, which reads cleanly at

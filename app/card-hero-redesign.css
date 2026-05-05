@@ -1,0 +1,1389 @@
+/* card-hero-redesign.css
+   Editorial-financial restyle of /wallet/cards/[id]. Every rule in this
+   file is nested under .card-hero-page so the rest of the wallet stays
+   on its current visual language. Imported AFTER wallet-edit-v2.css in
+   app/(app)/wallet/cards/[id]/page.tsx, so on equal specificity these
+   rules win.
+
+   Design source: docs/design/card-hero-handoff/. Tokens lifted from
+   docs/design/card-hero-handoff/project/strata.css. Type stack: IBM
+   Plex Sans (UI), IBM Plex Serif (headlines), IBM Plex Mono (numerics)
+   — variables live on <html> via app/layout.tsx and are consumed only
+   inside this scope.
+*/
+
+.card-hero-page[data-hero-style="editorial"] {
+  /* warm neutrals */
+  --paper:   #f6f3ec;
+  --paper-2: #efebe1;
+  --card:    #fbfaf6;
+  --rule:    rgba(28, 30, 35, 0.08);
+  --rule-2:  rgba(28, 30, 35, 0.16);
+
+  /* ink scale */
+  --ink:    #1c1e23;
+  --ink-2:  #4d525a;
+  --ink-3:  #7c828b;
+  --ink-4:  #a0a4ac;
+
+  /* Citi-leaning accent — deep slate-blue, not the bright marketing blue */
+  --accent:      oklch(0.42 0.10 245);
+  --accent-soft: oklch(0.42 0.10 245 / 0.10);
+  --accent-line: oklch(0.42 0.10 245 / 0.30);
+
+  --pos:  oklch(0.46 0.09 152);
+  --warn: oklch(0.55 0.12 65);
+  --neg:  oklch(0.50 0.13 25);
+
+  --radius:    10px;
+  --radius-lg: 14px;
+  --radius-sm: 6px;
+
+  --shadow-1: 0 1px 0 rgba(28, 30, 35, 0.04);
+  --shadow-2: 0 1px 2px rgba(28, 30, 35, 0.05),
+              0 1px 0 rgba(28, 30, 35, 0.04);
+
+  --pad-section: 28px;
+  --gap-row: 14px;
+
+  /* page chrome */
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-plex-sans), system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 36px 40px 120px;
+}
+
+@media (max-width: 900px) {
+  .card-hero-page[data-hero-style="editorial"] {
+    padding: 24px 20px 80px;
+  }
+}
+
+.card-hero-page[data-hero-style="editorial"] a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.card-hero-page[data-hero-style="editorial"] a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* tabular numerics utility, shared across the page */
+.card-hero-page[data-hero-style="editorial"] .mono,
+.card-hero-page[data-hero-style="editorial"] .num {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── back link ─────────────────────────────────────────────────────── */
+.card-hero-page[data-hero-style="editorial"] .back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+  margin-bottom: 22px;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+}
+.card-hero-page[data-hero-style="editorial"] .back-link:hover {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+/* ── eyebrow (small caps utility) ──────────────────────────────────── */
+.card-hero-page[data-hero-style="editorial"] .eyebrow {
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+  font-family: var(--font-plex-sans), system-ui, sans-serif;
+}
+
+/* ── deadlines strip ───────────────────────────────────────────────── */
+.card-hero-page[data-hero-style="editorial"] .deadlines {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 14px;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  box-shadow: var(--shadow-1);
+}
+
+/* ── HERO IDENTITY ─────────────────────────────────────────────────── */
+.card-hero-page[data-hero-style="editorial"] .card-hero-identity {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 40px;
+  align-items: start;
+  margin-bottom: 56px;
+  padding-bottom: 36px;
+  border-bottom: 1px solid var(--rule);
+  position: static;
+}
+
+@media (max-width: 900px) {
+  .card-hero-page[data-hero-style="editorial"] .card-hero-identity {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}
+
+/* ── editorial card art (CardArt heroStyle="editorial") ────────────── */
+.card-hero-page[data-hero-style="editorial"] .card-art-editorial {
+  position: static;
+  width: 360px;
+  height: 226px;
+  aspect-ratio: auto;
+  border-radius: 14px;
+  padding: 22px 24px;
+  color: #f3f0e7;
+  overflow: hidden;
+  font-family: var(--font-plex-sans), system-ui, sans-serif;
+  background:
+    radial-gradient(circle at 100% 0%,
+      oklch(0.50 0.08 245),
+      oklch(0.28 0.06 250) 60%,
+      oklch(0.18 0.04 250));
+  box-shadow:
+    0 12px 28px -16px rgba(28, 30, 35, 0.45),
+    0 1px 0 rgba(255, 255, 255, 0.06) inset;
+  /* The base .card-art has its own ::before and a chip child — suppress
+     them and let our cc-* children render the editorial look. */
+}
+.card-hero-page[data-hero-style="editorial"] .card-art-editorial::before {
+  content: none;
+}
+.card-hero-page[data-hero-style="editorial"] .card-art-editorial::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 220px 120px at 78% 18%,
+    rgba(255, 255, 255, 0.10),
+    transparent 60%
+  );
+  pointer-events: none;
+}
+.card-hero-page[data-hero-style="editorial"] .card-art-editorial > .chip {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .card-hero-page[data-hero-style="editorial"] .card-art-editorial {
+    width: 100%;
+    max-width: 360px;
+    height: auto;
+    aspect-ratio: 360 / 226;
+  }
+}
+
+.card-hero-page[data-hero-style="editorial"] .cc-issuer {
+  font-family: var(--font-plex-serif), Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  opacity: 0.9;
+}
+.card-hero-page[data-hero-style="editorial"] .cc-name {
+  position: absolute;
+  left: 24px;
+  bottom: 56px;
+  font-family: var(--font-plex-serif), Georgia, serif;
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  line-height: 1.15;
+  max-width: 230px;
+}
+.card-hero-page[data-hero-style="editorial"] .cc-network {
+  position: absolute;
+  right: 22px;
+  bottom: 20px;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.card-hero-page[data-hero-style="editorial"] .cc-num {
+  position: absolute;
+  left: 24px;
+  bottom: 22px;
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  opacity: 0.55;
+}
+.card-hero-page[data-hero-style="editorial"] .cc-chip {
+  position: absolute;
+  left: 24px;
+  top: 84px;
+  width: 36px;
+  height: 28px;
+  border-radius: 5px;
+  background: linear-gradient(135deg, #d6c79a, #a78f50);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.2),
+    0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.card-hero-page[data-hero-style="editorial"] .cc-chip::before,
+.card-hero-page[data-hero-style="editorial"] .cc-chip::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-top: 1px solid rgba(0, 0, 0, 0.25);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+}
+.card-hero-page[data-hero-style="editorial"] .cc-chip::after {
+  inset: 9px 4px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-left: none;
+  border-right: none;
+}
+
+/* ── identity body — eyebrow / name / meta / positioning / opened ── */
+.card-hero-page[data-hero-style="editorial"] .card-hero-identity-body {
+  padding-top: 4px;
+  min-width: 0;
+}
+.card-hero-page[data-hero-style="editorial"] .card-hero-identity-body .eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+.card-hero-page[data-hero-style="editorial"] .card-hero-name {
+  font-family: var(--font-plex-serif), Georgia, serif;
+  font-size: 38px;
+  line-height: 1.08;
+  letter-spacing: -0.018em;
+  margin: 6px 0 4px;
+  font-weight: 500;
+  text-wrap: balance;
+  color: var(--ink);
+}
+.card-hero-page[data-hero-style="editorial"] .card-hero-meta {
+  font-size: 13px;
+  color: var(--ink-2);
+  margin-bottom: 16px;
+  margin-top: 6px;
+}
+.card-hero-page[data-hero-style="editorial"] .card-hero-positioning {
+  font-size: 15.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  max-width: 540px;
+  margin: 0 0 22px;
+  text-wrap: pretty;
+}
+
+/* OpenedAtPill — keep its existing widget but recalibrate to editorial tone */
+.card-hero-page[data-hero-style="editorial"] .opened-at-pill {
+  border-radius: 999px;
+  border-color: var(--rule);
+  background: var(--card);
+  font-family: var(--font-plex-sans), system-ui, sans-serif;
+}
+.card-hero-page[data-hero-style="editorial"] .opened-at-pill:hover {
+  border-color: var(--ink-3);
+}
+
+/* ── projected rewards block (renders inside CardArrivalHero) ──────── */
+/* CardArrivalHero is currently slim; we let it use the same panel
+   language as the rest. If it expands later, these rules give it a
+   home without further markup changes. */
+.card-hero-page[data-hero-style="editorial"] .card-hero-fm,
+.card-hero-page[data-hero-style="editorial"] .card-hero-arrival {
+  margin-bottom: 26px;
+}
+
+/* ── shared section head pattern ───────────────────────────────────── */
+.card-hero-page[data-hero-style="editorial"] .currency-panel,
+.card-hero-page[data-hero-style="editorial"] .earning-section,
+.card-hero-page[data-hero-style="editorial"] .recurring-value-section,
+.card-hero-page[data-hero-style="editorial"] .value-thesis-hero,
+.card-hero-page[data-hero-style="editorial"] .mechanics-zone,
+.card-hero-page[data-hero-style="editorial"] .catalog-group {
+  margin-bottom: 48px;
+}
+
+.card-hero-page[data-hero-style="editorial"] .currency-panel-head,
+.card-hero-page[data-hero-style="editorial"] .earning-section-head,
+.card-hero-page[data-hero-style="editorial"] .recurring-value-section-head,
+.card-hero-page[data-hero-style="editorial"] .hero-section-head {
+  margin-bottom: 18px;
+  max-width: 720px;
+}
+
+.card-hero-page[data-hero-style="editorial"] .currency-panel-name,
+.card-hero-page[data-hero-style="editorial"] .earning-section-title,
+.card-hero-page[data-hero-style="editorial"] .recurring-value-section-title,
+.card-hero-page[data-hero-style="editorial"] .hero-section-title {
+  font-family: var(--font-plex-serif), Georgia, serif;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 4px 0 6px;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.card-hero-page[data-hero-style="editorial"] .currency-panel-sub,
+.card-hero-page[data-hero-style="editorial"] .earning-section-sub,
+.card-hero-page[data-hero-style="editorial"] .recurring-value-section-sub,
+.card-hero-page[data-hero-style="editorial"] .hero-section-sub {
+  font-size: 14px;
+  color: var(--ink-2);
+  line-height: 1.55;
+  margin: 0;
+  max-width: 620px;
+}
+
+/* ── CURRENCY PANEL — slim editorial layout ────────────────────────── */
+.card-hero-page[data-hero-style="editorial"] .currency-panel {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: 22px 24px;
+  box-shadow: var(--shadow-1);
+}
+
+.card-hero-page[data-hero-style="editorial"] .currency-panel-values {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(148px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 600px) {
+  .card-hero-page[data-hero-style="editorial"] .currency-panel-values {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card-hero-page[data-hero-style="editorial"] .currency-cpp-row {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 14px 12px 10px;
+  background: var(--paper);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 80ms ease;
+}
+.card-hero-page[data-hero-style="editorial"] .currency-cpp-row:hover {
+  border-color: var(--rule-2);
+}
+.card-hero-page[data-hero-style="editorial"]
+  .currency-cpp-row:has(.currency-cpp-badge) {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  padding-top: 18px;
+}
+
+.card-hero-page[data-hero-style="editorial"] .currency-cpp-label {
+  font-size: 10.5px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .currency-cpp-row:has(.currency-cpp-badge)
+  .currency-cpp-label {
+  color: var(--accent);
+}
+
+.card-hero-page[data-hero-style="editorial"] .currency-cpp-input-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.card-hero-page[data-hero-style="editorial"] .currency-cpp-input {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 22px;
+  font-weight: 500;
+  width: 84px;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  padding: 0;
+  outline: none;
+  font-variant-numeric: tabular-nums;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .currency-cpp-input::-webkit-outer-spin-button,
+.card-hero-page[data-hero-style="editorial"]
+  .currency-cpp-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.card-hero-page[data-hero-style="editorial"] .currency-cpp-suffix {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.card-hero-page[data-hero-style="editorial"] .currency-cpp-badge {
+  position: absolute;
+  top: -9px;
+  left: 10px;
+  background: var(--accent);
+  color: #fbfaf6;
+  font-size: 9px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.card-hero-page[data-hero-style="editorial"] .currency-cpp-default-hint,
+.card-hero-page[data-hero-style="editorial"] .currency-cpp-error {
+  font-size: 11px;
+  color: var(--ink-3);
+  margin-top: 4px;
+}
+.card-hero-page[data-hero-style="editorial"] .currency-cpp-error {
+  color: var(--neg);
+}
+
+.card-hero-page[data-hero-style="editorial"] .currency-cpp-reset {
+  font-size: 12px;
+  color: var(--ink-3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+}
+.card-hero-page[data-hero-style="editorial"] .currency-cpp-reset:hover {
+  color: var(--accent);
+}
+
+/* Transfer-partner list — kept, visually de-emphasized */
+.card-hero-page[data-hero-style="editorial"] .currency-panel-line {
+  font-size: 13px;
+  color: var(--ink-3);
+  margin: 16px 0 8px;
+}
+.card-hero-page[data-hero-style="editorial"] .currency-panel-partners {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.card-hero-page[data-hero-style="editorial"] .currency-partner-tag {
+  font-size: 12px;
+  color: var(--ink-2);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-weight: 400;
+}
+.card-hero-page[data-hero-style="editorial"] .currency-partner-star {
+  color: var(--accent);
+}
+
+/* ── EARNING SECTION ───────────────────────────────────────────────── */
+.card-hero-page[data-hero-style="editorial"] .earning-section-body {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--rule);
+}
+.card-hero-page[data-hero-style="editorial"] .earning-rate-row {
+  border-bottom: 1px solid var(--rule);
+  padding: 11px 4px;
+  background: transparent;
+}
+.card-hero-page[data-hero-style="editorial"] .earning-rate-head {
+  display: grid;
+  grid-template-columns: 56px 1fr auto auto;
+  align-items: baseline;
+  gap: 16px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+.card-hero-page[data-hero-style="editorial"] .earning-rate-row .num,
+.card-hero-page[data-hero-style="editorial"] .earning-rate-mult,
+.card-hero-page[data-hero-style="editorial"] .earning-rate-row [data-rate] {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--accent);
+}
+.card-hero-page[data-hero-style="editorial"] .earning-rate-headline {
+  font-size: 14px;
+  color: var(--ink);
+}
+.card-hero-page[data-hero-style="editorial"] .earning-rate-chip {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.card-hero-page[data-hero-style="editorial"] .earning-rate-caret {
+  color: var(--ink-4);
+}
+
+/* ── RECURRING VALUE SECTION ───────────────────────────────────────── */
+.card-hero-page[data-hero-style="editorial"] .recurring-value-section-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.card-hero-page[data-hero-style="editorial"] .recurring-credit-card {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  box-shadow: var(--shadow-1);
+}
+.card-hero-page[data-hero-style="editorial"] .recurring-credit-headline {
+  font-family: var(--font-plex-serif), Georgia, serif;
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0 0 4px;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+.card-hero-page[data-hero-style="editorial"] .recurring-credit-cadence {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  margin: 0 0 14px;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .recurring-credit-frequency-prompt {
+  font-size: 11.5px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .recurring-credit-frequency-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .recurring-credit-frequency-chip {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 13px;
+  padding: 4px 12px;
+  border: 1px solid var(--rule-2);
+  background: var(--paper);
+  color: var(--ink-2);
+  border-radius: 999px;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .recurring-credit-frequency-chip[data-active="true"],
+.card-hero-page[data-hero-style="editorial"]
+  .recurring-credit-frequency-chip[aria-pressed="true"] {
+  background: var(--accent);
+  color: #fbfaf6;
+  border-color: var(--accent);
+}
+.card-hero-page[data-hero-style="editorial"]
+  .recurring-credit-frequency-chip:hover:not([data-active="true"]):not(
+    [aria-pressed="true"]
+  ) {
+  border-color: var(--ink-3);
+}
+
+.card-hero-page[data-hero-style="editorial"] .recurring-credit-projected {
+  margin: 14px 0;
+  padding: 10px 14px;
+  background: var(--paper);
+  border-left: 2px solid var(--accent-line);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .recurring-credit-projected-label {
+  font-size: 11px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-right: 8px;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .recurring-credit-projected-value {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 16px;
+  color: var(--ink);
+  font-weight: 500;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .recurring-credit-projected-prompt {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  font-style: italic;
+}
+
+.card-hero-page[data-hero-style="editorial"] .recurring-credit-companions {
+  margin-top: 8px;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .recurring-credit-companions-eyebrow {
+  font-size: 11.5px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .recurring-credit-companions-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 6px 18px;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .recurring-credit-companions-list li {
+  font-size: 13px;
+  color: var(--ink-2);
+  position: relative;
+  padding-left: 14px;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .recurring-credit-companions-list li::before {
+  content: "+";
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+}
+
+/* ── VALUE THESIS HERO + MECHANICS ZONE — calmer surface ───────────── */
+.card-hero-page[data-hero-style="editorial"] .value-thesis-hero,
+.card-hero-page[data-hero-style="editorial"] .mechanics-zone {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: 22px 24px;
+  box-shadow: var(--shadow-1);
+}
+.card-hero-page[data-hero-style="editorial"] .mechanic-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--rule);
+  align-items: center;
+}
+.card-hero-page[data-hero-style="editorial"] .mechanic-row:last-child {
+  border-bottom: none;
+}
+.card-hero-page[data-hero-style="editorial"] .mechanic-label {
+  font-size: 14px;
+  color: var(--ink);
+  font-weight: 500;
+}
+.card-hero-page[data-hero-style="editorial"] .mechanic-detail {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  margin-top: 2px;
+}
+.card-hero-page[data-hero-style="editorial"] .mechanic-countdown {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+/* ── CATALOG GROUP ─────────────────────────────────────────────────── */
+.card-hero-page[data-hero-style="editorial"] .catalog-group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule);
+}
+.card-hero-page[data-hero-style="editorial"] .catalog-group-head-l {
+  display: flex;
+  align-items: baseline;
+  gap: 8px 14px;
+  flex-wrap: wrap;
+  row-gap: 4px;
+}
+.card-hero-page[data-hero-style="editorial"] .catalog-group-label {
+  font-family: var(--font-plex-serif), Georgia, serif;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 0;
+  white-space: nowrap;
+  color: var(--ink);
+}
+.card-hero-page[data-hero-style="editorial"] .catalog-group-summary {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+.card-hero-page[data-hero-style="editorial"] .catalog-group-summary.muted {
+  color: var(--ink-4);
+}
+.card-hero-page[data-hero-style="editorial"] .catalog-group-source {
+  font-size: 11.5px;
+  color: var(--ink-3);
+  white-space: nowrap;
+  text-decoration: none;
+}
+.card-hero-page[data-hero-style="editorial"] .catalog-group-source:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+.card-hero-page[data-hero-style="editorial"] .catalog-group-skip {
+  font-size: 12px;
+  background: none;
+  border: none;
+  color: var(--ink-3);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+}
+.card-hero-page[data-hero-style="editorial"] .catalog-group-skip:hover {
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* skipped state — soft strike-through on the perk headline */
+.card-hero-page[data-hero-style="editorial"]
+  .money-find-row[data-status="skip"]
+  .money-find-headline {
+  color: var(--ink-3);
+  text-decoration: line-through;
+  text-decoration-color: var(--ink-4);
+}
+.card-hero-page[data-hero-style="editorial"]
+  .money-find-row[data-status="skip"]
+  .money-find-personal,
+.card-hero-page[data-hero-style="editorial"]
+  .money-find-row[data-status="skip"]
+  .money-find-value {
+  color: var(--ink-3);
+}
+
+/* ── PERK ROW ──────────────────────────────────────────────────────── */
+.card-hero-page[data-hero-style="editorial"] .money-find-row {
+  padding: var(--gap-row) 0;
+  border-bottom: 1px solid var(--rule);
+}
+.card-hero-page[data-hero-style="editorial"] .money-find-row:last-child {
+  border-bottom: none;
+}
+.card-hero-page[data-hero-style="editorial"] .money-find-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  align-items: start;
+}
+.card-hero-page[data-hero-style="editorial"] .money-find-headline {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  margin: 0 0 4px;
+  line-height: 1.4;
+}
+.card-hero-page[data-hero-style="editorial"] .money-find-personal {
+  font-size: 13.5px;
+  color: var(--ink-2);
+  margin: 0;
+  line-height: 1.5;
+  max-width: 580px;
+  text-wrap: pretty;
+}
+.card-hero-page[data-hero-style="editorial"] .money-find-tail {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  min-width: 220px;
+}
+.card-hero-page[data-hero-style="editorial"] .money-find-value {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+  color: var(--ink);
+  font-weight: 500;
+  text-align: right;
+  line-height: 1.2;
+}
+.card-hero-page[data-hero-style="editorial"] .money-find-value small {
+  display: block;
+  font-family: var(--font-plex-sans), system-ui, sans-serif;
+  font-size: 11px;
+  color: var(--ink-3);
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* ── tristate (segmented pill) — Using / On list / Skip ────────────── */
+.card-hero-page[data-hero-style="editorial"] .money-find-question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+}
+.card-hero-page[data-hero-style="editorial"] .question-text {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+.card-hero-page[data-hero-style="editorial"] .money-find-tristate {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0;
+  border: 1px solid var(--rule-2);
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 12.5px;
+  overflow: hidden;
+  height: 28px;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .money-find-tristate[data-active="using"] {
+  border-color: oklch(0.46 0.09 152 / 0.4);
+  background: oklch(0.46 0.09 152 / 0.07);
+}
+.card-hero-page[data-hero-style="editorial"]
+  .money-find-tristate[data-active="going_to"] {
+  border-color: oklch(0.55 0.12 65 / 0.4);
+  background: oklch(0.55 0.12 65 / 0.08);
+}
+.card-hero-page[data-hero-style="editorial"]
+  .money-find-tristate[data-active="skip"] {
+  border-color: var(--rule);
+  background: transparent;
+}
+
+.card-hero-page[data-hero-style="editorial"]
+  .money-find-tristate
+  .status-chip {
+  font-family: var(--font-plex-sans), system-ui, sans-serif;
+  background: none;
+  border: none;
+  padding: 0 12px;
+  height: 100%;
+  cursor: pointer;
+  color: var(--ink-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: 0.005em;
+  border-right: 1px solid var(--rule);
+  white-space: nowrap;
+  font-weight: 500;
+  font-size: 12.5px;
+  border-radius: 0;
+  text-transform: none;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .money-find-tristate
+  .status-chip:last-child {
+  border-right: none;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .money-find-tristate
+  .status-chip:hover {
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.025);
+}
+.card-hero-page[data-hero-style="editorial"]
+  .money-find-tristate
+  .status-chip[data-active="true"][data-tone="using"] {
+  color: var(--pos);
+}
+.card-hero-page[data-hero-style="editorial"]
+  .money-find-tristate
+  .status-chip[data-active="true"][data-tone="going_to"] {
+  color: var(--warn);
+}
+.card-hero-page[data-hero-style="editorial"]
+  .money-find-tristate
+  .status-chip[data-active="true"][data-tone="skip"] {
+  color: var(--ink-2);
+}
+.card-hero-page[data-hero-style="editorial"]
+  .money-find-tristate
+  .status-chip[data-active="true"]::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* probe button — keep the existing affordance, retoned */
+.card-hero-page[data-hero-style="editorial"] .money-find-probe {
+  font-size: 12.5px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  margin-top: 8px;
+  cursor: pointer;
+}
+.card-hero-page[data-hero-style="editorial"] .money-find-probe:hover {
+  background: oklch(0.42 0.10 245 / 0.16);
+}
+
+/* ── MANAGE CARD DISCLOSURE — admin grid look ──────────────────────── */
+.card-hero-page[data-hero-style="editorial"] .manage-card-disclosure {
+  margin-top: 60px;
+  border-top: 1px solid var(--rule);
+  padding-top: 28px;
+  background: transparent;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  border-radius: 0;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .manage-card-disclosure
+  > summary {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .manage-card-disclosure
+  .manage-card-title {
+  font-family: var(--font-plex-serif), Georgia, serif;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.card-hero-page[data-hero-style="editorial"] .signals-editor {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: 8px 24px;
+  box-shadow: var(--shadow-1);
+}
+.card-hero-page[data-hero-style="editorial"] .signals-editor-head {
+  margin: 18px 0 4px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 14px;
+}
+.card-hero-page[data-hero-style="editorial"] .signals-editor-title {
+  font-family: var(--font-plex-serif), Georgia, serif;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 4px 0 4px;
+}
+.card-hero-page[data-hero-style="editorial"] .signals-editor-sub {
+  font-size: 13px;
+  color: var(--ink-3);
+  margin: 0;
+}
+
+/* Cluster (one cluster per row, admin-style) */
+.card-hero-page[data-hero-style="editorial"] .cluster-stack {
+  display: flex;
+  flex-direction: column;
+}
+.card-hero-page[data-hero-style="editorial"] .field-cluster {
+  border-bottom: 1px solid var(--rule);
+  padding: 14px 0;
+}
+.card-hero-page[data-hero-style="editorial"] .field-cluster:last-child {
+  border-bottom: none;
+}
+.card-hero-page[data-hero-style="editorial"] .field-cluster > summary {
+  display: grid;
+  grid-template-columns: 32px 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  list-style: none;
+  cursor: pointer;
+  padding: 0;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .field-cluster
+  > summary::-webkit-details-marker {
+  display: none;
+}
+.card-hero-page[data-hero-style="editorial"] .field-cluster .num-tag {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--ink-4);
+  font-weight: 400;
+  letter-spacing: 0.05em;
+}
+.card-hero-page[data-hero-style="editorial"] .field-cluster .cluster-head {
+  min-width: 0;
+}
+.card-hero-page[data-hero-style="editorial"] .field-cluster .cluster-head .ttl {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.card-hero-page[data-hero-style="editorial"] .field-cluster .cluster-head .sub {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  margin-top: 2px;
+}
+.card-hero-page[data-hero-style="editorial"] .field-cluster .caret {
+  color: var(--ink-4);
+  transition: transform 120ms ease;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .field-cluster[open]
+  > summary
+  .caret {
+  transform: rotate(90deg);
+}
+.card-hero-page[data-hero-style="editorial"] .field-cluster > .body {
+  margin-top: 14px;
+  padding-left: 44px;
+}
+
+@media (max-width: 600px) {
+  .card-hero-page[data-hero-style="editorial"] .field-cluster > .body {
+    padding-left: 0;
+  }
+  .card-hero-page[data-hero-style="editorial"]
+    .field-cluster
+    > summary {
+    grid-template-columns: 24px 1fr auto;
+  }
+  .card-hero-page[data-hero-style="editorial"] .field-cluster .caret {
+    display: none;
+  }
+}
+
+/* row-grid inside a cluster — pair fields side-by-side on desktop */
+.card-hero-page[data-hero-style="editorial"] .row-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px 24px;
+}
+@media (max-width: 600px) {
+  .card-hero-page[data-hero-style="editorial"] .row-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.card-hero-page[data-hero-style="editorial"] .row-grid .row[data-full="true"] {
+  grid-column: 1 / -1;
+}
+.card-hero-page[data-hero-style="editorial"] .row-grid .row .eyebrow {
+  margin-bottom: 6px;
+}
+.card-hero-page[data-hero-style="editorial"] .row-grid .row .row-hint {
+  font-size: 12px;
+  color: var(--ink-3);
+  margin-top: 4px;
+}
+
+/* Inputs inside the editor */
+.card-hero-page[data-hero-style="editorial"] .signals-editor .input {
+  font-family: var(--font-plex-sans), system-ui, sans-serif;
+  font-size: 13.5px;
+  padding: 7px 10px;
+  border: 1px solid var(--rule-2);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 7px;
+  width: 100%;
+}
+.card-hero-page[data-hero-style="editorial"] .signals-editor .input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* YesNo / chip */
+.card-hero-page[data-hero-style="editorial"] .signals-editor .yesno {
+  display: inline-flex;
+  gap: 6px;
+}
+.card-hero-page[data-hero-style="editorial"] .signals-editor .yesno .chip {
+  font-size: 12.5px;
+  padding: 6px 12px;
+  border: 1px solid var(--rule-2);
+  background: var(--paper);
+  color: var(--ink-2);
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .signals-editor
+  .yesno
+  .chip[data-active="true"] {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+/* Stepper */
+.card-hero-page[data-hero-style="editorial"] .signals-editor .stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+.card-hero-page[data-hero-style="editorial"] .signals-editor .stepper button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--rule-2);
+  background: var(--paper);
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .signals-editor
+  .stepper
+  button:first-child {
+  border-radius: 7px 0 0 7px;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .signals-editor
+  .stepper
+  button:last-child {
+  border-radius: 0 7px 7px 0;
+  border-left: none;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .signals-editor
+  .stepper
+  button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.card-hero-page[data-hero-style="editorial"] .signals-editor .stepper .val {
+  border-top: 1px solid var(--rule-2);
+  border-bottom: 1px solid var(--rule-2);
+  padding: 0 14px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 13px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* PillGroup status pills (not the perk-row tristate) */
+.card-hero-page[data-hero-style="editorial"]
+  .signals-editor
+  .pill-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .signals-editor
+  .pill-group
+  .status-pill {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  border: 1px solid var(--rule-2);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .signals-editor
+  .pill-group
+  .status-pill::before {
+  display: none;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .signals-editor
+  .pill-group
+  .status-pill[data-on="true"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+.card-hero-page[data-hero-style="editorial"]
+  .signals-editor
+  .pill-group
+  .status-pill[data-on="true"][data-tone="warn"] {
+  background: var(--warn);
+  border-color: var(--warn);
+}
+.card-hero-page[data-hero-style="editorial"]
+  .signals-editor
+  .pill-group
+  .status-pill[data-on="true"][data-tone="neg"] {
+  background: var(--neg);
+  border-color: var(--neg);
+}
+.card-hero-page[data-hero-style="editorial"]
+  .signals-editor
+  .pill-group
+  .status-pill
+  .ttl {
+  font-weight: 500;
+}
+.card-hero-page[data-hero-style="editorial"]
+  .signals-editor
+  .pill-group
+  .status-pill
+  .sub {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+.card-hero-page[data-hero-style="editorial"]
+  .signals-editor
+  .pill-group
+  .status-pill[data-on="true"]
+  .sub {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* toggle-row inside annual credits cluster */
+.card-hero-page[data-hero-style="editorial"]
+  .signals-editor
+  .toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--rule);
+}
+.card-hero-page[data-hero-style="editorial"]
+  .signals-editor
+  .toggle-row:first-of-type {
+  border-top: 0;
+}
+
+/* footer buttons */
+.card-hero-page[data-hero-style="editorial"] .panel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px 0 4px;
+  margin-top: 14px;
+  border-top: 1px solid var(--rule);
+}
+.card-hero-page[data-hero-style="editorial"] .panel-footer .remove-link {
+  font-size: 13px;
+  background: none;
+  border: none;
+  color: var(--ink-3);
+  cursor: pointer;
+  padding: 6px 0;
+}
+.card-hero-page[data-hero-style="editorial"] .panel-footer .remove-link:hover {
+  color: var(--neg);
+}
+.card-hero-page[data-hero-style="editorial"] .panel-footer-actions {
+  display: flex;
+  gap: 8px;
+}
+.card-hero-page[data-hero-style="editorial"] .panel-footer .btn {
+  font-size: 13px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--rule-2);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.card-hero-page[data-hero-style="editorial"] .panel-footer .btn:hover {
+  border-color: var(--ink-3);
+  background: var(--card);
+}
+.card-hero-page[data-hero-style="editorial"] .panel-footer .btn-primary {
+  background: var(--accent);
+  color: #fbfaf6;
+  border-color: var(--accent);
+}
+.card-hero-page[data-hero-style="editorial"]
+  .panel-footer
+  .btn-primary:hover {
+  background: oklch(0.36 0.10 245);
+  border-color: oklch(0.36 0.10 245);
+}
+
+/* ── density (forward-looking — wire to data-density on the page) ──── */
+.card-hero-page[data-hero-style="editorial"][data-density="airy"] {
+  --pad-section: 36px;
+  --gap-row: 18px;
+}
+.card-hero-page[data-hero-style="editorial"][data-density="airy"]
+  .currency-panel,
+.card-hero-page[data-hero-style="editorial"][data-density="airy"]
+  .earning-section,
+.card-hero-page[data-hero-style="editorial"][data-density="airy"]
+  .recurring-value-section,
+.card-hero-page[data-hero-style="editorial"][data-density="airy"]
+  .catalog-group {
+  margin-bottom: 64px;
+}
+.card-hero-page[data-hero-style="editorial"][data-density="tight"] {
+  --pad-section: 18px;
+  --gap-row: 9px;
+}
+.card-hero-page[data-hero-style="editorial"][data-density="tight"]
+  .currency-panel,
+.card-hero-page[data-hero-style="editorial"][data-density="tight"]
+  .earning-section,
+.card-hero-page[data-hero-style="editorial"][data-density="tight"]
+  .recurring-value-section,
+.card-hero-page[data-hero-style="editorial"][data-density="tight"]
+  .catalog-group {
+  margin-bottom: 32px;
+}
+
+/* ── responsive collapse ──────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .card-hero-page[data-hero-style="editorial"] .money-find-head {
+    grid-template-columns: 1fr;
+  }
+  .card-hero-page[data-hero-style="editorial"] .money-find-tail {
+    align-items: flex-start;
+    min-width: 0;
+  }
+  .card-hero-page[data-hero-style="editorial"] .money-find-question {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

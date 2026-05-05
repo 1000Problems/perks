@@ -375,7 +375,7 @@ export function CardHero({
   const positioningText = card.card_intro?.positioning ?? null;
 
   return (
-    <main className="card-hero-page">
+    <main className="card-hero-page" data-hero-style="editorial">
       <Link href={"/wallet/edit" as Route} className="back-link">
         ← Wallet
       </Link>
@@ -396,6 +396,7 @@ export function CardHero({
           issuer={card.issuer}
           network={card.network ?? undefined}
           size="xl"
+          heroStyle="editorial"
         />
         <div className="card-hero-identity-body">
           <div className="eyebrow">{card.issuer}</div>
@@ -463,6 +464,12 @@ export function CardHero({
           (f) => f.play.value_model.kind !== "multiplier_on_category",
         );
         if (groupFinds.length === 0) return null;
+        // Editorial layout — surface a single source link in the group
+        // head, taken from the first perk in the group that has one.
+        // Falls back to undefined when no row in the group has a source.
+        const firstSource = groupFinds
+          .map((f) => playSourceMap.get(f.play.id))
+          .find((s) => s?.source?.url);
         return (
           <CatalogGroup
             key={group}
@@ -475,6 +482,8 @@ export function CardHero({
             cardId={cardId}
             playSourceMap={playSourceMap}
             perkFlags={perkFlags}
+            groupSourceUrl={firstSource?.source?.url}
+            groupSourceLabel={firstSource?.source?.label ?? "source"}
           />
         );
       })}

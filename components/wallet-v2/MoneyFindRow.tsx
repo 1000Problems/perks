@@ -29,10 +29,14 @@ interface Props {
 // per-domain context lives in the QUESTION map below ("Spending here
 // regularly?", "Filed a trip-delay claim?", etc.); the chips
 // themselves stay invariant so users only learn one vocabulary.
-const CHIPS: { value: FindStatus; label: string }[] = [
-  { value: "using", label: "Got it" },
-  { value: "going_to", label: "On my list" },
-  { value: "skip", label: "Not for me" },
+//
+// Editorial redesign uses shorter labels (Using / On list / Skip) that
+// read better as a segmented pill. Tone keys stay the same so the CSS
+// selectors continue to match.
+const CHIPS: { value: FindStatus; label: string; tone: string }[] = [
+  { value: "using", label: "Using", tone: "using" },
+  { value: "going_to", label: "On list", tone: "going_to" },
+  { value: "skip", label: "Skip", tone: "skip" },
 ];
 
 const QUESTION_PROMPT: Record<string, string> = {
@@ -112,14 +116,17 @@ export function MoneyFindRow({
 
       <div className="money-find-question">
         <span className="question-text">{questionText}</span>
-        <div className="money-find-tristate">
+        <div
+          className="money-find-tristate"
+          data-active={status === "unset" ? "none" : status}
+        >
           {CHIPS.map((c) => (
             <button
               key={c.value}
               type="button"
               className="status-chip"
               data-active={status === c.value ? "true" : "false"}
-              data-tone={c.value}
+              data-tone={c.tone}
               onClick={() => onMark(c.value === status ? "unset" : c.value)}
             >
               {c.label}

@@ -87,25 +87,9 @@ export function CurrencyPanel({
       override.portal_cpp != null ||
       override.transfer_cpp != null);
 
-  const airlinePartners = program.transfer_partners.filter(
-    (p) => p.type === "airline",
-  );
-  const hotelPartners = program.transfer_partners.filter(
-    (p) => p.type === "hotel",
-  );
-  const isUnique = (notes: string | null | undefined) =>
-    typeof notes === "string" && /unique to/i.test(notes);
-  const sortedAirlines = [...airlinePartners].sort((a, b) => {
-    const au = isUnique(a.notes);
-    const bu = isUnique(b.notes);
-    if (au !== bu) return au ? -1 : 1;
-    return a.partner.localeCompare(b.partner);
-  });
-  const partnersLine = formatPartnersLine(
-    airlinePartners.length,
-    hotelPartners.length,
-    sortedAirlines.find((p) => isUnique(p.notes))?.partner ?? null,
-  );
+  // Design pass 2026-05: transfer-partner list removed. Was a wall of
+  // tags above the cpp inputs that hijacked attention; the program's
+  // transfer story now lives in the per-perk why-sentences below.
 
   return (
     <section className="currency-panel" aria-label="Your points portal">
@@ -175,33 +159,6 @@ export function CurrencyPanel({
           programId={program.id}
           onReset={() => onOverrideChange(program.id, null)}
         />
-      )}
-
-      {partnersLine && (
-        <p className="currency-panel-line">{partnersLine}</p>
-      )}
-
-      {sortedAirlines.length > 0 && (
-        <div
-          className="currency-panel-partners"
-          aria-label="Airline transfer partners"
-        >
-          {sortedAirlines.map((p) => (
-            <span
-              key={p.partner}
-              className="currency-partner-tag"
-              data-unique={isUnique(p.notes) ? "true" : "false"}
-              title={p.notes ?? undefined}
-            >
-              {isUnique(p.notes) && (
-                <span className="currency-partner-star" aria-hidden>
-                  ★
-                </span>
-              )}
-              {p.partner}
-            </span>
-          ))}
-        </div>
       )}
     </section>
   );
@@ -308,6 +265,21 @@ function CppRow({
   const showDefaultHint =
     value != null && defaultValue != null && Math.abs(value - defaultValue) > 1e-6;
 
+  // Design pass 2026-05: explicit ▲/▼ steppers so the value reads as
+  // editable, not as static metadata. 0.05¢ steps match the precision
+  // users actually nudge cpp values by.
+  const STEP = 0.05;
+  const bump = (delta: number) => {
+    const base =
+      Number.isFinite(parseFloat(draft)) && draft.trim() !== ""
+        ? parseFloat(draft)
+        : (effective ?? defaultValue ?? MIN_CPP);
+    const next = clamp(round2(base + delta), MIN_CPP, MAX_CPP);
+    const str = next.toString();
+    setDraft(str);
+    flushCommit(str);
+  };
+
   return (
     <div className="currency-cpp-row">
       <span className="currency-cpp-label">{label}</span>
@@ -315,7 +287,7 @@ function CppRow({
         <input
           type="number"
           inputMode="decimal"
-          step="0.1"
+          step={STEP}
           min={MIN_CPP}
           max={MAX_CPP}
           className="currency-cpp-input"
@@ -328,6 +300,24 @@ function CppRow({
           aria-label={`${label} cents per point`}
         />
         <span className="currency-cpp-suffix">¢ / pt</span>
+        <span className="currency-cpp-stepper" aria-hidden>
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-label={`Increase ${label}`}
+            onClick={() => bump(STEP)}
+          >
+            ▲
+          </button>
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-label={`Decrease ${label}`}
+            onClick={() => bump(-STEP)}
+          >
+            ▼
+          </button>
+        </span>
       </span>
       <span className="currency-cpp-tail">
         {isHeadline && (
@@ -342,6 +332,13 @@ function CppRow({
       {error && <span className="currency-cpp-error">{error}</span>}
     </div>
   );
+}
+
+function clamp(n: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, n));
+}
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
 }
 
 function ResetButton({
@@ -406,22 +403,6 @@ function formatCpp(cpp: number | null): string {
   if (cpp == null) return "—";
   if (Number.isInteger(cpp)) return `${cpp}¢`;
   return `${(Math.round(cpp * 10) / 10).toFixed(1)}¢`;
-}
-
-function formatPartnersLine(
-  airlineCount: number,
-  hotelCount: number,
-  uniquePartner: string | null,
-): string | null {
-  if (airlineCount === 0 && hotelCount === 0) return null;
-  const parts: string[] = [];
-  if (airlineCount > 0) parts.push(`${airlineCount} airlines`);
-  if (hotelCount > 0) parts.push(`${hotelCount} hotels`);
-  const list = parts.join(" and ");
-  const unique = uniquePartner
-    ? ` Unique 1:1 transfer to ${uniquePartner}.`
-    : "";
-  return `Transfers 1:1 to ${list}.${unique}`;
 }
 
 function shortName(program: Program): string {

@@ -64,11 +64,17 @@ import { CatalogGroup } from "./CatalogGroup";
 import { buildPlaySourceMap, type ResolvedSource } from "./perkSource";
 import type { PerkFlag } from "@/lib/profile/server";
 import { MechanicsZone } from "./MechanicsZone";
-import { ManageCardDisclosure } from "./ManageCardDisclosure";
-import { SignalsEditor, type CardPatch } from "./SignalsEditor";
+// Design pass 2026-05: ManageCardPanel replaces the
+// ManageCardDisclosure → SignalsEditor cluster grid on this route.
+// SignalsEditor stays in place because /wallet/edit's right pane still
+// composes against it.
+import { ManageCardPanel } from "./ManageCardPanel";
+import { type CardPatch } from "./SignalsEditor";
 import type { ProgramCppOverride } from "@/lib/engine/programOverrides";
 import { CardArrivalHero } from "./CardArrivalHero";
-import { EarningSection } from "./EarningSection";
+// EarningSection removed in design pass 2026-05 — earn-rate plays were
+// already filtered out of CatalogGroup, and the section was duplicating
+// the card-art / "what it earns" pairing the user asked us to drop.
 import { RecurringValueSection } from "./RecurringValueSection";
 import type { FrequencyBucket } from "./RecurringCreditCard";
 
@@ -447,8 +453,6 @@ export function CardHero({
         />
       )}
 
-      <EarningSection card={card} program={program} />
-
       <RecurringValueSection
         card={card}
         program={program}
@@ -490,25 +494,15 @@ export function CardHero({
 
       <MechanicsZone card={card} held={held} today={today} />
 
-      <ManageCardDisclosure>
-        <SignalsEditor
-          card={card}
-          held={held}
-          profile={profile}
-          db={db}
-          playState={playState}
-          isNew={isNew}
-          onPatch={handlePatch}
-          onPlayStateChange={(playId, state) =>
-            writePlayState(playId, state.state, {
-              claimed_at: state.claimed_at,
-            })
-          }
-          onCancel={handleCancel}
-          onRemove={handleRemove}
-          onSave={handleSave}
-        />
-      </ManageCardDisclosure>
+      <ManageCardPanel
+        card={card}
+        held={held}
+        isNew={isNew}
+        onPatch={handlePatch}
+        onCancel={handleCancel}
+        onRemove={handleRemove}
+        onSave={handleSave}
+      />
     </main>
   );
 }

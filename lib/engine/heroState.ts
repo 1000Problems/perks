@@ -27,7 +27,10 @@ export function deriveHeroState(
   card: Card,
   playState: CardPlayState[],
 ): HeroSummary {
-  const plays = card.card_plays ?? [];
+  const plays = [
+    ...(card.card_plays ?? []),
+    ...(card.community_plays ?? []),
+  ];
   const coldPrompts = card.cold_prompts ?? [];
 
   // Real-play state (excludes synthetic ids).

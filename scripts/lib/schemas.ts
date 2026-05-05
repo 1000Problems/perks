@@ -285,6 +285,11 @@ export const CardSchema = z
     // with empty arrays renders mostly-empty groups in the new hero
     // page.
     card_plays: z.array(PlaySchema).default([]),
+    // Section 3 of the per-card hero page — "From the community". Same
+    // PlaySchema as card_plays; rendered separately by
+    // CommunityPlaysSection. Engine concatenates both arrays so
+    // projected-rewards math is unchanged after migration.
+    community_plays: z.array(PlaySchema).default([]),
     cold_prompts: z.array(ColdPromptSchema).default([]),
 
     // Value thesis: the celebration hero block at the top of the

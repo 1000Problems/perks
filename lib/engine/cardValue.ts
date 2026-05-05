@@ -344,7 +344,13 @@ function computePlaysCardValue(
 ): CardValue {
   const buckets = emptyBuckets();
   const cardCurrency = card.currency_earned ?? null;
-  for (const play of card.card_plays ?? []) {
+  // Section 3 plays ride on card.community_plays — score uniformly so
+  // projected_usd reflects every play on the page.
+  const allPlays = [
+    ...(card.card_plays ?? []),
+    ...(card.community_plays ?? []),
+  ];
+  for (const play of allPlays) {
     bucketPlay(play, profile, db, cardCurrency, signals, buckets);
   }
   const fee = card.annual_fee_usd ?? 0;
@@ -406,8 +412,12 @@ export function computeCardValue(
   signals: Map<string, SignalState>,
   db: CardDatabase,
 ): CardValue {
-  const plays = card.card_plays ?? [];
-  if (plays.length > 0) {
+  // Branch on the union of card_plays + community_plays so a card that
+  // ever moves all its plays into the community array still picks the
+  // signal-aware path.
+  const playCount =
+    (card.card_plays?.length ?? 0) + (card.community_plays?.length ?? 0);
+  if (playCount > 0) {
     return computePlaysCardValue(card, held, profile, signals, db);
   }
   return computeLegacyCardValue(card, held, profile, db);
@@ -437,7 +447,13 @@ export function getOnMyListItems(
   for (const held of profile.cards_held ?? []) {
     const card = db.cardById.get(held.card_id);
     if (!card) continue;
-    for (const play of card.card_plays ?? []) {
+    // Walk both arrays — Section 3 community plays should drive
+    // recommendations the same way regular plays do when "On my list".
+    const heldPlays = [
+      ...(card.card_plays ?? []),
+      ...(card.community_plays ?? []),
+    ];
+    for (const play of heldPlays) {
       if (play.reveals_signals.length === 0) continue;
       const state = aggregateRevealState(play.reveals_signals, signals);
       if (state !== "interested") continue;

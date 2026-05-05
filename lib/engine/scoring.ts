@@ -668,7 +668,9 @@ export function scoreCard(
   // perk loops above don't have a concept of "interested", so the
   // bonus only adds value the existing scoring couldn't see.
   let signalInterestBonus = 0;
-  if ((card.card_plays ?? []).length > 0 && signals.size > 0) {
+  const totalPlayCount =
+    (card.card_plays?.length ?? 0) + (card.community_plays?.length ?? 0);
+  if (totalPlayCount > 0 && signals.size > 0) {
     const cv = computeCardValue(card, null, userProfile, signals, db);
     signalInterestBonus = Math.round(cv.projected_usd * 0.10);
     if (signalInterestBonus > 0) {

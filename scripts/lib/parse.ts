@@ -13,10 +13,13 @@ export interface ParsedCard {
   perksDedup: unknown[] | null;
   destinationPerks: Record<string, unknown> | null;
   notes: string;
-  // Money-find content per cards/{id}.md. Both optional. Parsed as
+  // Money-find content per cards/{id}.md. All optional. Parsed as
   // unknown[] (or null when absent) and validated downstream against
   // PlaySchema / ColdPromptSchema in scripts/build-card-db.ts.
+  // community_plays carries Section 3 ("From the community") rows; same
+  // PlaySchema, separate array.
   cardPlays: unknown[] | null;
+  communityPlays: unknown[] | null;
   coldPrompts: unknown[] | null;
   soul: {
     credit_score: unknown | null;
@@ -36,8 +39,9 @@ const SECTION_KEYS = {
   perksDedup: /^## perks_dedup\.json/,
   destinationPerks: /^## destination_perks\.json/,
   notes: /^## RESEARCH_NOTES/,
-  // Money-find page content (additive — both optional)
+  // Money-find page content (additive — all optional)
   cardPlays: /^## card_plays\b/,
+  communityPlays: /^## community_plays\b/,
   coldPrompts: /^## cold_prompts\b/,
   // Soul sections (additive — all optional)
   soulCreditScore: /^## card_soul\.credit_score\b/,
@@ -104,6 +108,7 @@ export function parseCardMarkdown(filename: string, md: string): ParsedCard {
   let destinationPerks: Record<string, unknown> | null;
 
   let cardPlays: unknown[] | null;
+  let communityPlays: unknown[] | null;
   let coldPrompts: unknown[] | null;
 
   try {
@@ -119,6 +124,8 @@ export function parseCardMarkdown(filename: string, md: string): ParsedCard {
         : null;
     const playsRaw = extractJson(sections.cardPlays);
     cardPlays = Array.isArray(playsRaw) ? playsRaw : null;
+    const communityRaw = extractJson(sections.communityPlays);
+    communityPlays = Array.isArray(communityRaw) ? communityRaw : null;
     const promptsRaw = extractJson(sections.coldPrompts);
     coldPrompts = Array.isArray(promptsRaw) ? promptsRaw : null;
   } catch (e) {
@@ -152,6 +159,7 @@ export function parseCardMarkdown(filename: string, md: string): ParsedCard {
     destinationPerks,
     notes: (sections.notes ?? "").trim(),
     cardPlays,
+    communityPlays,
     coldPrompts,
     soul: {
       credit_score: soulCreditScore,

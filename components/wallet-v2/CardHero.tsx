@@ -77,6 +77,7 @@ import { CardArrivalHero } from "./CardArrivalHero";
 // the card-art / "what it earns" pairing the user asked us to drop.
 import { RecurringValueSection } from "./RecurringValueSection";
 import type { FrequencyBucket } from "./RecurringCreditCard";
+import { CommunityPlaysSection } from "./CommunityPlaysSection";
 
 interface Props {
   cardId: string;
@@ -338,7 +339,21 @@ export function CardHero({
     [card, profile, playState, db, todayIso, programOverrides],
   );
 
-  const groupedFinds = useMemo(() => findsByGroup(finds), [finds]);
+  // Section 3 plays live in card.community_plays and render in their
+  // own block (CommunityPlaysSection). Keep them out of the catalog
+  // groups so we don't render them twice.
+  const communityIdSet = useMemo<Set<string>>(
+    () => new Set((card?.community_plays ?? []).map((p) => p.id)),
+    [card],
+  );
+  const catalogFinds = useMemo(
+    () => finds.filter((f) => !communityIdSet.has(f.play.id)),
+    [finds, communityIdSet],
+  );
+  const groupedFinds = useMemo(
+    () => findsByGroup(catalogFinds),
+    [catalogFinds],
+  );
 
   // TASK-per-perk-source-urls: precompute play.id → source citation
   // once per render. Drives the inline ⓘ link next to each perk row.
@@ -491,6 +506,16 @@ export function CardHero({
           />
         );
       })}
+
+      <CommunityPlaysSection
+        card={card}
+        finds={finds}
+        onMarkFind={handleMarkFind}
+        onProbeClick={handleProbeClick}
+        cardId={cardId}
+        playSourceMap={playSourceMap}
+        perkFlags={perkFlags}
+      />
 
       <MechanicsZone card={card} held={held} today={today} />
 

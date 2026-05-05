@@ -115,7 +115,10 @@ function loadSignals(db: DB): void {
 function validateSignalReferences(db: DB): void {
   const known = new Set(db.signals.map((s) => s.id));
   for (const card of db.cards) {
-    const plays = card.card_plays ?? [];
+    const plays = [
+      ...(card.card_plays ?? []),
+      ...(card.community_plays ?? []),
+    ];
     for (const play of plays) {
       for (const sig of play.reveals_signals) {
         if (!known.has(sig)) {
@@ -185,6 +188,9 @@ function mergeFile(db: DB, filename: string): void {
       ? {
           ...(parsed.card as Record<string, unknown>),
           ...(parsed.cardPlays != null ? { card_plays: parsed.cardPlays } : {}),
+          ...(parsed.communityPlays != null
+            ? { community_plays: parsed.communityPlays }
+            : {}),
           ...(parsed.coldPrompts != null ? { cold_prompts: parsed.coldPrompts } : {}),
         }
       : parsed.card;

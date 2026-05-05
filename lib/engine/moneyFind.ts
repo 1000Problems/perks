@@ -318,7 +318,13 @@ export function scoreFinds(
   // default = program shipped values.
   programOverrides?: Map<string, ProgramCppOverride>,
 ): ScoredFind[] {
-  const plays = card.card_plays ?? [];
+  // Section 3 ("From the community") rides on a sibling array. Engine
+  // scores both uniformly so projected-rewards math is unchanged after
+  // the migration; render layer separates them via card.community_plays.
+  const plays = [
+    ...(card.card_plays ?? []),
+    ...(card.community_plays ?? []),
+  ];
   const coldPrompts = card.cold_prompts ?? [];
 
   // Build the cold-answer map once.

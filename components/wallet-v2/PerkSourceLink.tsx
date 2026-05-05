@@ -44,6 +44,10 @@ interface Props {
   perkKind: "annual_credit" | "ongoing_perk";
   perkName: string;
   myFlag: PerkFlag | null;
+  /** When false, the flag button is hidden — the source came from a */
+  /** play.source_urls fallback and there's no perk row to flag */
+  /** against. Defaults to true. */
+  flaggable?: boolean;
 }
 
 const REASON_OPTIONS: { value: PerkFlagReason; label: string }[] = [
@@ -53,12 +57,25 @@ const REASON_OPTIONS: { value: PerkFlagReason; label: string }[] = [
   { value: "other", label: "Something else" },
 ];
 
+// Trust-hierarchy note shown at the top of the popover. Auto-generated
+// from source.type so individual perks don't have to author it. Not
+// shown for "issuer" — when Citi enumerates the perk on its own page,
+// the source IS the trust signal and no extra context is needed.
+const SOURCE_TYPE_NOTE: Record<PerkSource["type"], string | null> = {
+  issuer: null,
+  network: "Mastercard owns this benefit. Your Strata Premier inherits it as a World Elite card. Citi doesn't enumerate Mastercard-bundled perks on its own pages — Citi keeps flexibility to drop them quietly if Mastercard ever changes the bundle.",
+  partner: "This is a Mastercard-administered partner offer, redeemed on the partner's site. Activate by linking your card. Mastercard refreshes the lifestyle bundle periodically (DashPass → Peacock just happened); Lyft and Instacart are locked through early 2027.",
+  underwriter: "Insurance underwritten by Mastercard's network partner. The page above lists the headline coverage; full terms live in the issuer's Guide to Benefits PDF.",
+  community: "External community source. Used when no official issuer or network page documents this play. Verify against the partner's award chart before transferring points.",
+};
+
 export function PerkSourceLink({
   source,
   cardId,
   perkKind,
   perkName,
   myFlag,
+  flaggable = true,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -118,26 +135,27 @@ export function PerkSourceLink({
           verified {verifiedText}
         </span>
       )}
-      <span ref={containerRef} className="perk-source-flag-wrap">
-        <button
-          type="button"
-          className="perk-source-flag-trigger"
-          aria-expanded={open}
-          aria-haspopup="dialog"
-          aria-label={
-            myFlag
-              ? "You flagged this perk — click to manage"
-              : "Report a problem with this source"
-          }
-          data-flagged={myFlag ? "true" : "false"}
-          onClick={(e) => {
-            e.stopPropagation();
-            setOpen((v) => !v);
-            setEditing(false);
-          }}
-        >
-          ⚑{myFlag ? " flagged" : ""}
-        </button>
+      {flaggable && (
+        <span ref={containerRef} className="perk-source-flag-wrap">
+          <button
+            type="button"
+            className="perk-source-flag-trigger"
+            aria-expanded={open}
+            aria-haspopup="dialog"
+            aria-label={
+              myFlag
+                ? "You flagged this perk — click to manage"
+                : "Report a problem with this source"
+            }
+            data-flagged={myFlag ? "true" : "false"}
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen((v) => !v);
+              setEditing(false);
+            }}
+          >
+            ⚑{myFlag ? " flagged" : ""}
+          </button>
         {open && (
           <div
             role="dialog"
@@ -145,6 +163,12 @@ export function PerkSourceLink({
             className="perk-source-popover"
             onClick={(e) => e.stopPropagation()}
           >
+            {SOURCE_TYPE_NOTE[source.type] && (
+              <div className="perk-source-typenote">
+                <div className="perk-source-eyebrow">About this source</div>
+                <p>{SOURCE_TYPE_NOTE[source.type]}</p>
+              </div>
+            )}
             {!showForm && myFlag ? (
               <FlaggedPane
                 onUndo={async () => {
@@ -175,7 +199,8 @@ export function PerkSourceLink({
             )}
           </div>
         )}
-      </span>
+        </span>
+      )}
     </div>
   );
 }

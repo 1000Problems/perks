@@ -27,10 +27,21 @@ export interface PerkSource {
 
 // Carries the source plus the perk identity (kind + name) so the UI
 // can pass it straight to flag actions without re-resolving.
+//
+// `flaggable: true` — source came from a real annual_credit /
+//   ongoing_perk entry. The UI shows the flag button; reports route
+//   to the perks_source_flags table keyed by (card_id, perk_name).
+//
+// `flaggable: false` — source came from a play.source_urls fallback
+//   (earning multipliers, niche plays). No perk row exists to flag
+//   against, so the UI hides the flag button. Users can still click
+//   through to the URL; reports for these need to come through a
+//   different surface (out of scope today).
 export interface ResolvedSource {
   source: PerkSource;
   perkKind: "annual_credit" | "ongoing_perk";
   perkName: string;
+  flaggable: boolean;
 }
 
 // Explicit overrides for plays whose id doesn't tokenize cleanly to
@@ -119,7 +130,12 @@ export function findSourceForPlay(
   if (overrideName) {
     const hit = entries.find((e) => e.name === overrideName);
     if (hit?.source) {
-      return { source: hit.source, perkKind: hit.kind, perkName: hit.name };
+      return {
+        source: hit.source,
+        perkKind: hit.kind,
+        perkName: hit.name,
+        flaggable: true,
+      };
     }
   }
 
@@ -130,7 +146,12 @@ export function findSourceForPlay(
       (e) => e.signal_id === requiresSignal && e.source != null,
     );
     if (hit?.source) {
-      return { source: hit.source, perkKind: hit.kind, perkName: hit.name };
+      return {
+        source: hit.source,
+        perkKind: hit.kind,
+        perkName: hit.name,
+        flaggable: true,
+      };
     }
   }
 
@@ -152,9 +173,73 @@ export function findSourceForPlay(
       source: best.entry.source,
       perkKind: best.entry.kind,
       perkName: best.entry.name,
+      flaggable: true,
     };
   }
+
+  // 4. Fallback to play.source_urls[0]. Earning multipliers and
+  // niche plays don't map to a credit/perk, but they often carry
+  // their own citation list. Synthesize a non-flaggable
+  // ResolvedSource so the UI still renders a visible source link.
+  const firstPlayUrl = play.source_urls?.[0];
+  if (firstPlayUrl) {
+    return {
+      source: {
+        url: firstPlayUrl,
+        type: classifySourceUrl(firstPlayUrl),
+        // No label / verified_at — these are play-level URLs, not
+        // human-stamped perk citations. UI falls back to hostname.
+      },
+      perkKind: "ongoing_perk", // synthetic; never read because flaggable=false
+      perkName: play.id,         // synthetic; never read because flaggable=false
+      flaggable: false,
+    };
+  }
+
   return undefined;
+}
+
+// Heuristic URL → source type classification. Used only for the
+// play.source_urls fallback above (when a play has a citation but no
+// matching perk in the markdown, so we don't have an authored type).
+//
+// Order matters — most specific first. The list is intentionally
+// small; community sites that don't appear here fall through to the
+// "community" default.
+function classifySourceUrl(url: string): PerkSource["type"] {
+  let host = "";
+  try {
+    host = new URL(url).hostname.toLowerCase();
+  } catch {
+    return "community";
+  }
+  // Strip leading www. for cleaner matching.
+  host = host.replace(/^www\./, "");
+
+  // Issuer (Citi-owned domains)
+  if (host === "citi.com" || host.endsWith(".citi.com")) return "issuer";
+  if (host === "thankyou.com" || host.endsWith(".thankyou.com")) return "issuer";
+  if (host === "citientertainment.com") return "issuer";
+
+  // Network (Mastercard / Visa / Amex network domains)
+  if (host === "mastercard.com" || host.endsWith(".mastercard.com")) return "network";
+  if (host === "mastercard.us" || host.endsWith(".mastercard.us")) return "network";
+  if (host === "mastercardus.idprotectiononline.com") return "network";
+  if (host === "visa.com" || host.endsWith(".visa.com")) return "network";
+
+  // Underwriter (insurance benefit administrators)
+  if (host === "cardbenefitservices.com" || host.endsWith(".cardbenefitservices.com")) return "underwriter";
+  if (host === "cardbenefits.citi.com") return "underwriter";
+
+  // Partner (the merchant administering the offer)
+  if (host === "lyft.com" || host.endsWith(".lyft.com")) return "partner";
+  if (host === "instacart.com" || host.endsWith(".instacart.com")) return "partner";
+  if (host === "doordash.com" || host.endsWith(".doordash.com")) return "partner";
+  if (host === "peacocktv.com" || host.endsWith(".peacocktv.com")) return "partner";
+
+  // Default — TPG, Frequent Miler, Thrifty Traveler, Award Wallet,
+  // Travel Freely, OMAAT, etc.
+  return "community";
 }
 
 // Build a Map<play_id, ResolvedSource> for every play in a card. Used

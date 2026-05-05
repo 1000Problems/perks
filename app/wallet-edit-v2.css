@@ -1126,6 +1126,19 @@
   gap: 12px;
   align-items: center;
 }
+.perk-source-typenote {
+  margin: -4px -2px 12px;
+  padding: 10px 12px;
+  background: var(--bg-1, var(--paper-2, transparent));
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+}
+.perk-source-typenote p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
 .perk-source-action {
   background: transparent;
   border: 0;

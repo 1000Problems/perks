@@ -73,6 +73,7 @@ export function MoneyFindRow({
               perkKind={resolvedSource.perkKind}
               perkName={resolvedSource.perkName}
               myFlag={myFlag}
+              flaggable={resolvedSource.flaggable}
             />
           )}
           {personalSentence && (

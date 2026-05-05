@@ -23,12 +23,21 @@ import {
   mergeSignals,
 } from "@/lib/engine/holdingSignals";
 import { CardHero } from "@/components/wallet-v2/CardHero";
+import { StrataPremierPage } from "@/components/strata-page/StrataPremierPage";
+import {
+  loadNetworkResearch,
+  getCardOverlay,
+} from "@/lib/data/networkResearch";
 import type { CardPlayState } from "@/lib/profile/types";
 import "@/app/wallet-edit-v2.css";
 // Editorial card-hero redesign — must import AFTER wallet-edit-v2.css so
 // scoped overrides win on equal specificity. All rules in this stylesheet
 // are nested under .card-hero-page so they don't leak into other routes.
 import "@/app/card-hero-redesign.css";
+// New from-scratch Strata Premier page (built from
+// docs/SECTION_1_FROM_OFFICIAL_CARD_DOCS.md and
+// docs/SECTION_2_FROM_NETWORK_RESEARCH.md). Scoped under .strata-page-v1.
+import "@/app/strata-page.css";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +68,25 @@ export default async function CardHeroPage({
   const db = loadCardDatabase();
   if (!db.cardById.has(id)) {
     notFound();
+  }
+
+  // ── Brand-new Strata Premier page ────────────────────────────────────
+  // Other cards continue to render the v3 CardHero. Once the new page
+  // shape lands for the rest of the catalog this branch goes away.
+  if (id === "citi_strata_premier") {
+    const card = db.cardById.get(id)!;
+    const network = card.network
+      ? loadNetworkResearch(card.network)
+      : null;
+    const overlay = network ? getCardOverlay(network, id) : null;
+    return (
+      <StrataPremierPage
+        card={card}
+        network={network}
+        overlay={overlay}
+        userDestinationSignals={[]}
+      />
+    );
   }
 
   const held = profile.cards_held.find((h) => h.card_id === id) ?? null;

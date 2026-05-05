@@ -1,0 +1,411 @@
+/* Strata Premier card page — scoped under .strata-page-v1 to isolate
+   from the wallet/edit and v3 hero stylesheets. */
+
+.strata-page-v1 {
+  --pad-section: 28px;
+  --gap-row: 14px;
+  --rule: hsl(220 14% 90%);
+  --paper: #fefefe;
+  --ink: hsl(220 13% 12%);
+  --ink-muted: hsl(220 9% 38%);
+  --accent: hsl(217 81% 36%);
+  --accent-soft: hsl(217 81% 96%);
+  --pos: hsl(150 55% 32%);
+  --warn: hsl(35 90% 42%);
+  --shadow-1: 0 1px 2px hsl(220 13% 12% / 0.06),
+    0 1px 3px hsl(220 13% 12% / 0.04);
+
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 20px 80px;
+  font-family: var(--font-sans, "IBM Plex Sans", system-ui, sans-serif);
+  color: var(--ink);
+  background: var(--paper);
+  line-height: 1.55;
+}
+
+.strata-page-v1 .section {
+  padding: var(--pad-section) 0;
+  border-bottom: 1px solid var(--rule);
+}
+.strata-page-v1 .section:last-child {
+  border-bottom: 0;
+}
+
+.strata-page-v1 .section-heading {
+  font-family: var(--font-display, "IBM Plex Serif", Georgia, serif);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0 0 14px;
+}
+.strata-page-v1 .subsection-heading {
+  font-family: var(--font-display, "IBM Plex Serif", Georgia, serif);
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+.strata-page-v1 .subsection-byline,
+.strata-page-v1 .section-byline {
+  margin: 0 0 16px;
+  color: var(--ink-muted);
+  font-size: 14px;
+}
+
+/* ── Section 1: Header ─────────────────────────────────────────────── */
+.strata-page-v1 .section--header {
+  padding-top: 12px;
+}
+.strata-page-v1 .header-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.strata-page-v1 .card-name {
+  font-family: var(--font-display, "IBM Plex Serif", Georgia, serif);
+  font-size: 36px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  margin: 0 0 4px;
+}
+.strata-page-v1 .card-issuer {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 14px;
+}
+.strata-page-v1 .header-pricing {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 18px;
+  row-gap: 6px;
+  margin: 0;
+  font-size: 14px;
+}
+.strata-page-v1 .pricing-row {
+  display: contents;
+}
+.strata-page-v1 .pricing-row dt {
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+.strata-page-v1 .pricing-row dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.strata-page-v1 .header-source {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: none;
+}
+.strata-page-v1 .header-source:hover {
+  text-decoration: underline;
+}
+
+/* ── Section 1: Currency intro ─────────────────────────────────────── */
+.strata-page-v1 .currency-intro {
+  margin: 0;
+  padding: 18px 22px;
+  background: var(--accent-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--ink);
+}
+.strata-page-v1 .currency-intro p {
+  margin: 0;
+}
+
+/* ── Perk Card (atomic unit) ───────────────────────────────────────── */
+.strata-page-v1 .perk-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  background: white;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  box-shadow: var(--shadow-1);
+}
+.strata-page-v1 .perk-card--issuer {
+  background: white;
+}
+.strata-page-v1 .perk-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.strata-page-v1 .perk-card__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  flex: 1 1 60%;
+}
+.strata-page-v1 .perk-card__sub {
+  margin: 4px 0 -4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.strata-page-v1 .perk-card__notes {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+.strata-page-v1 .perk-card__bullets,
+.strata-page-v1 .perk-card__bundle {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.strata-page-v1 .perk-card__bundle li {
+  list-style: square;
+}
+.strata-page-v1 .perk-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.strata-page-v1 .perk-card__foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--rule);
+  font-size: 12px;
+}
+.strata-page-v1 .perk-card__source {
+  color: var(--accent);
+  text-decoration: none;
+}
+.strata-page-v1 .perk-card__source:hover {
+  text-decoration: underline;
+}
+.strata-page-v1 .perk-card__inline-enroll {
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+.strata-page-v1 .perk-card__inline-enroll:hover {
+  text-decoration: underline;
+}
+.strata-page-v1 .perk-card__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 4px;
+  padding: 10px 14px;
+  background: var(--accent);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: filter 0.12s ease;
+}
+.strata-page-v1 .perk-card__cta:hover {
+  filter: brightness(0.94);
+}
+
+/* ── Pills & chips ─────────────────────────────────────────────────── */
+.strata-page-v1 .pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.strata-page-v1 .pill--auto-applied {
+  background: hsl(150 55% 95%);
+  color: var(--pos);
+}
+.strata-page-v1 .pill--activate {
+  background: hsl(35 90% 94%);
+  color: var(--warn);
+}
+.strata-page-v1 .chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 500;
+  background: hsl(220 14% 96%);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.strata-page-v1 .chip--value {
+  background: hsl(150 55% 95%);
+  color: var(--pos);
+}
+.strata-page-v1 .chip--expires {
+  background: hsl(220 14% 96%);
+  color: var(--ink-muted);
+}
+
+/* ── Grids ─────────────────────────────────────────────────────────── */
+.strata-page-v1 .earn-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.strata-page-v1 .single-card {
+  max-width: 100%;
+}
+.strata-page-v1 .recurring-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+.strata-page-v1 .activate-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+.strata-page-v1 .alwayson-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+/* ── 2.1 Earn channels list ────────────────────────────────────────── */
+.strata-page-v1 .channel-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--rule);
+}
+.strata-page-v1 .channel-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr max-content;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 14px;
+}
+.strata-page-v1 .channel-row__name {
+  font-weight: 600;
+}
+.strata-page-v1 .channel-row__kind {
+  color: var(--ink-muted);
+}
+.strata-page-v1 .channel-row__link {
+  color: var(--accent);
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+}
+.strata-page-v1 .channel-row__link:hover {
+  text-decoration: underline;
+}
+
+/* ── 2.4 Destination chip rail ─────────────────────────────────────── */
+.strata-page-v1 .destination-rail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.strata-page-v1 .destination-chip {
+  padding: 6px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-size: 13px;
+  background: white;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease;
+}
+.strata-page-v1 .destination-chip a {
+  color: var(--ink);
+  text-decoration: none;
+}
+.strata-page-v1 .destination-chip:hover {
+  border-color: var(--accent);
+}
+.strata-page-v1 .destination-chip--active {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.strata-page-v1 .destination-chip--active a {
+  color: white;
+}
+
+/* ── 2.5 Coverage list ─────────────────────────────────────────────── */
+.strata-page-v1 .coverage-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--rule);
+}
+.strata-page-v1 .coverage-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  align-items: baseline;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 14px;
+}
+.strata-page-v1 .coverage-row__label {
+  font-weight: 600;
+}
+.strata-page-v1 .coverage-row__limit {
+  color: var(--ink-muted);
+}
+.strata-page-v1 .coverage-guide-link {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--accent);
+  text-decoration: none;
+}
+.strata-page-v1 .coverage-guide-link:hover {
+  text-decoration: underline;
+}
+
+/* ── Mobile ────────────────────────────────────────────────────────── */
+@media (max-width: 720px) {
+  .strata-page-v1 .header-grid {
+    grid-template-columns: 1fr;
+  }
+  .strata-page-v1 .earn-grid,
+  .strata-page-v1 .activate-grid,
+  .strata-page-v1 .alwayson-grid {
+    grid-template-columns: 1fr;
+  }
+  .strata-page-v1 .channel-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .strata-page-v1 .coverage-row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+  .strata-page-v1 .card-name {
+    font-size: 28px;
+  }
+  .strata-page-v1 .section-heading {
+    font-size: 22px;
+  }
+}

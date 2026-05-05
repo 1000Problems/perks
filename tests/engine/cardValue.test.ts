@@ -1,7 +1,10 @@
 // Phase 4 tests — signal-aware card value computation.
 
 import { describe, it, expect } from "vitest";
-import { computeCardValue } from "@/lib/engine/cardValue";
+import {
+  computeCardValue,
+  yearlyEarningEstimate,
+} from "@/lib/engine/cardValue";
 import { computeFoundMoneyV2 } from "@/lib/engine/foundMoney";
 import { loadCardDatabase } from "@/lib/data/loader";
 import type { UserProfile, WalletCardHeld } from "@/lib/engine/types";
@@ -200,5 +203,35 @@ describe("computeFoundMoneyV2 — compat wrapper", () => {
       ]),
     );
     expect(withSignal.point).toBeGreaterThanOrEqual(baseline.point);
+  });
+});
+
+describe("yearlyEarningEstimate — drives the v3 CardArrivalHero number", () => {
+  it("returns a positive value for Strata Premier holders with non-zero spend", () => {
+    const card = db.cardById.get("citi_strata_premier")!;
+    const out = yearlyEarningEstimate(card, baseProfile, db);
+    expect(out).toBeGreaterThan(0);
+    // Sanity: with the baseProfile's $22.5k of total spend across grocery/
+    // dining/gas/airfare/hotels/other and 3x earn on most of those at
+    // ThankYou's median 1.9¢/pt, the number is comfortably triple-digit.
+    expect(out).toBeGreaterThan(200);
+  });
+
+  it("returns zero when the user has no spend profile (cold start)", () => {
+    const card = db.cardById.get("citi_strata_premier")!;
+    const empty: UserProfile = {
+      ...baseProfile,
+      spend_profile: {},
+    };
+    const out = yearlyEarningEstimate(card, empty, db);
+    expect(out).toBe(0);
+  });
+
+  it("returns zero for cards that earn no rewards currency", () => {
+    // Find a no-currency card if any exist; otherwise skip.
+    const card = db.cards.find((c) => c.currency_earned === null);
+    if (!card) return;
+    const out = yearlyEarningEstimate(card, baseProfile, db);
+    expect(out).toBe(0);
   });
 });

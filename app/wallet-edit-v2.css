@@ -2362,3 +2362,424 @@
   font-size: 13.5px;
   padding: 8px 16px;
 }
+
+/* ── v3 card-page redesign: arrival hero, earning, recurring value ──── */
+/* See TASK-card-page-redesign-v3.md. */
+
+.card-arrival-hero {
+  margin: 8px 0 22px;
+  padding: 26px 28px;
+  border-radius: var(--r-xl);
+  border: 1px solid oklch(0.85 0.10 155 / 0.4);
+  background: linear-gradient(170deg, var(--paper), var(--pos-bg, oklch(0.96 0.04 155)));
+}
+.card-arrival-hero[data-state="cold"] {
+  border-color: var(--rule);
+  background: linear-gradient(170deg, var(--paper), var(--paper-2));
+}
+.card-arrival-hero-number {
+  font-family: var(--font-display), serif;
+  font-size: 56px;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  color: var(--pos-ink, var(--ink-1));
+  font-variant-numeric: tabular-nums;
+}
+.card-arrival-hero[data-state="cold"] .card-arrival-hero-number {
+  color: var(--ink-3);
+}
+.card-arrival-hero-subline {
+  margin-top: 8px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  letter-spacing: 0;
+}
+@media (max-width: 600px) {
+  .card-arrival-hero {
+    padding: 22px 20px;
+  }
+  .card-arrival-hero-number {
+    font-size: 44px;
+  }
+}
+
+/* Earning section — official-source rates, expandable for exclusions. */
+.earning-section {
+  margin: 28px 0 8px;
+  padding: 22px 24px;
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  background: var(--paper);
+}
+.earning-section-head { margin-bottom: 14px; }
+.earning-section-head .eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 4px;
+}
+.earning-section-title {
+  margin: 0;
+  font-family: var(--font-display), serif;
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+}
+.earning-section-sub {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-3);
+  max-width: 60ch;
+}
+.earning-section-body {
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
+}
+.earning-rate-row {
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--paper);
+  overflow: hidden;
+}
+.earning-rate-row[data-expanded="true"] {
+  border-color: var(--ink-3);
+}
+.earning-rate-head {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 12px 14px;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: var(--ink-1);
+}
+.earning-rate-head:hover {
+  background: var(--paper-2, var(--paper));
+}
+.earning-rate-headline {
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink-1);
+}
+.earning-rate-chip {
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--pos-ink, var(--ink-1));
+  background: var(--pos-bg, transparent);
+  border: 1px solid var(--pos-ink, var(--ink-3));
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+.earning-rate-caret {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+.earning-rate-body {
+  padding: 0 14px 14px;
+  border-top: 1px dashed var(--rule);
+  margin-top: -1px;
+  background: var(--paper-2, var(--paper));
+}
+.earning-rate-exclusions {
+  margin: 12px 0 10px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  max-width: 70ch;
+}
+.earning-rate-source {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.earning-rate-source a {
+  color: var(--ink-2);
+  text-decoration: underline;
+}
+.earning-rate-source a:hover { color: var(--ink-1); }
+.earning-rate-source-verified {
+  color: var(--ink-3);
+}
+@media (max-width: 600px) {
+  .earning-rate-head {
+    grid-template-columns: 1fr auto;
+  }
+  .earning-rate-caret { display: none; }
+}
+
+/* Recurring Value — per-event credits with frequency picker. */
+.recurring-value-section {
+  margin: 22px 0 8px;
+  padding: 22px 24px;
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  background: var(--paper);
+}
+.recurring-value-section-head {
+  margin-bottom: 14px;
+}
+.recurring-value-section-head .eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 4px;
+}
+.recurring-value-section-title {
+  margin: 0;
+  font-family: var(--font-display), serif;
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+}
+.recurring-value-section-sub {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-3);
+  max-width: 60ch;
+}
+.recurring-value-section-body {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+.recurring-credit-card {
+  padding: 18px 20px;
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: var(--paper-2, var(--paper));
+}
+.recurring-credit-head {
+  margin-bottom: 14px;
+}
+.recurring-credit-headline {
+  margin: 0;
+  font-family: var(--font-display), serif;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  line-height: 1.2;
+}
+.recurring-credit-cadence {
+  margin: 4px 0 0;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  text-transform: uppercase;
+}
+.recurring-credit-frequency {
+  margin: 14px 0 10px;
+}
+.recurring-credit-frequency-prompt {
+  font-size: 13px;
+  color: var(--ink-2);
+  margin-bottom: 8px;
+}
+.recurring-credit-frequency-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.recurring-credit-frequency-chip {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.recurring-credit-frequency-chip:hover {
+  border-color: var(--ink-3);
+  color: var(--ink-1);
+}
+.recurring-credit-frequency-chip[data-selected="true"] {
+  background: var(--pos-ink, var(--ink-1));
+  border-color: var(--pos-ink, var(--ink-1));
+  color: var(--paper);
+}
+.recurring-credit-projected {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 10px 0 16px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--pos-bg, var(--paper));
+  border: 1px solid oklch(0.85 0.10 155 / 0.4);
+}
+.recurring-credit-projected-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+.recurring-credit-projected-value {
+  font-family: var(--font-display), serif;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--pos-ink, var(--ink-1));
+  font-variant-numeric: tabular-nums;
+}
+.recurring-credit-projected-prompt {
+  font-size: 13px;
+  color: var(--ink-3);
+  font-style: italic;
+}
+.recurring-credit-companions {
+  margin: 14px 0;
+  padding-top: 12px;
+  border-top: 1px dashed var(--rule);
+}
+.recurring-credit-companions-eyebrow {
+  font-size: 12px;
+  color: var(--ink-2);
+  margin-bottom: 6px;
+}
+.recurring-credit-companions-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-1);
+}
+.recurring-credit-companions-list li { margin: 2px 0; }
+.recurring-credit-stacking {
+  margin: 14px 0 0;
+}
+.recurring-credit-stacking-toggle {
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.recurring-credit-stacking-toggle:hover {
+  border-color: var(--ink-3);
+  color: var(--ink-1);
+}
+.recurring-credit-stacking-body {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+}
+.recurring-credit-stacking-eyebrow {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.recurring-credit-stacking-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.recurring-credit-stacking-table td {
+  padding: 4px 0;
+  vertical-align: top;
+  color: var(--ink-1);
+}
+.recurring-credit-stacking-table td:last-child {
+  text-align: right;
+  white-space: nowrap;
+  padding-left: 12px;
+}
+.recurring-credit-stacking-total td {
+  border-top: 1px solid var(--rule);
+  padding-top: 8px;
+  font-weight: 500;
+}
+.recurring-credit-stacking-savings td {
+  color: var(--pos-ink, var(--ink-1));
+  font-weight: 500;
+}
+.recurring-credit-stacking-caveats {
+  margin: 12px 0 0;
+  padding-left: 16px;
+  font-size: 12px;
+  color: var(--ink-3);
+  line-height: 1.5;
+}
+.recurring-credit-stacking-caveats em {
+  font-style: italic;
+  color: var(--ink-2);
+}
+.recurring-credit-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--rule);
+}
+.recurring-credit-source {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.recurring-credit-source a {
+  color: var(--ink-2);
+  text-decoration: underline;
+}
+.recurring-credit-source a:hover { color: var(--ink-1); }
+.recurring-credit-source-verified { color: var(--ink-3); }
+.recurring-credit-cta {
+  font-size: 13px;
+  color: var(--ink-1);
+  text-decoration: none;
+  border: 1px solid var(--ink-2);
+  border-radius: 999px;
+  padding: 6px 14px;
+  background: var(--paper);
+  white-space: nowrap;
+}
+.recurring-credit-cta:hover {
+  background: var(--ink-1);
+  color: var(--paper);
+  border-color: var(--ink-1);
+}
+.recurring-credit-exclusions {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px dashed var(--rule);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--ink-3);
+}
+@media (max-width: 600px) {
+  .recurring-credit-card {
+    padding: 16px 16px;
+  }
+  .recurring-credit-headline {
+    font-size: 20px;
+  }
+  .recurring-credit-projected-value {
+    font-size: 20px;
+  }
+}

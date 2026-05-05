@@ -20,13 +20,13 @@
   "currency_earned": "citi_thankyou",
 
   "earning": [
-    {"category": "hotels_cars_attractions_citi_travel", "rate_pts_per_dollar": 10, "cap_usd_per_year": null, "notes": "Via CitiTravel.com"},
-    {"category": "airlines", "rate_pts_per_dollar": 3, "cap_usd_per_year": null},
-    {"category": "hotels_other", "rate_pts_per_dollar": 3, "cap_usd_per_year": null},
-    {"category": "restaurants", "rate_pts_per_dollar": 3, "cap_usd_per_year": null},
-    {"category": "supermarkets", "rate_pts_per_dollar": 3, "cap_usd_per_year": null},
-    {"category": "gas_stations_ev_charging", "rate_pts_per_dollar": 3, "cap_usd_per_year": null},
-    {"category": "everything_else", "rate_pts_per_dollar": 1, "cap_usd_per_year": null}
+    {"category": "hotels_cars_attractions_citi_travel", "rate_pts_per_dollar": 10, "cap_usd_per_year": null, "official_text": "10 ThankYou Points for each $1 spent on hotel, car rental and attraction bookings on the Citi Travel® site via cititravel.com or 1-833-737-1288 (TTY: 711)", "exclusions": "", "source": {"url": "https://online.citi.com/US/ag/cards/displayterms?app=UNSOL&HKOP=b5a03a5076668926139dc6d999bcde8adb7310d1f3118cdef81adbb339f30ab0", "type": "issuer", "label": "Citi Strata Premier card terms", "verified_at": "2026-05-04"}, "notes": "Via CitiTravel.com"},
+    {"category": "airlines", "rate_pts_per_dollar": 3, "cap_usd_per_year": null, "official_text": "3 ThankYou Points for each $1 spent on air travel", "exclusions": "", "source": {"url": "https://online.citi.com/US/ag/cards/displayterms?app=UNSOL&HKOP=b5a03a5076668926139dc6d999bcde8adb7310d1f3118cdef81adbb339f30ab0", "type": "issuer", "label": "Citi Strata Premier card terms", "verified_at": "2026-05-04"}},
+    {"category": "hotels_other", "rate_pts_per_dollar": 3, "cap_usd_per_year": null, "official_text": "3 ThankYou Points for each $1 spent on other hotel purchases", "exclusions": "", "source": {"url": "https://online.citi.com/US/ag/cards/displayterms?app=UNSOL&HKOP=b5a03a5076668926139dc6d999bcde8adb7310d1f3118cdef81adbb339f30ab0", "type": "issuer", "label": "Citi Strata Premier card terms", "verified_at": "2026-05-04"}},
+    {"category": "restaurants", "rate_pts_per_dollar": 3, "cap_usd_per_year": null, "official_text": "3 ThankYou Points for each $1 spent at restaurants", "exclusions": "", "source": {"url": "https://online.citi.com/US/ag/cards/displayterms?app=UNSOL&HKOP=b5a03a5076668926139dc6d999bcde8adb7310d1f3118cdef81adbb339f30ab0", "type": "issuer", "label": "Citi Strata Premier card terms", "verified_at": "2026-05-04"}},
+    {"category": "supermarkets", "rate_pts_per_dollar": 3, "cap_usd_per_year": null, "official_text": "3 ThankYou Points for each $1 spent at supermarkets", "exclusions": "Excludes purchases made at general merchandise/discount superstores; freezer/meat locker provisioners; dairy product stores; miscellaneous food/convenience stores; drugstores; warehouse/wholesale clubs; specialty food markets; bakeries; candy, nut, and confectionery stores; and meal kit delivery services. Purchases made at online supermarkets or with grocery delivery services do not qualify if the merchant does not classify itself as a supermarket by using the supermarket merchant code.", "source": {"url": "https://online.citi.com/US/ag/cards/displayterms?app=UNSOL&HKOP=b5a03a5076668926139dc6d999bcde8adb7310d1f3118cdef81adbb339f30ab0", "type": "issuer", "label": "Citi Strata Premier card terms", "verified_at": "2026-05-04"}},
+    {"category": "gas_stations_ev_charging", "rate_pts_per_dollar": 3, "cap_usd_per_year": null, "official_text": "3 ThankYou Points for each $1 spent at gas and EV charging stations", "exclusions": "", "source": {"url": "https://online.citi.com/US/ag/cards/displayterms?app=UNSOL&HKOP=b5a03a5076668926139dc6d999bcde8adb7310d1f3118cdef81adbb339f30ab0", "type": "issuer", "label": "Citi Strata Premier card terms", "verified_at": "2026-05-04"}},
+    {"category": "everything_else", "rate_pts_per_dollar": 1, "cap_usd_per_year": null, "official_text": "1 ThankYou Point for each $1 spent on all other purchases", "exclusions": "", "source": {"url": "https://online.citi.com/US/ag/cards/displayterms?app=UNSOL&HKOP=b5a03a5076668926139dc6d999bcde8adb7310d1f3118cdef81adbb339f30ab0", "type": "issuer", "label": "Citi Strata Premier card terms", "verified_at": "2026-05-04"}}
   ],
 
   "signup_bonus": {
@@ -43,7 +43,7 @@
 
   "ongoing_perks": [
     {"name": "Mastercard Luxury Hotels & Resorts", "value_estimate_usd": 250, "category": "travel_perk", "signal_id": "luxury_hotel_traveler", "notes": "Complimentary breakfast for two, room upgrade subject to availability, and $100 on-property amenity credit per stay at 4,000+ properties booked via mastercard.com/luxuryhotels. Mastercard World Elite network benefit, separate from Citi-branded The Reserve / Hotel Collection programs at CitiTravel.com.", "source": {"url": "https://www.mastercard.com/us/en/personal/find-a-card/credit-card/world-elite-mastercard.html", "type": "network", "label": "Mastercard World Elite benefits", "verified_at": "2026-05-04"}},
-    {"name": "The Reserve by Citi Travel", "value_estimate_usd": 200, "category": "travel_perk", "signal_id": "luxury_hotel_traveler", "notes": "Book at 'The Reserve' rate via CitiTravel.com to get a $100 USD experience credit, room upgrade subject to availability, daily breakfast for two, complimentary Wi-Fi, early check-in, and late check-out per stay. Citi-branded program separate from Mastercard Luxury Hotels & Resorts; available to Strata Elite, Strata Premier, and Prestige cardmembers. Back-to-back stays at the same hotel within 24 hours count as one stay. Cannot stack with other offers; benefits forfeit if unused.", "source": {"url": "https://online.citi.com/US/ag/cards/displayterms?app=UNSOL&HKOP=b5a03a5076668926139dc6d999bcde8adb7310d1f3118cdef81adbb339f30ab0", "type": "issuer", "label": "Citi Strata Premier T&C — The Reserve", "verified_at": "2026-05-04"}},
+    {"name": "The Reserve by Citi Travel — passive companions", "value_estimate_usd": 60, "category": "travel_perk", "signal_id": "luxury_hotel_traveler", "notes": "Passive components of the Reserve rate booking experience: daily breakfast for two, room upgrade (subject to availability), complimentary Wi-Fi, early check-in, late check-out. The headline $100 Experience Credit is tracked separately on this card under recurring_credits[reserve_experience_credit] because it repeats per stay with no annual cap. Available to Strata Elite, Strata Premier, and Prestige cardmembers when booking the 'Reserve' rate via CitiTravel.com.", "source": {"url": "https://online.citi.com/US/ag/cards/displayterms?app=UNSOL&HKOP=b5a03a5076668926139dc6d999bcde8adb7310d1f3118cdef81adbb339f30ab0", "type": "issuer", "label": "Citi Strata Premier T&C — The Reserve", "verified_at": "2026-05-04"}},
     {"name": "Hotel Collection by Citi Travel", "value_estimate_usd": 60, "category": "travel_perk", "signal_id": "luxury_hotel_traveler", "notes": "Book at the 'Hotel Collection' rate via CitiTravel.com for daily breakfast for two, complimentary Wi-Fi, early check-in, and late check-out (subject to availability). Lower tier than The Reserve — no $100 experience credit, no room upgrade. Available to all Citi cardmembers with Citi Travel access.", "source": {"url": "https://online.citi.com/US/ag/cards/displayterms?app=UNSOL&HKOP=b5a03a5076668926139dc6d999bcde8adb7310d1f3118cdef81adbb339f30ab0", "type": "issuer", "label": "Citi Strata Premier T&C — Hotel Collection", "verified_at": "2026-05-04"}},
     {"name": "Citi Entertainment presale tickets", "value_estimate_usd": null, "category": "lifestyle", "notes": "Exclusive access and presale tickets to concerts, sporting events, and cultural experiences.", "source": {"url": "https://www.citientertainment.com/", "type": "issuer", "label": "Citi Entertainment", "verified_at": "2026-05-04"}},
     {"name": "Citi Concierge", "value_estimate_usd": null, "category": "lifestyle", "notes": "24/7 assistance with dining reservations, travel planning, and ticket purchases.", "source": {"url": "https://www.citi.com/credit-cards/citi-strata-premier-credit-card", "type": "issuer", "label": "Citi Strata Premier card page", "verified_at": "2026-05-04"}},
@@ -89,6 +89,36 @@
     "value_when_missing": "Add Citi Double Cash or Custom Cash next. Their cashback pools into this card and converts to transferable miles — about a 30% boost on every dollar.",
     "recommendation_priority": "first"
   },
+
+  "recurring_credits": [
+    {
+      "id": "reserve_experience_credit",
+      "name": "The Reserve $100 Experience Credit",
+      "headline": "$100 every Reserve hotel stay",
+      "event_label": "Reserve hotel stay",
+      "value_per_event_usd": 100,
+      "max_events_per_year": null,
+      "passive_companions": [
+        "Daily breakfast for two",
+        "Room upgrade (subject to availability)",
+        "Complimentary Wi-Fi",
+        "Early check-in (subject to availability)",
+        "Late check-out (subject to availability)"
+      ],
+      "stacks_with": ["earn_citi_travel_10x", "hotel_credit_100"],
+      "stack_caveats": [
+        "Reserve T&C state benefits cannot stack with other Citi offers on the same booking — verify whether the $100 Annual Hotel Benefit can be combined before assuming."
+      ],
+      "exclusions": "Book at the 'Reserve' rate via CitiTravel.com only. Back-to-back stays at the same hotel within 24 hours count as one stay. Benefits forfeit if unused. Available to Citi Strata Elite, Citi Strata Premier, and Citi Prestige cardmembers.",
+      "where_to_book_url": "https://www.citi.com/credit-cards/citi-travel/",
+      "source": {
+        "url": "https://online.citi.com/US/ag/cards/displayterms?app=UNSOL&HKOP=b5a03a5076668926139dc6d999bcde8adb7310d1f3118cdef81adbb339f30ab0",
+        "type": "issuer",
+        "label": "Citi Strata Premier card terms",
+        "verified_at": "2026-05-04"
+      }
+    }
+  ],
 
   "value_thesis": {
     "headline": "Why this card earns its keep",
@@ -339,6 +369,18 @@ None unique.
 - **Citi Strata** (sister card, lower tier) — file separately.
 - **Premier rebranded as Strata Premier in 2024.** Old Premier no longer accepts new applicants.
 - **AA transfer access**: Major differentiator vs Chase UR and Amex MR.
+
+### TODO — pull verbatim T&C exclusion text
+
+The supermarket exclusion paragraph is captured verbatim in `earning[].exclusions`. Pull and add the official Citi T&C exclusion language for the remaining categories:
+
+- `hotels_cars_attractions_citi_travel` — what counts as "Citi Travel" (carriers, attractions vendors, activation requirements)
+- `airlines` — what counts as "air travel" (carrier MCCs vs travel agencies, baggage/upgrade fees)
+- `hotels_other` — what counts as a hotel purchase outside Citi Travel
+- `restaurants` — restaurant MCC scope (excludes cafeterias inside grocery/department stores, certain bars, fast food in some doctrines)
+- `gas_stations_ev_charging` — gas station MCC scope (excludes warehouse fuel, marina fuel)
+
+Until populated, the EarningRateRow shows "No additional exclusions in the card terms." which is incorrect for these rows but harmless. Do not invent or paraphrase — copy verbatim from the T&C.
 
 ## card_plays
 

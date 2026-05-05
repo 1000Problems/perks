@@ -67,6 +67,10 @@ import { MechanicsZone } from "./MechanicsZone";
 import { ManageCardDisclosure } from "./ManageCardDisclosure";
 import { SignalsEditor, type CardPatch } from "./SignalsEditor";
 import type { ProgramCppOverride } from "@/lib/engine/programOverrides";
+import { CardArrivalHero } from "./CardArrivalHero";
+import { EarningSection } from "./EarningSection";
+import { RecurringValueSection } from "./RecurringValueSection";
+import type { FrequencyBucket } from "./RecurringCreditCard";
 
 interface Props {
   cardId: string;
@@ -244,6 +248,14 @@ export function CardHero({
     writePlayState(playId, currentlySkipped ? "unset" : "skip");
   }
 
+  // v3 RecurringValueSection — frequency bucket persisted as a synthetic
+  // playState row with bucket label stored in notes. Matches the
+  // group:* synthetic-id pattern above.
+  function handleRecurringBucketPick(creditId: string, bucket: FrequencyBucket) {
+    const playId = `recurring_freq:${creditId}`;
+    writePlayState(playId, "got_it", { notes: bucket });
+  }
+
   function handleProbeClick(promptId: string) {
     // Scroll to the cold prompt in the Hero region.
     const el = document.querySelector(
@@ -368,6 +380,13 @@ export function CardHero({
         ← Wallet
       </Link>
 
+      <CardArrivalHero
+        card={card}
+        profile={profile}
+        db={db}
+        isNew={isNew}
+      />
+
       <DeadlinesStrip cardId={cardId} today={today} />
 
       <header className="card-hero-identity">
@@ -427,8 +446,22 @@ export function CardHero({
         />
       )}
 
+      <EarningSection card={card} program={program} />
+
+      <RecurringValueSection
+        card={card}
+        program={program}
+        playState={playState}
+        onPickBucket={handleRecurringBucketPick}
+      />
+
       {ALL_GROUPS.map((group) => {
-        const groupFinds = groupedFinds.get(group) ?? [];
+        const groupFinds = (groupedFinds.get(group) ?? []).filter(
+          // v3: earn-rate plays are now rendered in the dedicated
+          // EarningSection above. Filter at the render layer so the
+          // engine and foundMoney still see them in card.card_plays.
+          (f) => f.play.value_model.kind !== "multiplier_on_category",
+        );
         if (groupFinds.length === 0) return null;
         return (
           <CatalogGroup

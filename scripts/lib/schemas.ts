@@ -11,32 +11,6 @@ const IsoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "expected YYYY-MM-DD");
 
 // ── cards.json ─────────────────────────────────────────────────────────
 
-const EarningRule = z.object({
-  category: z.string(),
-  rate_pts_per_dollar: z.number().nullable(),
-  cap_usd_per_year: z.number().nullable().optional(),
-  notes: z.string().nullable().optional(),
-});
-
-const SignupBonus = z.object({
-  amount_pts: z.number().nullable(),
-  spend_required_usd: z.number().nullable(),
-  spend_window_months: z.number().nullable(),
-  estimated_value_usd: z.number().nullable(),
-  notes: z.string().nullable().optional(),
-});
-
-// activation drives capture in the scoring engine:
-//   - "passive": always-on feature (no FX fee, primary CDW, purchase
-//     protection). Listed in the UI but contributes $0 to the score.
-//   - "signal_gated": value is captured only when the user has opted in
-//     via profile.perk_opt_ins matching the entry's signal_id. The
-//     default for any unlabeled credit/perk is "signal_gated" with
-//     null signal_id → $0 contribution. This kills the "perks-as-
-//     presumed-income" inflation that pushed Amex Platinum / Delta
-//     Reserve to the top despite weak earning rates.
-const Activation = z.enum(["passive", "signal_gated"]);
-
 // Per-perk citation. Optional during catalog rollout — the Strata
 // Premier pilot (TASK-per-perk-source-urls) backfills first; other
 // cards land via follow-on TASKs. UI shows an inline ⓘ link next to
@@ -67,6 +41,44 @@ const Source = z.object({
   // check (which writes to data/source-validation.json).
   verified_at: IsoDate.optional(),
 });
+
+const EarningRule = z.object({
+  category: z.string(),
+  rate_pts_per_dollar: z.number().nullable(),
+  cap_usd_per_year: z.number().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  // v3 card-page redesign: official-source enrichment used by the
+  // EarningSection on the per-card page. All optional during rollout —
+  // unauthored earning entries fall back to a generated headline.
+  //   - official_text: verbatim phrasing from the issuer's T&C
+  //   - exclusions:    verbatim exclusion language pulled from the same
+  //                    T&C section. Empty string when no exclusions are
+  //                    documented; renders "No additional exclusions"
+  //                    in the UI.
+  //   - source:        citation reusing the Source schema above.
+  official_text: z.string().optional(),
+  exclusions: z.string().optional(),
+  source: Source.optional(),
+});
+
+const SignupBonus = z.object({
+  amount_pts: z.number().nullable(),
+  spend_required_usd: z.number().nullable(),
+  spend_window_months: z.number().nullable(),
+  estimated_value_usd: z.number().nullable(),
+  notes: z.string().nullable().optional(),
+});
+
+// activation drives capture in the scoring engine:
+//   - "passive": always-on feature (no FX fee, primary CDW, purchase
+//     protection). Listed in the UI but contributes $0 to the score.
+//   - "signal_gated": value is captured only when the user has opted in
+//     via profile.perk_opt_ins matching the entry's signal_id. The
+//     default for any unlabeled credit/perk is "signal_gated" with
+//     null signal_id → $0 contribution. This kills the "perks-as-
+//     presumed-income" inflation that pushed Amex Platinum / Delta
+//     Reserve to the top despite weak earning rates.
+const Activation = z.enum(["passive", "signal_gated"]);
 
 const AnnualCredit = z.object({
   name: z.string(),
@@ -324,6 +336,32 @@ export const CardSchema = z
           .enum(["first", "high", "normal"])
           .default("normal"),
       })
+      .optional(),
+
+    // Recurring credits: per-event credits that repeat (typically per
+    // stay or per booking). Distinct from annual_credits (calendar-year
+    // capped) and ongoing_perks (passive features). The Reserve $100
+    // Experience Credit on Citi Strata Premier is the canonical case —
+    // $100 every Reserve hotel stay, no annual cap. Renders on the
+    // per-card page as RecurringCreditCard with a frequency picker and
+    // live projected annual value.
+    recurring_credits: z
+      .array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+          headline: z.string(),
+          event_label: z.string(),
+          value_per_event_usd: z.number(),
+          max_events_per_year: z.number().nullable(),
+          passive_companions: z.array(z.string()).default([]),
+          stacks_with: z.array(z.string()).default([]),
+          stack_caveats: z.array(z.string()).default([]),
+          exclusions: z.string(),
+          where_to_book_url: Url.optional(),
+          source: Source,
+        }),
+      )
       .optional(),
   });
 

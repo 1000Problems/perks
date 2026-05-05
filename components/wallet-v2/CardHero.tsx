@@ -48,8 +48,6 @@ import {
 } from "@/lib/profile/actions";
 import { fmt } from "@/lib/utils/format";
 import {
-  ALL_GROUPS,
-  findsByGroup,
   isGroupSkipped,
   scoreFinds,
   type FindStatus,
@@ -60,7 +58,6 @@ import { DeadlinesStrip } from "./DeadlinesStrip";
 import { OpenedAtPill } from "./OpenedAtPill";
 import { CurrencyPanel } from "./CurrencyPanel";
 import { ValueThesisHero } from "./ValueThesisHero";
-import { CatalogGroup } from "./CatalogGroup";
 import { buildPlaySourceMap, type ResolvedSource } from "./perkSource";
 import type { PerkFlag } from "@/lib/profile/server";
 import { MechanicsZone } from "./MechanicsZone";
@@ -78,6 +75,7 @@ import { CardArrivalHero } from "./CardArrivalHero";
 import { RecurringValueSection } from "./RecurringValueSection";
 import type { FrequencyBucket } from "./RecurringCreditCard";
 import { CommunityPlaysSection } from "./CommunityPlaysSection";
+import { ProvenanceSection } from "./ProvenanceSection";
 
 interface Props {
   cardId: string;
@@ -350,8 +348,18 @@ export function CardHero({
     () => finds.filter((f) => !communityIdSet.has(f.play.id)),
     [finds, communityIdSet],
   );
-  const groupedFinds = useMemo(
-    () => findsByGroup(catalogFinds),
+  // Section 1 / Section 2 split — derived in CardHero, consumed by two
+  // ProvenanceSection instances below. Default-to-issuer mirrors the
+  // schema default; cards with no provided_by tags still render.
+  const issuerFinds = useMemo(
+    () =>
+      catalogFinds.filter(
+        (f) => (f.play.provided_by ?? "issuer") === "issuer",
+      ),
+    [catalogFinds],
+  );
+  const networkFinds = useMemo(
+    () => catalogFinds.filter((f) => f.play.provided_by === "network"),
     [catalogFinds],
   );
 
@@ -475,37 +483,36 @@ export function CardHero({
         onPickBucket={handleRecurringBucketPick}
       />
 
-      {ALL_GROUPS.map((group) => {
-        const groupFinds = (groupedFinds.get(group) ?? []).filter(
-          // v3: earn-rate plays are now rendered in the dedicated
-          // EarningSection above. Filter at the render layer so the
-          // engine and foundMoney still see them in card.card_plays.
-          (f) => f.play.value_model.kind !== "multiplier_on_category",
-        );
-        if (groupFinds.length === 0) return null;
-        // Editorial layout — surface a single source link in the group
-        // head, taken from the first perk in the group that has one.
-        // Falls back to undefined when no row in the group has a source.
-        const firstSource = groupFinds
-          .map((f) => playSourceMap.get(f.play.id))
-          .find((s) => s?.source?.url);
-        return (
-          <CatalogGroup
-            key={group}
-            group={group}
-            finds={groupFinds}
-            skipped={isGroupSkipped(playState, group)}
-            onToggleGroupSkip={() => handleToggleGroupSkip(group)}
-            onMarkFind={handleMarkFind}
-            onProbeClick={handleProbeClick}
-            cardId={cardId}
-            playSourceMap={playSourceMap}
-            perkFlags={perkFlags}
-            groupSourceUrl={firstSource?.source?.url}
-            groupSourceLabel={firstSource?.source?.label ?? "source"}
-          />
-        );
-      })}
+      <ProvenanceSection
+        eyebrow="From Citi"
+        title="What Citi promises on this card"
+        subline="Documented in the card terms — credits, protections, and always-on features. Updates on Citi's release cycle."
+        card={card}
+        finds={issuerFinds}
+        playState={playState}
+        onMarkFind={handleMarkFind}
+        onProbeClick={handleProbeClick}
+        onToggleGroupSkip={handleToggleGroupSkip}
+        cardId={cardId}
+        playSourceMap={playSourceMap}
+        perkFlags={perkFlags}
+      />
+
+      <ProvenanceSection
+        eyebrow="Built into Mastercard World Elite"
+        title="What the network adds on top"
+        subline="Benefits Mastercard provides on every World Elite card. Independent of Citi's release cycle."
+        card={card}
+        finds={networkFinds}
+        playState={playState}
+        onMarkFind={handleMarkFind}
+        onProbeClick={handleProbeClick}
+        onToggleGroupSkip={handleToggleGroupSkip}
+        cardId={cardId}
+        playSourceMap={playSourceMap}
+        perkFlags={perkFlags}
+        disabled={card.disabled_network_benefits ?? []}
+      />
 
       <CommunityPlaysSection
         card={card}

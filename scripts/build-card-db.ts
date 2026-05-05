@@ -191,6 +191,9 @@ function mergeFile(db: DB, filename: string): void {
           ...(parsed.communityPlays != null
             ? { community_plays: parsed.communityPlays }
             : {}),
+          ...(parsed.disabledNetworkBenefits != null
+            ? { disabled_network_benefits: parsed.disabledNetworkBenefits }
+            : {}),
           ...(parsed.coldPrompts != null ? { cold_prompts: parsed.coldPrompts } : {}),
         }
       : parsed.card;

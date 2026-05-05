@@ -1,0 +1,728 @@
+{
+  "research_run": {
+    "network": "Mastercard World Elite",
+    "region": "US",
+    "verified_at": "2026-05-05",
+    "researcher": "claude-research",
+    "previous_run_compared": null
+  },
+  "universal_benefits": [
+    {
+      "id": "mc_zero_liability",
+      "name": "Mastercard Zero Liability Protection",
+      "value_estimate_usd": null,
+      "category": "passive",
+      "activation": "passive",
+      "signal_id": null,
+      "subtype": "always_on",
+      "enrollment_url": null,
+      "expires_at": null,
+      "notes": "Cardholder is not held responsible for unauthorized transactions made in store, by phone, online, in app, or at ATMs, provided the cardholder used reasonable care and promptly reported loss/theft. Does not apply to commercial cards or unregistered prepaid cards.",
+      "source": {
+        "url": "https://www.mastercard.com/us/en/personal/protection-and-security/zero-liability-protection.html",
+        "type": "network",
+        "label": "Mastercard US — Zero Liability Protection",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_id_theft_protection",
+      "name": "Mastercard ID Theft Protection",
+      "value_estimate_usd": null,
+      "category": "passive",
+      "activation": "signal_gated",
+      "signal_id": null,
+      "subtype": "activation_required",
+      "enrollment_url": "https://mastercardus.idprotectiononline.com/",
+      "expires_at": null,
+      "notes": "Free identity-theft monitoring across surface/dark/deep web, single-bureau (TransUnion) credit monitoring, and access to a resolution specialist. Provided by Iris Powered by Generali; cardholder must enroll to receive coverage.",
+      "source": {
+        "url": "https://mastercardus.idprotectiononline.com/",
+        "type": "partner",
+        "label": "Mastercard ID Theft Protection — Enrollment portal",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_global_service",
+      "name": "Mastercard Global Service",
+      "value_estimate_usd": null,
+      "category": "passive",
+      "activation": "passive",
+      "signal_id": null,
+      "subtype": "always_on",
+      "enrollment_url": null,
+      "expires_at": null,
+      "notes": "24/7 worldwide assistance for lost/stolen card reporting, emergency card replacement and emergency cash advance. US/Canada toll-free 1-800-307-7309; collect from outside US +1-636-722-7111.",
+      "source": {
+        "url": "https://www.mastercard.com/us/en/personal/protection-and-security.html",
+        "type": "network",
+        "label": "Mastercard US — Safety and Security Benefits",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_public_transit_tap_go",
+      "name": "Mastercard Public Transit Tap & Go Benefit",
+      "value_estimate_usd": 30,
+      "category": "lifestyle",
+      "activation": "passive",
+      "signal_id": null,
+      "subtype": "always_on",
+      "enrollment_url": null,
+      "expires_at": "2027-12-31",
+      "notes": "$2.50 statement credit when an eligible US Mastercard cardholder taps to pay $10 or more in a calendar month at participating transit systems (MBTA Boston, CTA/Pace Chicago, DART Dallas, Miami-Dade, NJ Transit, PATH, SEPTA, WMATA). Limit one credit per cardholder per month.",
+      "source": {
+        "url": "https://www.mastercard.com/us/en/personal/find-a-card/card-benefits.html",
+        "type": "network",
+        "label": "Mastercard US — Cardholder Benefits & Services",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_music_entertainment_presale",
+      "name": "Mastercard Music & Entertainment Access (Presale tickets)",
+      "value_estimate_usd": null,
+      "category": "lifestyle",
+      "activation": "signal_gated",
+      "signal_id": null,
+      "subtype": "always_on",
+      "enrollment_url": null,
+      "expires_at": "2027-03-31",
+      "notes": "Exclusive access to ticket presales at top US venues and festivals. Cardholder enters first 6 digits of an eligible Mastercard consumer credit card as the offer passcode at checkout via Ticketmaster/TicketWeb. Not available to business/commercial Mastercards.",
+      "source": {
+        "url": "https://www.mastercard.com/us/en/personal/find-a-card/credit-card/world-mastercard.html",
+        "type": "network",
+        "label": "Mastercard US — World Mastercard benefits page (Music & Entertainment terms)",
+        "verified_at": "2026-05-05"
+      }
+    }
+  ],
+  "tier_specific_benefits": [
+    {
+      "id": "mc_travel_lifestyle_services",
+      "name": "Mastercard Travel & Lifestyle Services",
+      "value_estimate_usd": null,
+      "category": "travel_perk",
+      "activation": "signal_gated",
+      "signal_id": null,
+      "subtype": "always_on",
+      "enrollment_url": "https://travel.mastercard.com/product/terms",
+      "expires_at": null,
+      "notes": "World Elite suite operated by Ten Lifestyle Group plc. Includes Lowest Hotel Rate Guarantee, Hotel Stay Guarantee, complimentary 24/7 Lifestyle Manager, and access to the Mastercard Luxury Hotels & Resorts portfolio (3,000+ properties) with daily breakfast for two, room upgrade and $50–$100 amenity credit when available.",
+      "source": {
+        "url": "https://www.mastercard.us/content/dam/public/mastercardcom/na/global-site/documents/gtb/world-elite.pdf",
+        "type": "network",
+        "label": "Mastercard Guide to Benefits — World Elite Mastercard (network template)",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_concierge_service",
+      "name": "World Elite Concierge Service",
+      "value_estimate_usd": null,
+      "category": "lifestyle",
+      "activation": "passive",
+      "signal_id": null,
+      "subtype": "always_on",
+      "enrollment_url": null,
+      "expires_at": null,
+      "notes": "24/7/365 personal concierge for travel planning, dining/entertainment reservations, ticket sourcing, gift research and pre-trip planning. Reachable at 1-877-354-8330. Goods/services purchased are billed to the cardholder's World Elite Mastercard.",
+      "source": {
+        "url": "https://www.mastercard.us/content/dam/public/mastercardcom/na/global-site/documents/gtb/world-elite.pdf",
+        "type": "network",
+        "label": "Mastercard Guide to Benefits — World Elite Mastercard (Concierge section)",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_airport_concierge",
+      "name": "Mastercard Airport Concierge",
+      "value_estimate_usd": null,
+      "category": "travel_perk",
+      "activation": "passive",
+      "signal_id": null,
+      "subtype": "always_on",
+      "enrollment_url": null,
+      "expires_at": null,
+      "notes": "15% discount on Airport Meet & Greet services at 700+ airports worldwide (departure, arrival or connecting). Cardholder pays the discounted fee out of pocket; Mastercard does not cover the service cost.",
+      "source": {
+        "url": "https://www.mastercard.us/content/dam/public/mastercardcom/na/global-site/documents/gtb/world-elite.pdf",
+        "type": "network",
+        "label": "Mastercard Guide to Benefits — World Elite Mastercard (Airport Concierge section)",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_golf",
+      "name": "Mastercard Golf / Priceless Golf",
+      "value_estimate_usd": null,
+      "category": "lifestyle",
+      "activation": "signal_gated",
+      "signal_id": null,
+      "subtype": "always_on",
+      "enrollment_url": null,
+      "expires_at": null,
+      "notes": "World Elite cardholders get access to a Golf Concierge Service, preferred tee times at participating TPC Network courses, PGA TOUR experiences and access to Open Championship/AIG Women's Open hospitality offers via Priceless.",
+      "source": {
+        "url": "https://www.priceless.com/celebrity/10896/pga-tour",
+        "type": "network",
+        "label": "Priceless.com — PGA TOUR collection",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_priceless_experiences",
+      "name": "Priceless Experiences",
+      "value_estimate_usd": null,
+      "category": "lifestyle",
+      "activation": "passive",
+      "signal_id": null,
+      "subtype": "always_on",
+      "enrollment_url": "https://www.priceless.com/",
+      "expires_at": null,
+      "notes": "Marketplace of curated experiences (culinary, arts, sports, travel) bookable with any Mastercard, with select experiences gated to World Elite and World Legend tiers across 45+ destinations.",
+      "source": {
+        "url": "https://www.priceless.com/",
+        "type": "network",
+        "label": "priceless.com homepage",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_world_elite_digital_offers",
+      "name": "World Elite Mastercard Digital Merchant Offers",
+      "value_estimate_usd": null,
+      "category": "lifestyle",
+      "activation": "signal_gated",
+      "signal_id": null,
+      "subtype": "always_on",
+      "enrollment_url": "https://www.mastercard.us/worldeliteoffers",
+      "expires_at": null,
+      "notes": "Aggregated landing page that lists current digital-merchant offers (Peacock, Instacart, Lyft, etc.) available to US-issued World Elite Mastercard cardholders. Offers and terms vary; specific offers tracked separately below.",
+      "source": {
+        "url": "https://www.mastercard.us/content/dam/public/mastercardcom/na/global-site/documents/gtb/world-elite.pdf",
+        "type": "network",
+        "label": "Mastercard Guide to Benefits — World Elite Mastercard (Digital Merchant Offers)",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_peacock_credit",
+      "name": "Peacock $3 Monthly Statement Credit",
+      "value_estimate_usd": 36,
+      "category": "lifestyle",
+      "activation": "signal_gated",
+      "signal_id": null,
+      "subtype": "partner_offer",
+      "enrollment_url": "https://www.peacocktv.com/mastercard",
+      "expires_at": "2027-12-31",
+      "notes": "$3.00 monthly statement credit when an eligible World Elite or World Legend Mastercard is the payment method on a full-priced Peacock Premium or Peacock Premium Plus monthly subscription purchased directly from Peacock. No opt-in required; auto-applied via Mastercard Rewards System. Excludes Apple Card and certain co-brands.",
+      "source": {
+        "url": "https://www.peacocktv.com/mastercard",
+        "type": "partner",
+        "label": "Peacock — World Elite and World Legend Mastercard offer",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_instacart_offer",
+      "name": "Instacart+ 3 Free Months and $10 Off Second Order Monthly",
+      "value_estimate_usd": 150,
+      "category": "lifestyle",
+      "activation": "signal_gated",
+      "signal_id": null,
+      "subtype": "partner_offer",
+      "enrollment_url": "https://www.instacart.com/p/mastercard-offer",
+      "expires_at": "2027-01-31",
+      "notes": "New Instacart+ members with an eligible World, World Elite or World Legend Mastercard receive 3 free months of Instacart+; all eligible cardholders get $10 off their second qualifying Instacart order each calendar month.",
+      "source": {
+        "url": "https://www.mastercard.com/us/en/personal/find-a-card/credit-card/world-elite-mastercard.html",
+        "type": "network",
+        "label": "Mastercard US — World Elite Mastercard benefits page (Instacart terms)",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_lyft_take3_credit",
+      "name": "Lyft Take 3, Get $5 Credit",
+      "value_estimate_usd": 60,
+      "category": "lifestyle",
+      "activation": "signal_gated",
+      "signal_id": null,
+      "subtype": "partner_offer",
+      "enrollment_url": "https://www.lyft.com/mastercard",
+      "expires_at": "2027-01-31",
+      "notes": "Take three Eligible Lyft rides paid for at least in part with an eligible World, World Elite or World Legend Mastercard in a calendar month and receive a $5 Lyft credit. Limit one credit per Lyft account per month; credits expire 30 days after issuance. Excludes business profile rides, bike/scooter rentals and Apple Card.",
+      "source": {
+        "url": "https://www.lyft.com/mastercard",
+        "type": "partner",
+        "label": "Lyft — Earn and save with Mastercard",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_lyft_airport_10pct",
+      "name": "Lyft 10% Off Scheduled Airport Rides",
+      "value_estimate_usd": null,
+      "category": "lifestyle",
+      "activation": "signal_gated",
+      "signal_id": null,
+      "subtype": "partner_offer",
+      "enrollment_url": "https://www.lyft.com/mastercard",
+      "expires_at": "2027-01-31",
+      "notes": "10% off Lyft Scheduled Rides to/from qualifying US (incl. Puerto Rico) airports when paid in full with a World Elite or World Legend consumer Mastercard. Discount is reflected at booking; physical card must be linked, digital wallets and Apple Card excluded.",
+      "source": {
+        "url": "https://help.lyft.com/hc/en-us/rider/articles/360020383574-World-and-World-Elite-Mastercard-",
+        "type": "partner",
+        "label": "Lyft Help — World, World Elite, World Legend Mastercard",
+        "verified_at": "2026-05-05"
+      }
+    }
+  ],
+  "earn_channels": [
+    {
+      "id": "mc_travel_rewards",
+      "name": "Mastercard Travel Rewards",
+      "kind": "international_cashback_portal",
+      "how_to_access": "Cardholder registers an eligible Mastercard at mtr.mastercardservices.com; offers automatically apply as statement-credit cashback when the registered card is used at a participating merchant (in the local currency of the offer) while traveling internationally or shopping online.",
+      "eligibility": "Available on select US-issued World Elite and World Legend Mastercard consumer and small-business products; participation is at the issuer's discretion. Cash-back posts on the issuer's regular billing statement.",
+      "enrollment_url": "https://mtr.mastercardservices.com/en-US/register?t=login",
+      "earn_structure": [],
+      "sample_participating_merchants": [],
+      "notes": "Country-specific cashback rates and category mixes (dining, hotel, transportation, retail) are not published on the unauthenticated portal landing page; rates are visible only after registration. Mastercard.com confirms the program is for cardholders 'when traveling internationally and shopping from your home.'",
+      "source": {
+        "url": "https://mtr.mastercardservices.com/en-US/register?t=login",
+        "type": "network",
+        "label": "Mastercard Travel Rewards — registration portal",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_mastercard_travel_booking",
+      "name": "Mastercard Travel (booking site)",
+      "kind": "booking_site",
+      "how_to_access": "Mastercard Travel & Lifestyle Services site (travel.mastercard.com) and US arrival-guide portal (travel.mastercard.us) are the primary booking surfaces; bookings made by Lifestyle Manager phone agents.",
+      "eligibility": "World Elite and World Legend Mastercard cardholders.",
+      "enrollment_url": "https://travel.mastercard.com/product/terms",
+      "earn_structure": [],
+      "sample_participating_merchants": [],
+      "notes": "The Mastercard Travel booking platform delivers value through hotel benefits (free breakfast, $50–$100 amenity credit, upgrade), Lowest Hotel Rate Guarantee and Hotel Stay Guarantee. It does NOT publish a network-wide bonus earn rate above the issuer's native rate; cardholders earn whatever rate the issuer credits for travel/hotel spend.",
+      "source": {
+        "url": "https://travel.mastercard.com/product/terms",
+        "type": "network",
+        "label": "Mastercard Travel & Lifestyle Services — terms page",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_priceless_specials",
+      "name": "Priceless Specials / priceless.com Offers",
+      "kind": "merchant_offers",
+      "how_to_access": "Cardholder browses experiences/offers at priceless.com and pays with any Mastercard at checkout; some experiences are gated to World Elite, World Legend or other tiers.",
+      "eligibility": "Open to any Mastercard cardholder, with tier-restricted listings on certain experiences.",
+      "enrollment_url": "https://www.priceless.com/",
+      "earn_structure": [],
+      "sample_participating_merchants": [
+        "TPC Boston",
+        "PGA TOUR experiences",
+        "Eataly New York",
+        "Drew Tillman LA tours"
+      ],
+      "notes": "Priceless is a curated experience marketplace, not a points-earning portal. There is no incremental cash-back rate; value comes from access (presales, member-for-a-day club access) and curated pricing.",
+      "source": {
+        "url": "https://www.priceless.com/",
+        "type": "network",
+        "label": "priceless.com — Mastercard Priceless homepage",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_easy_savings",
+      "name": "Mastercard Easy Savings",
+      "kind": "small_business",
+      "how_to_access": "Issuer enrolls eligible US-issued small-business Mastercard accounts; cashback rebates auto-post when registered card is used at participating merchants.",
+      "eligibility": "Mastercard Small Business credit/debit cards. NOT applicable to consumer World Elite Mastercards including the Citi Strata Premier.",
+      "enrollment_url": "https://www.mastercard.com/us/en/business/industry-segment/small-medium-business/offers.html",
+      "earn_structure": [],
+      "sample_participating_merchants": [],
+      "notes": "Easy Savings is positioned for small-business cards and is not relevant to a consumer Citi Strata Premier overlay; flagged here for completeness so the recommendation engine knows not to surface it for this card.",
+      "source": {
+        "url": "https://www.mastercard.com/us/en/business/industry-segment/small-medium-business/offers.html",
+        "type": "network",
+        "label": "Mastercard US — Small Business Offers page",
+        "verified_at": "2026-05-05"
+      }
+    }
+  ],
+  "destination_benefits": [
+    {
+      "id": "mc_priceless_us_filter",
+      "name": "Priceless United States",
+      "destination_signal": "destination_united_states",
+      "city": null,
+      "country": "US",
+      "current_experiences": [],
+      "notes": "Filtered country page listing live US experiences across multiple cities (155 results live as of verification).",
+      "source": {
+        "url": "https://www.priceless.com/filter/l/united-states",
+        "type": "network",
+        "label": "priceless.com — United States filter",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_priceless_new_york",
+      "name": "Priceless New York",
+      "destination_signal": "destination_new_york",
+      "city": "New York",
+      "country": "US",
+      "current_experiences": [
+        {
+          "title": "Dine at Eataly New York",
+          "category": "dining",
+          "url": "https://www.priceless.com/filter/l/new-york"
+        }
+      ],
+      "notes": "City-filter page for New York experiences on Priceless.com; live experiences include culinary, arts and culture, sports.",
+      "source": {
+        "url": "https://www.priceless.com/filter/l/new-york",
+        "type": "network",
+        "label": "priceless.com — New York filter",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_priceless_chicago",
+      "name": "Priceless Chicago",
+      "destination_signal": "destination_chicago",
+      "city": "Chicago",
+      "country": "US",
+      "current_experiences": [],
+      "notes": "Chicago city filter on Priceless.com; only 1 live experience returned at verification, so program presence is thin in this market.",
+      "source": {
+        "url": "https://www.priceless.com/filter/options/location/5352",
+        "type": "network",
+        "label": "priceless.com — Chicago filter",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_priceless_los_angeles",
+      "name": "Priceless Los Angeles",
+      "destination_signal": "destination_los_angeles",
+      "city": "Los Angeles",
+      "country": "US",
+      "current_experiences": [
+        {
+          "title": "Walk a downtown LA architecture tour with creator Drew Tillman",
+          "category": "culture",
+          "url": "https://www.priceless.com/"
+        }
+      ],
+      "notes": "Los Angeles is one of the four US cities promoted on the Priceless homepage filter strip.",
+      "source": {
+        "url": "https://www.priceless.com/",
+        "type": "network",
+        "label": "priceless.com — LA experience listing on homepage",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_priceless_miami",
+      "name": "Priceless Miami",
+      "destination_signal": "destination_miami",
+      "city": "Miami",
+      "country": "US",
+      "current_experiences": [],
+      "notes": "Miami is listed as a featured city in the Priceless.com global filter set.",
+      "source": {
+        "url": "https://www.priceless.com/",
+        "type": "network",
+        "label": "priceless.com — homepage city filter strip",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_priceless_golf",
+      "name": "Priceless Golf / PGA TOUR Collection",
+      "destination_signal": "destination_pga_events",
+      "city": null,
+      "country": "US",
+      "current_experiences": [
+        {
+          "title": "Play where the pros play at TPC Boston",
+          "category": "sports",
+          "url": "https://www.priceless.com/sports/product/162509/play-where-the-pros-play-at-tpc-boston"
+        },
+        {
+          "title": "TPC Collection — privileged member-for-a-day perks at TPC courses",
+          "category": "sports",
+          "url": "https://www.priceless.com/celebrity/21562/tpc-collection"
+        },
+        {
+          "title": "PGA TOUR experiences hub",
+          "category": "sports",
+          "url": "https://www.priceless.com/celebrity/10896/pga-tour"
+        }
+      ],
+      "notes": "Golf-themed experience hub on priceless.com; bookable by World Elite cardholders via the Mastercard Golf Concierge Service.",
+      "source": {
+        "url": "https://www.priceless.com/celebrity/10896/pga-tour",
+        "type": "network",
+        "label": "priceless.com — PGA TOUR collection",
+        "verified_at": "2026-05-05"
+      }
+    }
+  ],
+  "insurance_protection": [
+    {
+      "id": "mc_masterrental_cdw",
+      "name": "MasterRental Coverage (Auto Rental CDW)",
+      "value_estimate_usd": null,
+      "category": "travel_protection",
+      "activation": "signal_gated",
+      "signal_id": null,
+      "subtype": "always_on",
+      "enrollment_url": "https://www.mycardbenefits.com",
+      "expires_at": null,
+      "notes": "Reimburses physical damage, theft, vandalism, collision and overturn on a Rental Vehicle when the entire rental is paid with the Covered Card and the rental agency's CDW is declined. Limit: lesser of contractual liability, ACV, repair cost, R&C, or rental agency invoice; up to $500 loss-of-use; up to two tows. Coverage is SECONDARY in the US, PRIMARY outside the cardholder's country of residence. Maximum 31 consecutive rental days. Excludes trucks, full-size vans, exotic/expensive cars, antiques, off-road use and rideshare/livery use. Administered by Sedgwick / underwritten by New Hampshire Insurance Company (AIG).",
+      "source": {
+        "url": "https://www.cardbenefits.citi.com/-/media/CPP/Files/LegalDocs/SOAPI/PID89_Strata_Premier_CRE131_GTPB_0524_tagged.ashx",
+        "type": "underwriter",
+        "label": "Citi Strata Premier — Guide to Protection Benefits (effective 2024-05-12) — MasterRental EOC",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_trip_cancellation_interruption",
+      "name": "Common Carrier Trip Cancellation & Trip Interruption",
+      "value_estimate_usd": null,
+      "category": "travel_protection",
+      "activation": "signal_gated",
+      "signal_id": null,
+      "subtype": "always_on",
+      "enrollment_url": "https://www.mycardbenefits.com",
+      "expires_at": null,
+      "notes": "Reimburses non-refundable Common Carrier fares charged to the Covered Card when the Eligible Traveler or Family Member experiences accidental bodily injury, sickness or death (Pre-existing conditions excluded). Maximum benefit $5,000 per Covered Trip and $10,000 per Eligible Account per 12 consecutive months. Secondary coverage. Round-trips up to 365 days; helicopter Common Carrier excluded.",
+      "source": {
+        "url": "https://www.cardbenefits.citi.com/-/media/CPP/Files/LegalDocs/SOAPI/PID89_Strata_Premier_CRE131_GTPB_0524_tagged.ashx",
+        "type": "underwriter",
+        "label": "Citi Strata Premier — Guide to Protection Benefits — Common Carrier Trip Cancellation/Interruption EOC",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_trip_delay",
+      "name": "Trip Delay Reimbursement",
+      "value_estimate_usd": null,
+      "category": "travel_protection",
+      "activation": "signal_gated",
+      "signal_id": null,
+      "subtype": "always_on",
+      "enrollment_url": "https://www.mycardbenefits.com",
+      "expires_at": null,
+      "notes": "Reimburses reasonable additional expenses (meals, lodging, toiletries, medication) when a Common Carrier Covered Trip is delayed more than 6 hours due to inclement weather, equipment failure, or lost/stolen passport or travel docs. Limited to $500 per Covered Trip and 2 claims per Eligible Account per 12 consecutive months. Secondary coverage; helicopter excluded.",
+      "source": {
+        "url": "https://www.cardbenefits.citi.com/-/media/CPP/Files/LegalDocs/SOAPI/PID89_Strata_Premier_CRE131_GTPB_0524_tagged.ashx",
+        "type": "underwriter",
+        "label": "Citi Strata Premier — Guide to Protection Benefits — Trip Delay EOC",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_lost_damaged_luggage",
+      "name": "Lost or Damaged Luggage",
+      "value_estimate_usd": null,
+      "category": "travel_protection",
+      "activation": "signal_gated",
+      "signal_id": null,
+      "subtype": "always_on",
+      "enrollment_url": "https://www.mycardbenefits.com",
+      "expires_at": null,
+      "notes": "Reimburses Checked or Carry-on Luggage permanently Lost (missing 10 consecutive days) or Damaged on a Covered Trip charged to the Covered Card. Up to $3,000 per Covered Trip ($2,000 per bag for NY residents); 2 claims per account per 12 consecutive months. Secondary to Common Carrier and other insurance. Excludes electronics, jewelry, money, sporting equipment unless checked, and trips under 100 miles.",
+      "source": {
+        "url": "https://www.cardbenefits.citi.com/-/media/CPP/Files/LegalDocs/SOAPI/PID89_Strata_Premier_CRE131_GTPB_0524_tagged.ashx",
+        "type": "underwriter",
+        "label": "Citi Strata Premier — Guide to Protection Benefits — Lost or Damaged Luggage EOC",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_purchase_protection",
+      "name": "Damage & Theft Purchase Protection",
+      "value_estimate_usd": null,
+      "category": "shopping_protection",
+      "activation": "signal_gated",
+      "signal_id": null,
+      "subtype": "always_on",
+      "enrollment_url": "https://mybenefits.cardbenefitclaims.com",
+      "expires_at": null,
+      "notes": "Repair or reimbursement when an item paid at least in part with the Covered Card and/or ThankYou Points is damaged or stolen within 90 days of purchase or delivery (whichever is first). Up to $10,000 per incident, $50,000 per calendar year per account. Secondary coverage. Excludes vehicles, consumables, jewelry/watches, tickets, firearms, items in care of third-party shippers. Underwritten by Virginia Surety Company.",
+      "source": {
+        "url": "https://www.cardbenefits.citi.com/-/media/CPP/Files/LegalDocs/SOAPI/PID89_Strata_Premier_CRE131_GTPB_0524_tagged.ashx",
+        "type": "underwriter",
+        "label": "Citi Strata Premier — Guide to Protection Benefits — Damage & Theft Purchase Protection",
+        "verified_at": "2026-05-05"
+      }
+    },
+    {
+      "id": "mc_extended_warranty",
+      "name": "Extended Warranty",
+      "value_estimate_usd": null,
+      "category": "shopping_protection",
+      "activation": "signal_gated",
+      "signal_id": null,
+      "subtype": "always_on",
+      "enrollment_url": "https://mybenefits.cardbenefitclaims.com",
+      "expires_at": null,
+      "notes": "Adds 24 additional months to a US manufacturer's warranty on items paid with the Covered Card and/or ThankYou Points. Up to $10,000 per item; total coverage capped at 7 years from purchase date. Excludes vehicles, used/antique items, items without a manufacturer's warranty. Underwritten by Virginia Surety Company.",
+      "source": {
+        "url": "https://www.cardbenefits.citi.com/-/media/CPP/Files/LegalDocs/SOAPI/PID89_Strata_Premier_CRE131_GTPB_0524_tagged.ashx",
+        "type": "underwriter",
+        "label": "Citi Strata Premier — Guide to Protection Benefits — Extended Warranty",
+        "verified_at": "2026-05-05"
+      }
+    }
+  ],
+  "card_overlays": [
+    {
+      "card_id": "citi_strata_premier",
+      "verified_at": "2026-05-05",
+      "issuer_source_url": "https://www.citi.com/credit-cards/citi-strata-premier-credit-card",
+      "guide_to_benefits_url": "https://www.cardbenefits.citi.com/-/media/CPP/Files/LegalDocs/SOAPI/PID89_Strata_Premier_CRE131_GTPB_0524_tagged.ashx",
+      "enabled_network_benefits": [
+        "mc_zero_liability",
+        "mc_id_theft_protection",
+        "mc_global_service",
+        "mc_public_transit_tap_go",
+        "mc_music_entertainment_presale",
+        "mc_travel_lifestyle_services",
+        "mc_concierge_service",
+        "mc_airport_concierge",
+        "mc_golf",
+        "mc_priceless_experiences",
+        "mc_world_elite_digital_offers",
+        "mc_peacock_credit",
+        "mc_instacart_offer",
+        "mc_lyft_take3_credit",
+        "mc_lyft_airport_10pct",
+        "mc_travel_rewards",
+        "mc_mastercard_travel_booking",
+        "mc_priceless_specials",
+        "mc_masterrental_cdw",
+        "mc_trip_cancellation_interruption",
+        "mc_trip_delay",
+        "mc_lost_damaged_luggage",
+        "mc_purchase_protection",
+        "mc_extended_warranty"
+      ],
+      "disabled_or_not_offered": [
+        {
+          "id": "mc_cell_phone_protection",
+          "reason": "Citi did not include cell phone protection on the Strata Premier — the issuer's Guide to Protection Benefits (effective 2024-05-12) contains only MasterRental, Trip Cancellation/Interruption, Trip Delay, Lost/Damaged Luggage, Damage & Theft Purchase Protection and Extended Warranty; no cellular wireless telephone EOC is included.",
+          "evidence_url": "https://www.cardbenefits.citi.com/-/media/CPP/Files/LegalDocs/SOAPI/PID89_Strata_Premier_CRE131_GTPB_0524_tagged.ashx"
+        },
+        {
+          "id": "mc_travel_accident_insurance",
+          "reason": "Travel Accident Insurance is not provided in the Citi Strata Premier Guide to Protection Benefits; Citi removed this coverage when relaunching the card in May 2024.",
+          "evidence_url": "https://www.cardbenefits.citi.com/-/media/CPP/Files/LegalDocs/SOAPI/PID89_Strata_Premier_CRE131_GTPB_0524_tagged.ashx"
+        },
+        {
+          "id": "mc_baggage_delay",
+          "reason": "Citi packages only Lost/Damaged Luggage on the Strata Premier; a separate Baggage Delay benefit (per-day reimbursement for delayed bags, common on other World Elite cards) is not part of this card's GTPB.",
+          "evidence_url": "https://www.cardbenefits.citi.com/-/media/CPP/Files/LegalDocs/SOAPI/PID89_Strata_Premier_CRE131_GTPB_0524_tagged.ashx"
+        },
+        {
+          "id": "mc_priority_pass",
+          "reason": "Priority Pass airport lounge access is not a network-default benefit on World Elite Mastercard and is not offered by Citi on the Strata Premier; the Citi product page lists no lounge benefit (Priority Pass is reserved for Citi Strata Elite, a World Legend card).",
+          "evidence_url": "https://www.citi.com/credit-cards/citi-strata-premier-credit-card"
+        },
+        {
+          "id": "mc_easy_savings",
+          "reason": "Mastercard Easy Savings is restricted to small-business Mastercards; Citi Strata Premier is a consumer card.",
+          "evidence_url": "https://www.mastercard.com/us/en/business/industry-segment/small-medium-business/offers.html"
+        }
+      ],
+      "issuer_overrides": [
+        {
+          "id": "mc_extended_warranty",
+          "what_changed": "Citi extends the manufacturer's warranty by 24 months (network template typically references doubling up to a 24-month maximum extension and varies by issuer); Citi caps coverage at $10,000 per item and total coverage at 7 years from purchase date, and explicitly extends coverage to ThankYou Points redemptions on the card.",
+          "evidence_url": "https://www.cardbenefits.citi.com/-/media/CPP/Files/LegalDocs/SOAPI/PID89_Strata_Premier_CRE131_GTPB_0524_tagged.ashx"
+        },
+        {
+          "id": "mc_purchase_protection",
+          "what_changed": "Citi raises Damage & Theft Purchase Protection to $10,000 per incident and $50,000 per calendar year per account, branded 'Damage & Theft Purchase Protection' under Virginia Surety Company. Extends eligibility to purchases made at least in part with ThankYou Points (excluding ThankYou-Points gift cards).",
+          "evidence_url": "https://www.cardbenefits.citi.com/-/media/CPP/Files/LegalDocs/SOAPI/PID89_Strata_Premier_CRE131_GTPB_0524_tagged.ashx"
+        },
+        {
+          "id": "mc_trip_cancellation_interruption",
+          "what_changed": "Citi sets explicit per-trip cap of $5,000 and $10,000 per 12-month account aggregate for Common Carrier trip cancellation/interruption, claim administration handled by Sedgwick at 1-833-251-6404, claims web portal mycardbenefits.com.",
+          "evidence_url": "https://www.cardbenefits.citi.com/-/media/CPP/Files/LegalDocs/SOAPI/PID89_Strata_Premier_CRE131_GTPB_0524_tagged.ashx"
+        },
+        {
+          "id": "mc_lost_damaged_luggage",
+          "what_changed": "Citi caps Lost/Damaged Luggage at $3,000 per Covered Trip ($2,000 per bag for NY residents), 2 claims per 12 consecutive months; coverage is secondary and explicitly excludes baggage delay (only permanent loss/damage).",
+          "evidence_url": "https://www.cardbenefits.citi.com/-/media/CPP/Files/LegalDocs/SOAPI/PID89_Strata_Premier_CRE131_GTPB_0524_tagged.ashx"
+        }
+      ]
+    }
+  ],
+  "unverified_claims": [
+    {
+      "claim": "World Elite Mastercard cell phone protection of $800/claim and $1,000/year with $50 deductible applies to all World Elite Mastercards including Citi Strata Premier.",
+      "found_on": "https://upgradedpoints.com/credit-cards/world-elite-mastercard-benefits-cards/",
+      "what_would_confirm_it": "A cell phone protection EOC inside the Citi Strata Premier Guide to Protection Benefits PDF on cardbenefits.citi.com — currently absent.",
+      "blog_source": "Upgraded Points, FinanceBuzz, Bankrate"
+    },
+    {
+      "claim": "World Elite Mastercard Travel Accident Insurance pays up to $1,000,000 for accidental death and dismemberment.",
+      "found_on": "https://wallethub.com/edu/cc/world-elite-mastercard/52556",
+      "what_would_confirm_it": "A Travel Accident EOC in either the network's worldelite.pdf or the Citi Strata Premier GTPB. The Citi Strata Premier 2024 GTPB does not include this coverage.",
+      "blog_source": "WalletHub"
+    },
+    {
+      "claim": "World Elite Mastercard includes baggage delay reimbursement of $100/day for up to 3 days.",
+      "found_on": "https://wallethub.com/edu/cc/world-elite-mastercard/52556",
+      "what_would_confirm_it": "A Baggage Delay EOC inside the Citi Strata Premier or current Mastercard network Guide to Benefits PDF. Citi GTPB only contains Lost/Damaged Luggage.",
+      "blog_source": "WalletHub, NerdWallet"
+    },
+    {
+      "claim": "Mastercard Travel Rewards offers cashback in 25 countries with country-specific rates (e.g., 5% dining in Japan).",
+      "found_on": "https://thepointsguy.com/credit-cards/the-most-valuable-mastercard-world-elite-benefits/",
+      "what_would_confirm_it": "Public country-by-country earn matrix on mtr.mastercardservices.com — the public landing page requires login, so country/category cashback rates cannot be confirmed from a network deep link.",
+      "blog_source": "The Points Guy, Upgraded Points"
+    },
+    {
+      "claim": "World Elite Mastercards provide a $1,000 hotel-relocation credit under the Mastercard Hotel Stay Guarantee.",
+      "found_on": "https://thepointsguy.com/credit-cards/the-most-valuable-mastercard-world-elite-benefits/",
+      "what_would_confirm_it": "A specific dollar figure on mastercard.com or in the network GTPB — current GTPB language only states Ten Lifestyle Group will 'attempt to make it right' or 'find comparable accommodations' without a stated dollar cap.",
+      "blog_source": "The Points Guy"
+    },
+    {
+      "claim": "World Elite Mastercards include a complimentary ShopRunner membership.",
+      "found_on": "https://thepointsguy.com/credit-cards/the-most-valuable-mastercard-world-elite-benefits/",
+      "what_would_confirm_it": "A live ShopRunner enrollment landing page on mastercard.com or shoprunner.com tied to World Elite — no such page is currently surfaced from the Mastercard US World Elite benefits hub as of 2026-05-05.",
+      "blog_source": "The Points Guy"
+    },
+    {
+      "claim": "World Elite Mastercards include up to $1,000 in private-jet credits via Caledonia Jets / Vitesse partnerships.",
+      "found_on": "https://thepointsguy.com/credit-cards/the-most-valuable-mastercard-world-elite-benefits/",
+      "what_would_confirm_it": "A Mastercard.com benefit page or partner page detailing the credit; not surfaced on the current Mastercard US World Elite benefits page.",
+      "blog_source": "The Points Guy"
+    },
+    {
+      "claim": "World Elite Mastercards include a complimentary McAfee Total Protection subscription for up to 5 devices.",
+      "found_on": "https://financebuzz.com/world-elite-mastercard-benefits",
+      "what_would_confirm_it": "A live McAfee enrollment landing page on mastercard.com — not currently surfaced from the World Elite hub.",
+      "blog_source": "FinanceBuzz"
+    },
+    {
+      "claim": "World Elite Mastercards provide automatic elite status with National, Avis and Sixt rental car programs.",
+      "found_on": "https://financebuzz.com/world-elite-mastercard-benefits",
+      "what_would_confirm_it": "Current network deep-link enrollment pages on mastercard.com; the current Mastercard US World Elite Mastercard page does not list these car-rental status benefits.",
+      "blog_source": "FinanceBuzz"
+    }
+  ],
+  "deprecated_or_changed_since_last_run": []
+}

@@ -204,6 +204,13 @@ export const PlaySchema = z.object({
   // Engine ignores both fields in Phase 2 — Phase 4 wires them in.
   reveals_signals: z.array(z.string()).default([]),
   requires_signals: z.array(z.string()).default([]),
+  // Section 1 (Citi) vs Section 2 (Mastercard) discriminator on the
+  // per-card hero page. Defaults to "issuer" — most plays document an
+  // issuer-promised benefit. "network" tags benefits the card-network
+  // (Mastercard World Elite, Visa Infinite, etc.) provides across
+  // every card on the network. Section 3 plays live in
+  // card.community_plays regardless of this field.
+  provided_by: z.enum(["issuer", "network"]).optional().default("issuer"),
 });
 
 export type Play = z.infer<typeof PlaySchema>;
@@ -290,6 +297,22 @@ export const CardSchema = z
     // CommunityPlaysSection. Engine concatenates both arrays so
     // projected-rewards math is unchanged after migration.
     community_plays: z.array(PlaySchema).default([]),
+    // Network benefits Mastercard / Visa publish at the network level
+    // that the issuer explicitly does NOT enable on this card. Rendered
+    // at the bottom of Section 2 ("Built into Mastercard World Elite")
+    // so users see the asymmetry instead of assuming every advertised
+    // World Elite benefit is active. Sourced from the network-research
+    // ingest pipeline (see cards/_NETWORK_RESEARCH/).
+    disabled_network_benefits: z
+      .array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+          reason: z.string(),
+          evidence_url: z.string().url(),
+        }),
+      )
+      .default([]),
     cold_prompts: z.array(ColdPromptSchema).default([]),
 
     // Value thesis: the celebration hero block at the top of the

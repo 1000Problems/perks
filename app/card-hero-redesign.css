@@ -315,7 +315,8 @@
 .card-hero-page[data-hero-style="editorial"] .value-thesis-hero,
 .card-hero-page[data-hero-style="editorial"] .mechanics-zone,
 .card-hero-page[data-hero-style="editorial"] .catalog-group,
-.card-hero-page[data-hero-style="editorial"] .community-plays-section {
+.card-hero-page[data-hero-style="editorial"] .community-plays-section,
+.card-hero-page[data-hero-style="editorial"] .provenance-section {
   margin-bottom: 48px;
 }
 
@@ -1691,6 +1692,119 @@
 .card-hero-page[data-hero-style="editorial"] .manage-remove-link:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+/* ── PROVENANCE SECTIONS — Section 1 (Citi) + Section 2 (Mastercard) ─ */
+/* Each section wraps a header (eyebrow / title / subline) and a body
+   that holds one CatalogGroup per non-empty topic group. The body
+   styles defer to .catalog-group rules already established further
+   up — we only style the section frame here.                          */
+.card-hero-page[data-hero-style="editorial"] .provenance-section-head {
+  margin-bottom: 24px;
+  max-width: 720px;
+}
+
+.card-hero-page[data-hero-style="editorial"] .provenance-section-title {
+  font-family: var(--font-plex-serif), Georgia, serif;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 4px 0 6px;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.card-hero-page[data-hero-style="editorial"] .provenance-section-subline {
+  font-size: 14px;
+  color: var(--ink-2);
+  line-height: 1.55;
+  margin: 0;
+  max-width: 620px;
+}
+
+.card-hero-page[data-hero-style="editorial"] .provenance-section-body {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Disabled-by-issuer block — muted footer below the catalog groups.
+   Renders only on Section 2 (Mastercard) when card.disabled_network_benefits
+   is non-empty. Visually subordinate to the active rows above.        */
+.card-hero-page[data-hero-style="editorial"] .provenance-disabled-block {
+  border-top: 1px dashed var(--rule);
+  padding-top: 22px;
+  margin-top: 8px;
+}
+
+.card-hero-page[data-hero-style="editorial"] .provenance-disabled-head {
+  margin-bottom: 14px;
+  max-width: 720px;
+}
+
+.card-hero-page[data-hero-style="editorial"] .provenance-disabled-subline {
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.5;
+  margin: 4px 0 0;
+  max-width: 620px;
+}
+
+.card-hero-page[data-hero-style="editorial"] .provenance-disabled-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card-hero-page[data-hero-style="editorial"] .provenance-disabled-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 2fr auto;
+  gap: 12px 16px;
+  align-items: baseline;
+  padding: 10px 0;
+  border-top: 1px solid var(--rule);
+  opacity: 0.78;
+}
+
+.card-hero-page[data-hero-style="editorial"]
+  .provenance-disabled-row:first-child {
+  border-top: none;
+}
+
+.card-hero-page[data-hero-style="editorial"] .provenance-disabled-name {
+  font-weight: 500;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.card-hero-page[data-hero-style="editorial"] .provenance-disabled-reason {
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
+.card-hero-page[data-hero-style="editorial"] .provenance-disabled-link {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.card-hero-page[data-hero-style="editorial"] .provenance-disabled-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+  .card-hero-page[data-hero-style="editorial"] .provenance-disabled-row {
+    grid-template-columns: 1fr;
+  }
+  .card-hero-page[data-hero-style="editorial"] .provenance-disabled-link {
+    justify-self: start;
+  }
 }
 
 /* ── COMMUNITY PLAYS — Section 3 ───────────────────────────────────── */

@@ -20,6 +20,7 @@ export interface ParsedCard {
   // PlaySchema, separate array.
   cardPlays: unknown[] | null;
   communityPlays: unknown[] | null;
+  disabledNetworkBenefits: unknown[] | null;
   coldPrompts: unknown[] | null;
   soul: {
     credit_score: unknown | null;
@@ -42,6 +43,7 @@ const SECTION_KEYS = {
   // Money-find page content (additive — all optional)
   cardPlays: /^## card_plays\b/,
   communityPlays: /^## community_plays\b/,
+  disabledNetworkBenefits: /^## disabled_network_benefits\b/,
   coldPrompts: /^## cold_prompts\b/,
   // Soul sections (additive — all optional)
   soulCreditScore: /^## card_soul\.credit_score\b/,
@@ -109,6 +111,7 @@ export function parseCardMarkdown(filename: string, md: string): ParsedCard {
 
   let cardPlays: unknown[] | null;
   let communityPlays: unknown[] | null;
+  let disabledNetworkBenefits: unknown[] | null;
   let coldPrompts: unknown[] | null;
 
   try {
@@ -126,6 +129,8 @@ export function parseCardMarkdown(filename: string, md: string): ParsedCard {
     cardPlays = Array.isArray(playsRaw) ? playsRaw : null;
     const communityRaw = extractJson(sections.communityPlays);
     communityPlays = Array.isArray(communityRaw) ? communityRaw : null;
+    const disabledRaw = extractJson(sections.disabledNetworkBenefits);
+    disabledNetworkBenefits = Array.isArray(disabledRaw) ? disabledRaw : null;
     const promptsRaw = extractJson(sections.coldPrompts);
     coldPrompts = Array.isArray(promptsRaw) ? promptsRaw : null;
   } catch (e) {
@@ -160,6 +165,7 @@ export function parseCardMarkdown(filename: string, md: string): ParsedCard {
     notes: (sections.notes ?? "").trim(),
     cardPlays,
     communityPlays,
+    disabledNetworkBenefits,
     coldPrompts,
     soul: {
       credit_score: soulCreditScore,

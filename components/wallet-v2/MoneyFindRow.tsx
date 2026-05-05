@@ -66,9 +66,6 @@ export function MoneyFindRow({
       <header className="money-find-head" onClick={() => setExpanded((v) => !v)}>
         <div className="money-find-headline-wrap">
           <h3 className="money-find-headline">{play.headline}</h3>
-          {personalSentence && (
-            <p className="money-find-personal">{personalSentence}</p>
-          )}
           {resolvedSource && (
             <PerkSourceLink
               source={resolvedSource.source}
@@ -77,6 +74,9 @@ export function MoneyFindRow({
               perkName={resolvedSource.perkName}
               myFlag={myFlag}
             />
+          )}
+          {personalSentence && (
+            <p className="money-find-personal">{personalSentence}</p>
           )}
         </div>
         <div className="money-find-tail">
@@ -139,7 +139,12 @@ export function MoneyFindRow({
               {play.action_label}
             </button>
           )}
-          {play.source_urls.length > 0 && (
+          {/* The legacy play.source_urls rendering is suppressed when */}
+          {/* we have a resolved perk source — that link is already */}
+          {/* visible in the header. Only sweet-spot / niche plays */}
+          {/* without a per-perk source still surface their citations */}
+          {/* down here. */}
+          {!resolvedSource && play.source_urls.length > 0 && (
             <div className="money-find-sources">
               {play.source_urls.map((u, i) => (
                 <a key={i} href={u} target="_blank" rel="noreferrer">

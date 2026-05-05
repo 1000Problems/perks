@@ -34,7 +34,7 @@
     "spend_required_usd": 4000,
     "spend_window_months": 3,
     "estimated_value_usd": 1100,
-    "notes": "Has hit 80k-90k. Citi 8/65/95 ThankYou family rules apply."
+    "notes": "Has hit 80k-90k. Citi ThankYou 48-month family rule applies: cannot earn SUB if you received a new-account bonus on Citi Premier or Citi Strata Premier in the last 48 months, OR if you converted another Citi card on which you earned a SUB in the last 48 months into a Premier or Strata Premier."
   },
 
   "annual_credits": [
@@ -42,10 +42,12 @@
   ],
 
   "ongoing_perks": [
-    {"name": "Mastercard Luxury Hotels & Resorts", "value_estimate_usd": 250, "category": "travel_perk", "signal_id": "luxury_hotel_traveler", "notes": "Complimentary breakfast for two, room upgrade subject to availability, and $100 on-property amenity credit per stay at 4,000+ properties booked via mastercard.com/luxuryhotels.", "source": {"url": "https://www.mastercard.com/us/en/personal/find-a-card/credit-card/world-elite-mastercard.html", "type": "network", "label": "Mastercard World Elite benefits", "verified_at": "2026-05-04"}},
+    {"name": "Mastercard Luxury Hotels & Resorts", "value_estimate_usd": 250, "category": "travel_perk", "signal_id": "luxury_hotel_traveler", "notes": "Complimentary breakfast for two, room upgrade subject to availability, and $100 on-property amenity credit per stay at 4,000+ properties booked via mastercard.com/luxuryhotels. Mastercard World Elite network benefit, separate from Citi-branded The Reserve / Hotel Collection programs at CitiTravel.com.", "source": {"url": "https://www.mastercard.com/us/en/personal/find-a-card/credit-card/world-elite-mastercard.html", "type": "network", "label": "Mastercard World Elite benefits", "verified_at": "2026-05-04"}},
+    {"name": "The Reserve by Citi Travel", "value_estimate_usd": 200, "category": "travel_perk", "signal_id": "luxury_hotel_traveler", "notes": "Book at 'The Reserve' rate via CitiTravel.com to get a $100 USD experience credit, room upgrade subject to availability, daily breakfast for two, complimentary Wi-Fi, early check-in, and late check-out per stay. Citi-branded program separate from Mastercard Luxury Hotels & Resorts; available to Strata Elite, Strata Premier, and Prestige cardmembers. Back-to-back stays at the same hotel within 24 hours count as one stay. Cannot stack with other offers; benefits forfeit if unused.", "source": {"url": "https://online.citi.com/US/ag/cards/displayterms?app=UNSOL&HKOP=b5a03a5076668926139dc6d999bcde8adb7310d1f3118cdef81adbb339f30ab0", "type": "issuer", "label": "Citi Strata Premier T&C — The Reserve", "verified_at": "2026-05-04"}},
+    {"name": "Hotel Collection by Citi Travel", "value_estimate_usd": 60, "category": "travel_perk", "signal_id": "luxury_hotel_traveler", "notes": "Book at the 'Hotel Collection' rate via CitiTravel.com for daily breakfast for two, complimentary Wi-Fi, early check-in, and late check-out (subject to availability). Lower tier than The Reserve — no $100 experience credit, no room upgrade. Available to all Citi cardmembers with Citi Travel access.", "source": {"url": "https://online.citi.com/US/ag/cards/displayterms?app=UNSOL&HKOP=b5a03a5076668926139dc6d999bcde8adb7310d1f3118cdef81adbb339f30ab0", "type": "issuer", "label": "Citi Strata Premier T&C — Hotel Collection", "verified_at": "2026-05-04"}},
     {"name": "Citi Entertainment presale tickets", "value_estimate_usd": null, "category": "lifestyle", "notes": "Exclusive access and presale tickets to concerts, sporting events, and cultural experiences.", "source": {"url": "https://www.citientertainment.com/", "type": "issuer", "label": "Citi Entertainment", "verified_at": "2026-05-04"}},
     {"name": "Citi Concierge", "value_estimate_usd": null, "category": "lifestyle", "notes": "24/7 assistance with dining reservations, travel planning, and ticket purchases.", "source": {"url": "https://www.citi.com/credit-cards/citi-strata-premier-credit-card", "type": "issuer", "label": "Citi Strata Premier card page", "verified_at": "2026-05-04"}},
-    {"name": "Trip Delay Protection", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection", "notes": "Up to $500 per covered trip when delayed 6+ hours, max 2 claims per 12 months. Underwritten by Mastercard.", "source": {"url": "https://www.citi.com/credit-cards/credit-card-rewards/citi-strata-premier-travel-benefits", "type": "issuer", "label": "Citi Strata Premier travel benefits", "verified_at": "2026-05-04"}},
+    {"name": "Trip Delay Protection", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection", "notes": "Up to $500 per covered trip when delayed 6+ hours, max 2 claims per 12 months. Underwritten by New Hampshire Insurance Company (an AIG company); secondary coverage unless otherwise stated. Full terms in the Guide to Protection Benefits provided with the card.", "source": {"url": "https://www.citi.com/credit-cards/credit-card-rewards/citi-strata-premier-travel-benefits", "type": "issuer", "label": "Citi Strata Premier travel benefits", "verified_at": "2026-05-04"}},
     {"name": "Trip Cancellation & Interruption", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection", "notes": "Up to $5,000 per trip / $10,000 per cardholder per year for nonrefundable trip costs lost to a covered cancellation reason.", "source": {"url": "https://www.citi.com/credit-cards/credit-card-rewards/citi-strata-premier-travel-benefits", "type": "issuer", "label": "Citi Strata Premier travel benefits", "verified_at": "2026-05-04"}},
     {"name": "Lost or Damaged Luggage", "signal_id": "trip_insurance", "value_estimate_usd": null, "category": "travel_protection", "notes": "Up to $3,000 per covered trip ($2,000 per bag for NY residents). File via Mastercard within 60 days.", "source": {"url": "https://www.citi.com/credit-cards/credit-card-rewards/citi-strata-premier-travel-benefits", "type": "issuer", "label": "Citi Strata Premier travel benefits", "verified_at": "2026-05-04"}},
     {"name": "MasterRental car insurance", "value_estimate_usd": null, "category": "travel_protection", "notes": "Secondary CDW in your country of residence; primary outside. Decline the rental company's CDW and charge the rental to your Strata Premier.", "source": {"url": "https://www.citi.com/credit-cards/credit-card-rewards/citi-strata-premier-travel-benefits", "type": "issuer", "label": "Citi Strata Premier travel benefits", "verified_at": "2026-05-04"}},
@@ -66,7 +68,8 @@
     "Citi 8/65 (8 cards in 65 days max)",
     "Citi 1/8 (1 Citi card every 8 days)",
     "Citi 2/65 (2 cards in 65 days)",
-    "Citi ThankYou family 24-month rule: cannot earn SUB on Strata Premier if received bonus on Premier/Strata Premier in last 24 months"
+    "Citi ThankYou family 48-month rule: cannot earn SUB on Strata Premier if received a new-account bonus on Citi Premier or Citi Strata Premier in the last 48 months",
+    "Citi conversion 48-month rule: cannot earn SUB if you converted another Citi card on which you earned a SUB in the last 48 months into a Premier or Strata Premier"
   ],
 
   "best_for": ["broad_3x_categories_at_$95_AF", "AAdvantage_transfer_users", "Turkish_Miles_Smiles_for_United"],
@@ -292,10 +295,17 @@
       "official": false
     },
     {
-      "id": "citi_thankyou_24_month",
-      "name": "ThankYou family 24-month rule",
-      "description": "Cannot earn SUB on a TY-earning card if received SUB on the same product or a sister product (Premier/Strata Premier) in the last 24 months.",
-      "applies_to": "citi_thankyou_cards",
+      "id": "citi_premier_strata_48_month",
+      "name": "Premier/Strata Premier 48-month family rule",
+      "description": "Cannot earn SUB on Citi Premier or Citi Strata Premier if you received a new-account bonus on either product in the last 48 months. Source: official Citi Strata Premier Card Terms and Conditions (Bonus Points Offer section).",
+      "applies_to": "citi_premier_strata_cards",
+      "official": true
+    },
+    {
+      "id": "citi_premier_strata_conversion_48_month",
+      "name": "Premier/Strata Premier 48-month conversion rule",
+      "description": "Cannot earn SUB if you converted another Citi credit card account on which you earned a new-account bonus in the last 48 months into a Citi Premier or Citi Strata Premier. Anti-product-change rule.",
+      "applies_to": "citi_premier_strata_cards",
       "official": true
     },
     {

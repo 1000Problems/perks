@@ -88,8 +88,13 @@
   column-gap: 40px;
   row-gap: 28px;
   align-items: start;
-  margin-bottom: 48px;
+  /* explicit padding-* longhands override wallet-edit-v2.css's
+     unscoped `.identity { padding: 22px 24px 14px }` shorthand */
+  padding-top: 0;
+  padding-right: 0;
+  padding-left: 0;
   padding-bottom: 36px;
+  margin-bottom: 48px;
   border-bottom: 1px solid var(--rule);
 }
 .strata-page-v2 .identity-meta {
@@ -504,6 +509,14 @@
   border-top: 1px solid var(--rule);
 }
 .strata-page-v2 .perk-row {
+  /* Override unscoped .perk-row in app/wallet-edit-v2.css which sets
+     display:grid + grid-template-columns:1fr auto. That rule pushes the
+     perk-head into column 1 and the collapsed panel's intrinsic-width
+     into column 2, squeezing the title to one word per line. */
+  display: block;
+  grid-template-columns: none;
+  gap: 0;
+  padding: 0;
   border-bottom: 1px solid var(--rule);
 }
 .strata-page-v2 .perk-row[data-hidden="true"] { display: none; }

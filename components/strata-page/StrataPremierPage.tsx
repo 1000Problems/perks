@@ -25,7 +25,7 @@ import type {
   DestinationEntry,
 } from "@/lib/data/networkResearch";
 
-// ── Pricing constants (from citi_strata_official.md, verbatim) ──────────
+// ── Pricing constants (from cards/_REF_citi_strata_official.md, verbatim) ─
 //
 // These are the Schumer-box facts that don't live in the card schema yet.
 // Source URL is the same as every Strata Premier issuer source already in
